@@ -10,7 +10,7 @@ __all__ = ['fit_emission_line']
 
 def errfunc(p, pix, flux, flux_ivar):
     amp, x_0, std_G, fwhm_L, *bg_coef = p
-    return (voigt_polynomial(pix, amp, x_0, std_G, fwhm_L, bg_coef) - flux) * np.sqrt(flux_ivar)
+    return (flux - voigt_polynomial(pix, amp, x_0, std_G, fwhm_L, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_emission_line(pix, flux, flux_ivar=None,
                       amp0=None, x0=None, std_G0=None, fwhm_L0=None, n_bg_coef=1):
@@ -34,10 +34,6 @@ def fit_emission_line(pix, flux, flux_ivar=None,
     if x0 is None: # then estimate the initial guess for the centroid
         x0 = pix[np.argmax(flux)]
 
-    int_ctrd0 = int(round(x0-pix.min()))
-    if amp0 is None: # then estimate the initial guess for amplitude
-        amp0 = flux[int_ctrd0] # flux at initial guess
-
     bg0 = np.array([0.] * n_bg_coef)
     bg0[0] = scoreatpercentile(flux[flux>0], 5.)
 
@@ -47,17 +43,16 @@ def fit_emission_line(pix, flux, flux_ivar=None,
     if fwhm_L0 is None:
         fwhm_L0 = 0.5 # MAGIC NUMBER
 
+    int_ctrd0 = int(round(x0-pix.min()))
+    if amp0 is None: # then estimate the initial guess for amplitude
+        amp0 = flux[int_ctrd0] * np.sqrt(2*np.pi*std_G0) # flux at initial guess
+
     if flux_ivar is None:
         flux_ivar = 1.
 
     p0 = [amp0, x0, std_G0, fwhm_L0] + bg0.tolist()
-    print(p0)
     p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, p0, args=(pix, flux, flux_ivar),
-                                      full_output=True)
-    print(p_opt)
-
-    # res = minimize(_errfunc, x0=p0, args=(pix_grid, flux, flux_ivar))
-    # p = res.x
+                                      full_output=True, maxfev=10000, ftol=1E-11, xtol=1E-11)
 
     fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
 

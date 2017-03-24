@@ -1,5 +1,10 @@
 """
 Generate a rough, initial wavelength solution for a 1D spectrum.
+
+TODO:
+- Make wavelength button better (icon and make sure it doesn't stay pressed)
+- Add a "done" button to quit gracefully
+
 """
 
 # Standard library
@@ -29,94 +34,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
-
-def gui_solution(pixels, flux, flux_ivar, fig, ax, line_list=None):
-    # map_dict = dict()
-    # map_dict['wavelength'] = []
-    # map_dict['pixel'] = []
-    # line_widths = [] # for auto-solving lines
-
-    # FOR TESTING:
-    map_dict = {'wavelength': [5460.7399999999998, 7245.1665999999996, 6717.0429999999997, 6678.2762000000002, 6598.9529000000002, 6532.8822], 'pixel': [1226.9646056472734, 349.38080535972756, 610.93127457855871, 630.09556101866531, 668.9871368080278, 701.444940640303]}
-    line_widths = [1.5] # for auto-solving lines
-
-    # # A 1D span selector to highlight a given line
-    # span = SpanSelector(ax, on_select, 'horizontal', useblit=True,
-    #                     rectprops=dict(alpha=0.5, facecolor='red'))
-    # span.set_active(False)
-
-    # def enable_span():
-    #     tb = fig.canvas.manager.toolbar
-
-    #     if span.active:
-    #         span.set_active(False)
-    #     else:
-    #         span.set_active(True)
-
-    #     if tb._active == 'PAN':
-    #         tb.pan()
-    #         tb._actions['pan'].setChecked(False)
-
-    #     if tb._active == 'ZOOM':
-    #         tb.zoom()
-    #         tb._actions['zoom'].setChecked(False)
-
-    # span_control = QtWidgets.QPushButton('λ')
-    # span_control.setCheckable(True)
-    # span_control.clicked.connect(enable_span)
-    # span_control.setStyleSheet("color: #de2d26; font-weight: bold;")
-    # fig.canvas.manager.toolbar.addWidget(span_control)
-
-    if line_list is not None:
-        def auto_identify():
-            _idx = np.argsort(map_dict['wavelength'])
-            wvln = np.array(map_dict['wavelength'])[_idx]
-            pixl = np.array(map_dict['pixel'])[_idx]
-
-            # build an approximate wavelength solution to predict where lines are
-            spl = InterpolatedUnivariateSpline(wvln, pixl, k=3)
-
-            predicted_pixels = spl(line_list)
-
-            new_waves = []
-            new_pixels = []
-
-            lw = np.median(line_widths)
-            for pix_ctr,xmin,xmax,wave in zip(predicted_pixels,
-                                              predicted_pixels-3*lw,
-                                              predicted_pixels+3*lw,
-                                              line_list):
-                lp = get_line_props(pixels, flux, xmin, xmax,
-                                    sigma0=lw)
-
-                if lp is None or lp['amp'] < 1000.: # HACK
-                    # logger.error("Failed to fit predicted line at {:.3f}A, {:.2f}pix"
-                    #              .format(wave, pix_ctr))
-                    continue
-
-                draw_line_marker(lp, wave, ax)
-                new_waves.append(wave)
-                new_pixels.append(pix_ctr)
-
-            fig.canvas.draw()
-
-            fig2,axes2 = plt.subplots(2,1,figsize=(6,10))
-            axes2[0].plot(new_pixels, new_waves, linestyle='none', marker='o')
-
-            coef = np.polynomial.chebyshev.chebfit(new_pixels, new_waves, deg=5)
-            pred = np.polynomial.chebyshev.chebval(new_pixels, coef)
-            axes2[1].plot(new_pixels, new_waves-pred,
-                          linestyle='none', marker='o')
-
-            plt.show()
-
-        autoid_control = QtWidgets.QPushButton('auto-identify')
-        autoid_control.clicked.connect(auto_identify)
-        fig.canvas.manager.toolbar.addWidget(autoid_control)
-
-    plt.show()
-
-    return map_dict
 
 class GUIWavelengthSolver(object):
 
@@ -148,6 +65,18 @@ class GUIWavelengthSolver(object):
         self._map_dict = dict()
         self._map_dict['wavel'] = []
         self._map_dict['pixel'] = []
+        self._line_std_G = None
+        self._line_fwhm_L = None
+        self._done_wavel_idx = []
+
+        # HACKKKKKKKK
+        # FOR TESTING:
+        self._map_dict = {
+            'pixel': [253.49776567137448, 350.48933365660855, 385.96682800595414, 611.8830370457823, 630.946098741436, 669.8844149439807, 702.3222611485875, 715.2450530491801, 766.3584402721303, 799.4864395301523, 832.6808030334421, 893.072235880927, 989.9800544605185, 1227.524397964227],
+            'wavel': [7438.8984, 7245.1666, 7173.9381, 6717.043, 6678.2762, 6598.9529, 6532.8822, 6506.5281, 6402.246, 6334.4278, 6266.495, 6143.0626, 5944.8342, 5460.74]
+        }
+        self._line_std_G = 6.14034197e-01
+        self._line_fwhm_L = 1.00875218e-01
 
         # for storing UI elements
         self._ui = dict()
@@ -202,6 +131,17 @@ class GUIWavelengthSolver(object):
         span_control.setStyleSheet("color: #de2d26; font-weight: bold;")
         self.fig.canvas.manager.toolbar.addWidget(span_control)
 
+        # setup auto-identify button
+        if self.line_list is not None:
+            autoid_control = QtWidgets.QPushButton('auto-identify')
+            autoid_control.clicked.connect(self.auto_identify)
+            self.fig.canvas.manager.toolbar.addWidget(autoid_control)
+
+        # add a button for "done"
+        done_control = QtWidgets.QPushButton('done')
+        done_control.clicked.connect(self._finish)
+        self.fig.canvas.manager.toolbar.addWidget(done_control)
+
         plt.show()
 
     def _on_select(self, xmin, xmax):
@@ -225,6 +165,7 @@ class GUIWavelengthSolver(object):
             logger.info("Snapping input wavelength {:.3f} to line list "
                         "value {:.3f}".format(wave_val, self.line_list[idx]))
             wave_val = self.line_list[idx]
+            self._done_wavel_idx.append(idx)
 
         line_props = self.get_line_props(xmin, xmax)
         if line_props is None:
@@ -238,9 +179,11 @@ class GUIWavelengthSolver(object):
 
         self._map_dict['wavel'].append(wave_val)
         self._map_dict['pixel'].append(line_props['x_0'])
-        # line_widths.append(line_props['std_G'])
 
-    def get_line_props(self, xmin, xmax):
+        print(self._map_dict['wavel'])
+        print(self._map_dict['pixel'])
+
+    def get_line_props(self, xmin, xmax, **kwargs):
         i1 = int(np.floor(xmin))
         i2 = int(np.ceil(xmax))+1
 
@@ -253,7 +196,7 @@ class GUIWavelengthSolver(object):
             flux_ivar = None
 
         try:
-            line_props = fit_emission_line(pix, flux, flux_ivar, n_bg_coef=2)
+            line_props = fit_emission_line(pix, flux, flux_ivar, n_bg_coef=2, **kwargs)
         except Exception as e:
             raise
             msg = "Failed to fit line!"
@@ -261,6 +204,10 @@ class GUIWavelengthSolver(object):
             logger.error(str(e))
             self._ui['textbox'].setText("ERROR: See terminal for more information.")
             return None
+
+        # store these to help auto-identify
+        self._line_std_G = line_props['std_G']
+        self._line_fwhm_L = line_props['fwhm_L']
 
         return line_props
 
@@ -274,12 +221,88 @@ class GUIWavelengthSolver(object):
         space = 0.05*peak
         self.ax.plot([x0,x0], [peak+space,peak+3*space],
                      lw=1., linestyle='-', marker='', alpha=0.5, c='#2166AC')
-        self.ax.plot(pix_grid, flux_grid,
-                     lw=1., linestyle='-', marker='', alpha=0.25, c='#31a354')
+        self.ax.plot(pix_grid, flux_grid, zorder=100,
+                     lw=1., linestyle='-', marker='', alpha=1., c='#31a354')
         self.ax.text(x0, peak+4*space, "{:.3f} $\AA$".format(wavelength),
                      ha='center', va='bottom', rotation='vertical')
 
-def main(proc_path, linelist_file, wavelength_data_file, overwrite=False):
+    def auto_identify(self):
+        if self.line_list is None:
+            raise ValueError("Can't auto-identify lines without a line list.")
+
+        _idx = np.argsort(self._map_dict['wavel'])
+        wvln = np.array(self._map_dict['wavel'])[_idx]
+        pixl = np.array(self._map_dict['pixel'])[_idx]
+
+        # build an approximate wavelength solution to predict where lines are
+        spl = InterpolatedUnivariateSpline(wvln, pixl, k=3)
+
+        predicted_pixels = spl(self.line_list)
+
+        new_wavels = []
+        new_pixels = []
+
+        # from Wikipedia: https://en.wikipedia.org/wiki/Voigt_profile
+        fG = 2*self._line_std_G*np.sqrt(2*np.log(2))
+        fL = self._line_fwhm_L
+        lw = 0.5346*fL + np.sqrt(0.2166*fL**2 + fG**2)
+        for pix_ctr,xmin,xmax,wave_idx,wave in zip(predicted_pixels,
+                                                   predicted_pixels-3*lw,
+                                                   predicted_pixels+3*lw,
+                                                   range(len(self.line_list)),
+                                                   self.line_list):
+
+            if pix_ctr < 200 or pix_ctr > 1600: # skip if outside good rows
+                continue
+
+            elif wave_idx in self._done_wavel_idx: # skip if already fit
+                continue
+
+            logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
+                         .format(pix_ctr, wave))
+            try:
+                lp = self.get_line_props(xmin, xmax,
+                                         std_G0=self._line_std_G,
+                                         fwhm_L0=self._line_fwhm_L)
+            except Exception as e:
+                logger.error("Failed to auto-fit line at {} ({msg})"
+                             .format(wave, msg=str(e)))
+                continue
+
+            if lp is None or lp['amp'] < 100.: # HACK
+                continue
+
+            # figure out closest line
+            # _all_pix = np.concatenate((self._map_dict['pixel'], new_pixels))
+            # _all_wav = np.concatenate((self._map_dict['wavel'], new_wavels))
+            # _diff = np.abs(lp['x_0'] - np.array(_all_pix))
+            # min_diff_idx = np.argmin(_diff)
+            # min_diff_pix = _all_pix[min_diff_idx]
+            # min_diff_wav = _all_wav[min_diff_idx]
+
+            # if _diff[min_diff_idx] < 3.:
+            #     logger.error("Fit line is too close to another at pix={:.2f}, λ={:.2f}"
+            #                  .format(min_diff_pix, min_diff_wav))
+            #     continue
+
+            self.draw_line_marker(lp, wave, xmin, xmax)
+            new_wavels.append(wave)
+            new_pixels.append(pix_ctr)
+            self._done_wavel_idx.append(wave_idx)
+
+        self.fig.canvas.draw()
+
+        _idx = np.argsort(new_wavels)
+        self._map_dict['wavel'] = np.array(new_wavels)[_idx]
+        self._map_dict['pixel'] = np.array(new_pixels)[_idx]
+
+    def _finish(self):
+        self.solution = dict()
+        self.solution['wavelength'] = self._map_dict['wavel']
+        self.solution['pixel'] = self._map_dict['pixel']
+        plt.close(self.fig)
+
+def main(proc_path, linelist_file, overwrite=False):
     """ """
 
     proc_path = path.realpath(path.expanduser(proc_path))
@@ -287,17 +310,26 @@ def main(proc_path, linelist_file, wavelength_data_file, overwrite=False):
         raise IOError("Path '{}' doesn't exist".format(proc_path))
     logger.info("Reading data from path: {}".format(proc_path))
 
-    base_path, name = path.split(proc_path)
-    output_path = path.realpath(path.join(base_path, '{}_proc'.format(name)))
-    os.makedirs(output_path, exist_ok=True)
-    logger.info("Saving processed files to path: {}".format(output_path))
-
     # read linelist if specified
     if linelist_file is not None:
         line_list = np.genfromtxt(linelist_file, usecols=[0], dtype=float)
 
     else:
         line_list = None
+
+    if path.isdir(proc_path):
+        wavelength_data_file = None
+        output_path = proc_path
+
+    elif path.isfile(proc_path):
+        wavelength_data_file = proc_path
+        base_path, name = path.split(proc_path)
+        output_path = base_path
+
+    else:
+        raise RuntimeError("how?!")
+
+    logger.info("Saving processed files to path: {}".format(output_path))
 
     if wavelength_data_file is None: # find a COMP lamp:
         ic = ccdproc.ImageFileCollection(proc_path)
@@ -309,6 +341,8 @@ def main(proc_path, linelist_file, wavelength_data_file, overwrite=False):
             raise IOError("No COMP lamp file found in {}".format(proc_path))
 
         wavelength_data_file = path.join(ic.location, wavelength_data_file)
+
+    logger.info("Using file: {}".format(wavelength_data_file))
 
     # read 2D CCD data
     ccd = CCDData.read(wavelength_data_file)
@@ -324,9 +358,18 @@ def main(proc_path, linelist_file, wavelength_data_file, overwrite=False):
     gui = GUIWavelengthSolver(col_pix, flux, flux_ivar=flux_ivar,
                               line_list=line_list)
 
-    # wave_pix_map = gui_solution(col_pix, flux, flux_ivar=flux_ivar,
-    #                             fig=fig, ax=ax, line_list=linelist)
-    # print(wave_pix_map)
+    wav = gui.solution['wavelength']
+    pix = gui.solution['pixel']
+
+    # TODO:
+    fig2,axes2 = plt.subplots(2,1,figsize=(6,10))
+    axes2[0].plot(pix, wav, linestyle='none', marker='o')
+
+    coef = np.polynomial.polynomial.polyfit(pix, wav, deg=11) # MAGIC NUMBER
+    pred = np.polynomial.polynomial.polyval(pix, coef)
+    axes2[1].plot(pix, wav-pred,
+                  linestyle='none', marker='o')
+    plt.show()
 
     return
 
@@ -355,14 +398,12 @@ if __name__ == "__main__":
                         default=False, help='Destroy everything.')
 
     parser.add_argument('-p', '--path', dest='proc_path', required=True,
-                        help='Path to a PROCESSED night or chunk of data to process.')
+                        help='Path to a PROCESSED night or chunk of data to process. Or, '
+                             'path to a specific comp file.')
     parser.add_argument('--linelist', dest='linelist_file', type=str, default=None,
                         help='Path to a text file where the 0th column is a list of '
                              'emission lines for the comparison lamp. Default is to '
                              'require the user to enter exact wavelengths.')
-    parser.add_argument('--comp', dest='wavelength_data_file', type=str, default=None,
-                        help='Path to a specific comp lamp file. Default is to find '
-                             'the first one within the data directory structure.')
 
     args = parser.parse_args()
 

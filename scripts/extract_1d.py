@@ -108,6 +108,45 @@ class SkippableImageFileCollection(ImageFileCollection):
 
         return files
 
+def process_raw_frame(ccd, master_bias, master_flat,
+                      oscan_idx, oscan_size,
+                      ccd_gain, ccd_readnoise):
+    """
+    Bias and flat-correct a raw CCD frame.
+    """
+
+    oscan_fits_section = "[{}:{},:]".format(oscan_idx, oscan_idx+oscan_size)
+
+    # make a copy of the object
+    nccd = ccd.copy()
+
+    # apply the overscan correction
+    poly_model = Polynomial1D(2)
+    nccd = ccdproc.subtract_overscan(nccd, fits_section=oscan_fits_section,
+                                     model=poly_model)
+
+    # trim the image (remove overscan region)
+    nccd = ccdproc.trim_image(nccd, fits_section='[1:{},:]'.format(oscan_idx))
+
+    # create the error frame
+    nccd = ccdproc.create_deviation(nccd, gain=ccd_gain,
+                                    readnoise=ccd_readnoise)
+
+    # now correct for the ccd gain
+    nccd = ccdproc.gain_correct(nccd, gain=ccd_gain)
+
+    # correct for master bias frame
+    # - this does some crazy shit at the blue end, but we can live with it
+    nccd = ccdproc.subtract_bias(nccd, master_bias)
+
+    # correct for master flat frame
+    nccd = ccdproc.flat_correct(nccd, master_flat)
+
+    # comsic ray cleaning - this updates the uncertainty array as well
+    nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
+
+    return nccd
+
 def voigt(x, amp, x0, G_std, L_fwhm):
     """
     Voigt profile - convolution of a Gaussian and Lorentzian.
@@ -243,12 +282,12 @@ def main(night_path, skip_list_file, overwrite=False):
     night_path = path.realpath(path.expanduser(night_path))
     if not path.exists(night_path):
         raise IOError("Path '{}' doesn't exist".format(night_path))
-    logger.debug("Reading data from path: {}".format(night_path))
+    logger.info("Reading data from path: {}".format(night_path))
 
     base_path, name = path.split(night_path)
     output_path = path.realpath(path.join(base_path, '{}_proc'.format(name)))
     os.makedirs(output_path, exist_ok=True)
-    logger.debug("Saving processed files to path: {}".format(output_path))
+    logger.info("Saving processed files to path: {}".format(output_path))
 
     # check for files to skip (e.g., saturated or errored exposures)
     if skip_list_file is not None: # a file containing a list of filenames to skip
@@ -260,11 +299,11 @@ def main(night_path, skip_list_file, overwrite=False):
 
     # generate the raw image file collection to process
     ic = SkippableImageFileCollection(night_path, skip_filenames=skip_list)
-    logger.debug("Frames to process:")
-    logger.debug("- Bias frames: {}".format(len(ic.files_filtered(imagetyp='BIAS'))))
-    logger.debug("- Flat frames: {}".format(len(ic.files_filtered(imagetyp='FLAT'))))
-    logger.debug("- Comparison lamp frames: {}".format(len(ic.files_filtered(imagetyp='COMP'))))
-    logger.debug("- Object frames: {}".format(len(ic.files_filtered(imagetyp='OBJECT'))))
+    logger.info("Frames to process:")
+    logger.info("- Bias frames: {}".format(len(ic.files_filtered(imagetyp='BIAS'))))
+    logger.info("- Flat frames: {}".format(len(ic.files_filtered(imagetyp='FLAT'))))
+    logger.info("- Comparison lamp frames: {}".format(len(ic.files_filtered(imagetyp='COMP'))))
+    logger.info("- Object frames: {}".format(len(ic.files_filtered(imagetyp='OBJECT'))))
 
     # ============================
     # Create the master bias frame
@@ -286,7 +325,7 @@ def main(night_path, skip_list_file, overwrite=False):
             bias_list.append(ccd)
 
         # combine all bias frames into a master bias frame
-        logger.debug("Creating master bias frame")
+        logger.info("Creating master bias frame")
         master_bias = ccdproc.combine(bias_list, method='average', clip_extrema=True,
                                       nlow=1, nhigh=1, error=True)
         master_bias.write(master_bias_file, overwrite=True)
@@ -294,7 +333,7 @@ def main(night_path, skip_list_file, overwrite=False):
         # TODO: make plot if requested?
 
     else:
-        logger.debug("Master bias frame file already exists: {}".format(master_bias_file))
+        logger.info("Master bias frame file already exists: {}".format(master_bias_file))
         master_bias = CCDData.read(master_bias_file)
 
     # ============================
@@ -315,7 +354,7 @@ def main(night_path, skip_list_file, overwrite=False):
             flat_list.append(ccd)
 
         # combine into a single master flat - use 3*sigma sigma-clipping
-        logger.debug("Creating master flat frame")
+        logger.info("Creating master flat frame")
         master_flat = ccdproc.combine(flat_list, method='average', sigma_clip=True,
                                       low_thresh=3, high_thresh=3)
         master_flat.write(master_flat_file, overwrite=True)
@@ -323,53 +362,47 @@ def main(night_path, skip_list_file, overwrite=False):
         # TODO: make plot if requested?
 
     else:
-        logger.debug("Master flat frame file already exists: {}".format(master_flat_file))
+        logger.info("Master flat frame file already exists: {}".format(master_flat_file))
         master_flat = CCDData.read(master_flat_file)
 
     # =====================
     # Process object frames
     # =====================
 
-    logger.debug("Beginning object frame processing...")
+    logger.info("Beginning object frame processing...")
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
         new_fname = path.join(output_path, 'proc_{}'.format(fname))
 
-        logger.log(1, "\tProcessing '{}'".format(hdu.header['OBJECT']))
+        logger.debug("\tProcessing '{}'".format(hdu.header['OBJECT']))
         if path.exists(new_fname) and not overwrite:
             logger.log(1, "\t\tAlready done! {}".format(new_fname))
             continue
 
         # read CCD frame
         ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+        nccd = process_raw_frame(ccd, master_bias, master_flat,
+                                 oscan_idx, oscan_size,
+                                 ccd_gain, ccd_readnoise)
+        nccd.write(new_fname, overwrite=overwrite)
 
-        # make a copy of the object
-        nccd = ccd.copy()
+    # ==============================
+    # Process comparison lamp frames
+    # ==============================
 
-        # apply the overscan correction
-        poly_model = Polynomial1D(2)
-        nccd = ccdproc.subtract_overscan(nccd, fits_section=oscan_fits_section,
-                                         model=poly_model)
+    logger.info("Beginning comp. lamp frame processing...")
+    for hdu, fname in ic.hdus(return_fname=True, imagetyp='COMP'):
+        new_fname = path.join(output_path, 'proc_{}'.format(fname))
 
-        # trim the image (remove overscan region)
-        nccd = ccdproc.trim_image(nccd, fits_section='[1:{},:]'.format(oscan_idx))
+        logger.debug("\tProcessing '{}'".format(hdu.header['OBJECT']))
+        if path.exists(new_fname) and not overwrite:
+            logger.log(1, "\t\tAlready done! {}".format(new_fname))
+            continue
 
-        # create the error frame
-        nccd = ccdproc.create_deviation(nccd, gain=ccd_gain,
-                                        readnoise=ccd_readnoise)
-
-        # now correct for the ccd gain
-        nccd = ccdproc.gain_correct(nccd, gain=ccd_gain)
-
-        # correct for master bias frame
-        # - this does some crazy shit at the blue end, but we can live with it
-        nccd = ccdproc.subtract_bias(nccd, master_bias)
-
-        # correct for master flat frame
-        nccd = ccdproc.flat_correct(nccd, master_flat)
-
-        # comsic ray cleaning - this updates the uncertainty array as well
-        nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
-
+        # read CCD frame
+        ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+        nccd = process_raw_frame(ccd, master_bias, master_flat,
+                                 oscan_idx, oscan_size,
+                                 ccd_gain, ccd_readnoise)
         nccd.write(new_fname, overwrite=overwrite)
 
     # ==================
@@ -377,11 +410,11 @@ def main(night_path, skip_list_file, overwrite=False):
     # ==================
 
     proc_ic = SkippableImageFileCollection(output_path, glob_pattr='proc_*')
-    logger.debug("{} raw frames already processed".format(len(proc_ic.files)))
+    logger.info("{} raw frames already processed".format(len(proc_ic.files)))
 
-    logger.debug("Beginning 1D extraction...")
-    for ccd, fname in proc_ic.ccds(return_fname=True):
-        logger.log(1, "\tExtracting '{}'".format(ccd.header['OBJECT']))
+    logger.info("Beginning 1D extraction...")
+    for ccd, fname in proc_ic.ccds(return_fname=True, imagetyp='OBJECT'):
+        logger.debug("\tExtracting '{}'".format(ccd.header['OBJECT']))
 
         fname_1d = path.join(output_path, '1d_{}'.format(fname))
         if path.exists(fname_1d) and not overwrite:

@@ -361,6 +361,13 @@ def main(proc_path, linelist_file, overwrite=False):
     wav = gui.solution['wavelength']
     pix = gui.solution['pixel']
 
+    # write the pixel-wavelength nodes out to file
+    with open(path.join(output_path, 'pix_to_wavelength.txt'), 'w') as f:
+        txt = ["# pixel wavelength"]
+        for row in zip(pix, wav):
+            txt.append("{:.5f} {:.5f}".format(*row))
+        f.write("\n".join(txt))
+
     # TODO:
     fig2,axes2 = plt.subplots(2,1,figsize=(6,10))
     axes2[0].plot(pix, wav, linestyle='none', marker='o')
@@ -370,18 +377,6 @@ def main(proc_path, linelist_file, overwrite=False):
     axes2[1].plot(pix, wav-pred,
                   linestyle='none', marker='o')
     plt.show()
-
-    return
-
-    # sort by pixel and write to file
-    _ix = np.argsort(wave_to_pix['pixel'])
-    pix_wvl = zip(np.array(wave_to_pix['pixel'])[_ix],
-                  np.array(wave_to_pix['wavelength'])[_ix])
-    with open(outputpath, 'w') as f:
-        txt = ["# pixel wavelength"]
-        for row in pix_wvl:
-            txt.append("{:.5f} {:.5f}".format(*row))
-        f.write("\n".join(txt))
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

@@ -31,6 +31,7 @@ import sys
 import logging
 
 # Third-party
+from astropy.modeling.models import Polynomial1D
 import astropy.units as u
 import ccdproc
 from ccdproc import CCDData, ImageFileCollection
@@ -41,7 +42,7 @@ import six
 # CCD properties
 #
 ccd_gain = 2.7 * u.electron/u.adu
-readnoise = 7.9*u.electron
+ccd_readnoise = 7.9 * u.electron
 oscan_idx = 300
 oscan_size = 64
 #
@@ -125,6 +126,9 @@ def main(night_path, skip_list_file, overwrite=False):
     # Create the master bias frame
     # ============================
 
+    # overscan region of the CCD, using FITS index notation
+    oscan_fits_section = "[{}:{},:]".format(oscan_idx, oscan_idx+oscan_size)
+
     master_bias_file = path.join(output_path, 'master_bias.fits')
 
     if not os.path.exists(master_bias_file) or overwrite:
@@ -141,14 +145,13 @@ def main(night_path, skip_list_file, overwrite=False):
         logger.debug("Creating master bias frame")
         master_bias = ccdproc.combine(bias_list, method='average', clip_extrema=True,
                                       nlow=1, nhigh=1, error=True)
-        master_bias.write(master_bias_file, clobber=True)
+        master_bias.write(master_bias_file, overwrite=True)
 
         # TODO: make plot if requested?
 
     else:
         logger.debug("Master bias frame file already exists: {}".format(master_bias_file))
-
-        # TODO: read from file
+        master_bias = CCDData.read(master_bias_file)
 
     # ============================
     # Create the master flat field
@@ -162,23 +165,71 @@ def main(night_path, skip_list_file, overwrite=False):
         for hdu, fname in ic.hdus(return_fname=True, imagetyp='FLAT'):
             ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
             ccd = ccdproc.gain_correct(ccd, gain=ccd_gain)
-            ccd = ccdproc.ccd_process(ccd,
-                                      oscan="[{}:{},:]".format(oscan_idx, oscan_idx+oscan_size),
+            ccd = ccdproc.ccd_process(ccd, oscan=oscan_fits_section,
                                       trim="[1:{},:]".format(oscan_idx),
                                       master_bias=master_bias)
             flat_list.append(ccd)
 
         # combine into a single master flat - use 3*sigma sigma-clipping
+        logger.debug("Creating master flat frame")
         master_flat = ccdproc.combine(flat_list, method='average', sigma_clip=True,
                                       low_thresh=3, high_thresh=3)
-        master_flat.write(master_flat_file, clobber=True)
+        master_flat.write(master_flat_file, overwrite=True)
 
         # TODO: make plot if requested?
 
     else:
         logger.debug("Master flat frame file already exists: {}".format(master_flat_file))
+        master_flat = CCDData.read(master_flat_file)
 
-        # TODO: read from file
+    # =====================
+    # Process object frames
+    # =====================
+
+    logger.debug("Beginning object frame processing...")
+    for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
+        new_fname = path.join(output_path, 'proc_{}'.format(fname))
+
+        logger.log(0, "Processing '{}'".format(hdu.header['OBJECT']))
+        if path.exists(new_fname) and not overwrite:
+            logger.log(0, "\t Already done! {}".format(new_fname))
+
+        # read CCD frame
+        ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+
+        # make a copy of the object
+        nccd = ccd.copy()
+
+        # apply the overscan correction
+        poly_model = Polynomial1D(2)
+        nccd = ccdproc.subtract_overscan(nccd, fits_section=oscan_fits_section,
+                                         model=poly_model)
+
+        # trim the image (remove overscan region)
+        nccd = ccdproc.trim_image(nccd, fits_section='[1:{},:]'.format(oscan_idx))
+
+        # create the error frame
+        nccd = ccdproc.create_deviation(nccd, gain=ccd_gain,
+                                        readnoise=ccd_readnoise)
+
+        # now correct for the ccd gain
+        nccd = ccdproc.gain_correct(nccd, gain=ccd_gain)
+
+        # correct for master bias frame
+        # - this does some crazy shit at the blue end, but we can live with it
+        nccd = ccdproc.subtract_bias(nccd, master_bias)
+
+        # correct for master flat frame
+        nccd = ccdproc.flat_correct(nccd, master_flat)
+
+        # comsic ray cleaning - this updates the uncertainty array as well
+        nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
+
+        nccd.write(new_fname, overwrite=overwrite)
+
+    # ==================
+    # Extract 1D spectra
+    # ==================
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

@@ -28,7 +28,6 @@ subsequent scripts.
 import os
 from os import path
 import logging
-import fnmatch
 
 # Third-party
 from astropy.table import Table
@@ -36,13 +35,15 @@ from astropy.io import fits
 from astropy.modeling.models import Polynomial1D
 import astropy.units as u
 import ccdproc
-from ccdproc import CCDData, ImageFileCollection
+from ccdproc import CCDData
 import matplotlib.pyplot as plt
 import numpy as np
-import six
 from scipy.optimize import leastsq
-from scipy.special import wofz
 from scipy.stats import scoreatpercentile
+
+# Project
+from comoving_rv.longslit import SkippableImageFileCollection
+from comoving_rv.longslit.models import voigt
 
 # -------------------------------
 # CCD properties
@@ -54,59 +55,12 @@ oscan_size = 64
 #
 # -------------------------------
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('extract_1d')
 formatter = logging.Formatter('%(levelname)s:%(name)s:  %(message)s')
 handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
-
-class SkippableImageFileCollection(ImageFileCollection):
-
-    def __init__(self, location=None, keywords=None, info_file=None,
-                 filenames=None, glob_pattr=None, skip_filenames=None):
-
-        if skip_filenames is None:
-            self.skip_filenames = list()
-
-        else:
-            self.skip_filenames = list(skip_filenames)
-
-        self.glob_pattr = glob_pattr
-
-        super(SkippableImageFileCollection, self).__init__(location=location,
-                                                           keywords=keywords,
-                                                           info_file=info_file,
-                                                           filenames=filenames)
-
-    def _get_files(self):
-        """ Helper method which checks whether ``files`` should be set
-        to a subset of file names or to all file names in a directory.
-        Returns
-        -------
-        files : list or str
-            List of file names which will be added to the collection.
-        """
-        files = []
-        if self._filenames:
-            if isinstance(self._filenames, six.string_types):
-                files.append(self._filenames)
-            else:
-                files = self._filenames
-        else:
-            _files = self._fits_files_in_directory()
-
-            files = []
-            for fn in _files:
-                if fn in self.skip_filenames:
-                    continue
-
-                if self.glob_pattr is not None and not fnmatch.fnmatch(fn, self.glob_pattr):
-                    continue
-
-                files.append(fn)
-
-        return files
 
 def process_raw_frame(ccd, master_bias, master_flat,
                       oscan_idx, oscan_size,
@@ -146,29 +100,6 @@ def process_raw_frame(ccd, master_bias, master_flat,
     nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
 
     return nccd
-
-def voigt(x, amp, x0, G_std, L_fwhm):
-    """
-    Voigt profile - convolution of a Gaussian and Lorentzian.
-
-    When G_std -> 0, the profile approaches a Lorentzian. When L_fwhm=0,
-    the profile is a Gaussian.
-
-    Parameters
-    ----------
-    x : numeric, array_like
-    amp : numeric
-        Amplitude of the profile (integral).
-    x0 : numeric
-        Centroid.
-    G_std : numeric
-        Standard of deviation of the Gaussian component.
-    L_fwhm : numeric
-        FWHM of the Lorentzian component.
-    """
-    _x = x-x0
-    z = (_x + 1j*L_fwhm/2.) / (np.sqrt(2.)*G_std)
-    return amp * wofz(z).real / (np.sqrt(2.*np.pi)*G_std)
 
 def get_psf_pars(ccd, row_idx=800): # MAGIC NUMBER
     """

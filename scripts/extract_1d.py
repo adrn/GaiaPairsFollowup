@@ -432,4 +432,3 @@ if __name__ == "__main__":
     main(night_path=args.night_path,
          skip_list_file=args.skip_list_file,
          overwrite=args.overwrite)
-

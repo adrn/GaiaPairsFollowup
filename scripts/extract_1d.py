@@ -101,18 +101,18 @@ def process_raw_frame(ccd, master_bias, master_flat,
 
     return nccd
 
-def get_psf_pars(ccd, row_idx=800): # MAGIC NUMBER
+def get_lsf_pars(ccd, row_idx=800): # MAGIC NUMBER
     """
     Fit a Voigt profile + background to the specified row to
-    get the PSF parameters.
+    get the LSF parameters.
     """
 
-    def psf_model(p, x):
+    def lsf_model(p, x):
         amp, x_0, std_G, fwhm_L, C = p
         return voigt(x, amp, x_0, std_G, fwhm_L) + C
 
-    def psf_chi(p, pix, flux, flux_ivar):
-        return (psf_model(p, pix) - flux) * np.sqrt(flux_ivar)
+    def lsf_chi(p, pix, flux, flux_ivar):
+        return (lsf_model(p, pix) - flux) * np.sqrt(flux_ivar)
 
     flux = ccd.data[row_idx]
     flux_err = ccd.uncertainty.array[row_idx]
@@ -124,34 +124,34 @@ def get_psf_pars(ccd, row_idx=800): # MAGIC NUMBER
 
     # initial guess for optimization
     p0 = [flux.max(), pix[np.argmax(flux)], 1., 1., scoreatpercentile(flux[flux>0], 16.)]
-    p_opt,ier = leastsq(psf_chi, x0=p0, args=(pix, flux, flux_ivar))
+    p_opt,ier = leastsq(lsf_chi, x0=p0, args=(pix, flux, flux_ivar))
 
     if ier < 1 or ier > 4:
-        raise RuntimeError("Failed to fit for PSF at row {}".format(row_idx))
+        raise RuntimeError("Failed to fit for LSF at row {}".format(row_idx))
 
-    psf_p = dict()
-    psf_p['std_G'] = p_opt[2]
-    psf_p['fwhm_L'] = p_opt[3]
+    lsf_p = dict()
+    lsf_p['std_G'] = p_opt[2]
+    lsf_p['fwhm_L'] = p_opt[3]
 
-    return psf_p
+    return lsf_p
 
-def extract_1d(ccd, psf_p):
+def extract_1d(ccd, lsf_p):
     """
-    Use the fit PSF, but fit for amplitude and background at each row
+    Use the fit LSF, but fit for amplitude and background at each row
     on the detector to get source and background flux.
     """
 
-    def row_model(p, psf_p, x):
+    def row_model(p, lsf_p, x):
         amp, x_0, C = p
-        return voigt(x, amp, x_0, G_std=psf_p['std_G'], L_fwhm=psf_p['fwhm_L']) + C
+        return voigt(x, amp, x_0, G_std=lsf_p['std_G'], L_fwhm=lsf_p['fwhm_L']) + C
 
-    def row_chi(p, pix, flux, flux_ivar, psf_p):
-        return (row_model(p, psf_p, pix) - flux) * np.sqrt(flux_ivar)
+    def row_chi(p, pix, flux, flux_ivar, lsf_p):
+        return (row_model(p, lsf_p, pix) - flux) * np.sqrt(flux_ivar)
 
     n_rows,n_cols = ccd.data.shape
     pix = np.arange(n_cols)
 
-    # PSF extraction
+    # LSF extraction
     trace_1d = np.zeros(n_rows).astype(float)
     flux_1d = np.zeros(n_rows).astype(float)
     flux_1d_err = np.zeros(n_rows).astype(float)
@@ -166,7 +166,7 @@ def extract_1d(ccd, psf_p):
 
         p0 = [flux.max(), pix[np.argmax(flux)], scoreatpercentile(flux[flux>0], 16.)]
         p_opt,p_cov,*_,mesg,ier = leastsq(row_chi, x0=p0, full_output=True,
-                                          args=(pix, flux, flux_ivar, psf_p))
+                                          args=(pix, flux, flux_ivar, lsf_p))
 
         if ier < 1 or ier > 4 or p_cov is None:
             flux_1d[i] = np.nan
@@ -352,11 +352,11 @@ def main(night_path, skip_list_file, overwrite=False):
             logger.log(1, "\t\tAlready extracted! {}".format(fname_1d))
             continue
 
-        # first step is to fit a voigt profile to a middle-ish row to determine PSF
-        psf_p = get_psf_pars(ccd, row_idx=800) # MAGIC NUMBER
+        # first step is to fit a voigt profile to a middle-ish row to determine LSF
+        lsf_p = get_lsf_pars(ccd, row_idx=800) # MAGIC NUMBER
 
         try:
-            tbl = extract_1d(ccd, psf_p)
+            tbl = extract_1d(ccd, lsf_p)
         except Exception as e:
             logger.error('--- Failed! --- {}'.format(e))
             continue

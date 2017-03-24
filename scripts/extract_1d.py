@@ -27,16 +27,22 @@ subsequent scripts.
 # Standard library
 import os
 from os import path
-import sys
 import logging
+import fnmatch
 
 # Third-party
+from astropy.table import Table
+from astropy.io import fits
 from astropy.modeling.models import Polynomial1D
 import astropy.units as u
 import ccdproc
 from ccdproc import CCDData, ImageFileCollection
+import matplotlib.pyplot as plt
 import numpy as np
 import six
+from scipy.optimize import leastsq
+from scipy.special import wofz
+from scipy.stats import scoreatpercentile
 
 # -------------------------------
 # CCD properties
@@ -58,13 +64,15 @@ logger.propagate = False
 class SkippableImageFileCollection(ImageFileCollection):
 
     def __init__(self, location=None, keywords=None, info_file=None,
-                 filenames=None, skip_filenames=None):
+                 filenames=None, glob_pattr=None, skip_filenames=None):
 
         if skip_filenames is None:
             self.skip_filenames = list()
 
         else:
             self.skip_filenames = list(skip_filenames)
+
+        self.glob_pattr = glob_pattr
 
         super(SkippableImageFileCollection, self).__init__(location=location,
                                                            keywords=keywords,
@@ -86,10 +94,146 @@ class SkippableImageFileCollection(ImageFileCollection):
             else:
                 files = self._filenames
         else:
-            files = self._fits_files_in_directory()
-            files = [fn for fn in files if fn not in self.skip_filenames]
+            _files = self._fits_files_in_directory()
+
+            files = []
+            for fn in _files:
+                if fn in self.skip_filenames:
+                    continue
+
+                if self.glob_pattr is not None and not fnmatch.fnmatch(fn, self.glob_pattr):
+                    continue
+
+                files.append(fn)
 
         return files
+
+def voigt(x, amp, x0, G_std, L_fwhm):
+    """
+    Voigt profile - convolution of a Gaussian and Lorentzian.
+
+    When G_std -> 0, the profile approaches a Lorentzian. When L_fwhm=0,
+    the profile is a Gaussian.
+
+    Parameters
+    ----------
+    x : numeric, array_like
+    amp : numeric
+        Amplitude of the profile (integral).
+    x0 : numeric
+        Centroid.
+    G_std : numeric
+        Standard of deviation of the Gaussian component.
+    L_fwhm : numeric
+        FWHM of the Lorentzian component.
+    """
+    _x = x-x0
+    z = (_x + 1j*L_fwhm/2.) / (np.sqrt(2.)*G_std)
+    return amp * wofz(z).real / (np.sqrt(2.*np.pi)*G_std)
+
+def get_psf_pars(ccd, row_idx=800): # MAGIC NUMBER
+    """
+    Fit a Voigt profile + background to the specified row to
+    get the PSF parameters.
+    """
+
+    def psf_model(p, x):
+        amp, x_0, std_G, fwhm_L, C = p
+        return voigt(x, amp, x_0, std_G, fwhm_L) + C
+
+    def psf_chi(p, pix, flux, flux_ivar):
+        return (psf_model(p, pix) - flux) * np.sqrt(flux_ivar)
+
+    flux = ccd.data[row_idx]
+    flux_err = ccd.uncertainty.array[row_idx]
+
+    flux_ivar = 1/flux_err**2.
+    flux_ivar[~np.isfinite(flux_ivar)] = 0.
+
+    pix = np.arange(len(flux))
+
+    # initial guess for optimization
+    p0 = [flux.max(), pix[np.argmax(flux)], 1., 1., scoreatpercentile(flux[flux>0], 16.)]
+    p_opt,ier = leastsq(psf_chi, x0=p0, args=(pix, flux, flux_ivar))
+
+    if ier < 1 or ier > 4:
+        raise RuntimeError("Failed to fit for PSF at row {}".format(row_idx))
+
+    psf_p = dict()
+    psf_p['std_G'] = p_opt[2]
+    psf_p['fwhm_L'] = p_opt[3]
+
+    return psf_p
+
+def extract_1d(ccd, psf_p):
+    """
+    Use the fit PSF, but fit for amplitude and background at each row
+    on the detector to get source and background flux.
+    """
+
+    def row_model(p, psf_p, x):
+        amp, x_0, C = p
+        return voigt(x, amp, x_0, G_std=psf_p['std_G'], L_fwhm=psf_p['fwhm_L']) + C
+
+    def row_chi(p, pix, flux, flux_ivar, psf_p):
+        return (row_model(p, psf_p, pix) - flux) * np.sqrt(flux_ivar)
+
+    n_rows,n_cols = ccd.data.shape
+    pix = np.arange(n_cols)
+
+    # PSF extraction
+    trace_1d = np.zeros(n_rows).astype(float)
+    flux_1d = np.zeros(n_rows).astype(float)
+    flux_1d_err = np.zeros(n_rows).astype(float)
+    sky_flux_1d = np.zeros(n_rows).astype(float)
+    sky_flux_1d_err = np.zeros(n_rows).astype(float)
+
+    for i in range(ccd.data.shape[0]):
+        flux = ccd.data[i]
+        flux_err = ccd.uncertainty.array[i]
+        flux_ivar = 1/flux_err**2.
+        flux_ivar[~np.isfinite(flux_ivar)] = 0.
+
+        p0 = [flux.max(), pix[np.argmax(flux)], scoreatpercentile(flux[flux>0], 16.)]
+        p_opt,p_cov,*_,mesg,ier = leastsq(row_chi, x0=p0, full_output=True,
+                                          args=(pix, flux, flux_ivar, psf_p))
+
+        if ier < 1 or ier > 4 or p_cov is None:
+            flux_1d[i] = np.nan
+            sky_flux_1d[i] = np.nan
+            logger.log(0, "Fit failed for {}".format(i)) # TODO: ignored for now
+            continue
+
+        flux_1d[i] = p_opt[0]
+        trace_1d[i] = p_opt[1]
+        sky_flux_1d[i] = p_opt[2]
+
+        # TODO: ignores centroiding covariances...
+        flux_1d_err[i] = np.sqrt(p_cov[0,0])
+        sky_flux_1d_err[i] = np.sqrt(p_cov[2,2])
+
+    # clean up the 1d spectra
+    flux_1d_ivar = 1/flux_1d_err**2
+    sky_flux_1d_ivar = 1/sky_flux_1d_err**2
+
+    pix_1d = np.arange(n_rows)
+    mask_1d = (pix_1d < 50) | (pix_1d > 1600) # MAGIC NUMBERS: remove near top and bottom of CCD
+
+    flux_1d[mask_1d] = 0.
+    flux_1d_ivar[mask_1d] = 0.
+
+    sky_flux_1d[mask_1d] = 0.
+    sky_flux_1d_ivar[mask_1d] = 0.
+
+    tbl = Table()
+    tbl['pix'] = pix_1d
+    tbl['trace'] = trace_1d
+    tbl['source_flux'] = flux_1d
+    tbl['source_ivar'] = flux_1d_ivar
+    tbl['background_flux'] = sky_flux_1d
+    tbl['background_ivar'] = sky_flux_1d_ivar
+
+    return tbl
 
 def main(night_path, skip_list_file, overwrite=False):
     """
@@ -190,9 +334,10 @@ def main(night_path, skip_list_file, overwrite=False):
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
         new_fname = path.join(output_path, 'proc_{}'.format(fname))
 
-        logger.log(0, "Processing '{}'".format(hdu.header['OBJECT']))
+        logger.log(1, "\tProcessing '{}'".format(hdu.header['OBJECT']))
         if path.exists(new_fname) and not overwrite:
-            logger.log(0, "\t Already done! {}".format(new_fname))
+            logger.log(1, "\t\tAlready done! {}".format(new_fname))
+            continue
 
         # read CCD frame
         ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
@@ -230,6 +375,53 @@ def main(night_path, skip_list_file, overwrite=False):
     # ==================
     # Extract 1D spectra
     # ==================
+
+    proc_ic = SkippableImageFileCollection(output_path, glob_pattr='proc_*')
+    logger.debug("{} raw frames already processed".format(len(proc_ic.files)))
+
+    logger.debug("Beginning 1D extraction...")
+    for ccd, fname in proc_ic.ccds(return_fname=True):
+        logger.log(1, "\tExtracting '{}'".format(ccd.header['OBJECT']))
+
+        fname_1d = path.join(output_path, '1d_{}'.format(fname))
+        if path.exists(fname_1d) and not overwrite:
+            logger.log(1, "\t\tAlready extracted! {}".format(fname_1d))
+            continue
+
+        # first step is to fit a voigt profile to a middle-ish row to determine PSF
+        psf_p = get_psf_pars(ccd, row_idx=800) # MAGIC NUMBER
+
+        try:
+            tbl = extract_1d(ccd, psf_p)
+        except Exception as e:
+            logger.error('--- Failed! --- {}'.format(e))
+            continue
+
+        # # PLOT!!!
+        # fig,axes = plt.subplots(1, 2, figsize=(12,8), sharex='row')
+
+        # axes[0].plot(tbl['pix'], tbl['source_flux'], marker='', drawstyle='steps-mid')
+        # axes[0].errorbar(tbl['pix'], tbl['source_flux'], 1/np.sqrt(tbl['source_ivar']),
+        #                  linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        # axes[0].set_ylim(1e2, np.nanmax(tbl['source_flux']))
+        # axes[0].set_yscale('log')
+
+        # axes[1].plot(tbl['pix'], tbl['background_flux'], marker='', drawstyle='steps-mid')
+        # axes[1].errorbar(tbl['pix'], tbl['background_flux'], 1/np.sqrt(tbl['background_ivar']),
+        #                  linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        # axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
+        # axes[1].set_yscale('log')
+
+        # fig.tight_layout()
+
+        # plt.show()
+        # return
+
+        hdu0 = fits.PrimaryHDU(header=ccd.header)
+        hdu1 = fits.table_to_hdu(tbl)
+        hdulist = fits.HDUList([hdu0, hdu1])
+
+        hdulist.writeto(fname_1d)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

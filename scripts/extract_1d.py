@@ -28,13 +28,31 @@ subsequent scripts.
 import os
 from os import path
 import sys
+import logging
 
 # Third-party
-from astropy import log as logger # HACK: use the astropy logger
+import astropy.units as u
 import ccdproc
 from ccdproc import CCDData, ImageFileCollection
 import numpy as np
 import six
+
+# -------------------------------
+# CCD properties
+#
+ccd_gain = 2.7 * u.electron/u.adu
+readnoise = 7.9*u.electron
+oscan_idx = 300
+oscan_size = 64
+#
+# -------------------------------
+
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(levelname)s:%(name)s:  %(message)s')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.propagate = False
 
 class SkippableImageFileCollection(ImageFileCollection):
 
@@ -84,6 +102,7 @@ def main(night_path, skip_list_file, overwrite=False):
 
     base_path, name = path.split(night_path)
     output_path = path.realpath(path.join(base_path, '{}_proc'.format(name)))
+    os.makedirs(output_path, exist_ok=True)
     logger.debug("Saving processed files to path: {}".format(output_path))
 
     # check for files to skip (e.g., saturated or errored exposures)
@@ -96,14 +115,73 @@ def main(night_path, skip_list_file, overwrite=False):
 
     # generate the raw image file collection to process
     ic = SkippableImageFileCollection(night_path, skip_filenames=skip_list)
-    logger.debug("To process:")
+    logger.debug("Frames to process:")
     logger.debug("- Bias frames: {}".format(len(ic.files_filtered(imagetyp='BIAS'))))
     logger.debug("- Flat frames: {}".format(len(ic.files_filtered(imagetyp='FLAT'))))
+    logger.debug("- Comparison lamp frames: {}".format(len(ic.files_filtered(imagetyp='COMP'))))
     logger.debug("- Object frames: {}".format(len(ic.files_filtered(imagetyp='OBJECT'))))
+
+    # ============================
+    # Create the master bias frame
+    # ============================
+
+    master_bias_file = path.join(output_path, 'master_bias.fits')
+
+    if not os.path.exists(master_bias_file) or overwrite:
+        # get list of overscan-subtracted bias frames as 2D image arrays
+        bias_list = []
+        for hdu, fname in ic.hdus(return_fname=True, imagetyp='BIAS'):
+            ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+            ccd = ccdproc.gain_correct(ccd, gain=ccd_gain)
+            ccd = ccdproc.subtract_overscan(ccd, overscan=ccd[:,oscan_idx:])
+            ccd = ccdproc.trim_image(ccd, fits_section="[1:{},:]".format(oscan_idx))
+            bias_list.append(ccd)
+
+        # combine all bias frames into a master bias frame
+        logger.debug("Creating master bias frame")
+        master_bias = ccdproc.combine(bias_list, method='average', clip_extrema=True,
+                                      nlow=1, nhigh=1, error=True)
+        master_bias.write(master_bias_file, clobber=True)
+
+        # TODO: make plot if requested?
+
+    else:
+        logger.debug("Master bias frame file already exists: {}".format(master_bias_file))
+
+        # TODO: read from file
+
+    # ============================
+    # Create the master flat field
+    # ============================
+
+    master_flat_file = path.join(output_path, 'master_flat.fits')
+
+    if not os.path.exists(master_flat_file) or overwrite:
+        # create a list of flat frames
+        flat_list = []
+        for hdu, fname in ic.hdus(return_fname=True, imagetyp='FLAT'):
+            ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+            ccd = ccdproc.gain_correct(ccd, gain=ccd_gain)
+            ccd = ccdproc.ccd_process(ccd,
+                                      oscan="[{}:{},:]".format(oscan_idx, oscan_idx+oscan_size),
+                                      trim="[1:{},:]".format(oscan_idx),
+                                      master_bias=master_bias)
+            flat_list.append(ccd)
+
+        # combine into a single master flat - use 3*sigma sigma-clipping
+        master_flat = ccdproc.combine(flat_list, method='average', sigma_clip=True,
+                                      low_thresh=3, high_thresh=3)
+        master_flat.write(master_flat_file, clobber=True)
+
+        # TODO: make plot if requested?
+
+    else:
+        logger.debug("Master flat frame file already exists: {}".format(master_flat_file))
+
+        # TODO: read from file
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
-    import logging
 
     # Define parser object
     parser = ArgumentParser(description="")

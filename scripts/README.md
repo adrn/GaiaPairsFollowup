@@ -67,3 +67,12 @@ The last step in the reduction process is to add wavelength values to the 1D
 extracted spectrum files (i.e. map the pixel values to wavelength values and add
 a column). This is done in two steps. For the first step, a polynomial function
 is fit to the
+
+
+Radial velocity determination
+-----------------------------
+
+As a first pass, we fit a voigt profile to Halpha in each spectrum. We do this
+with nonlinear least-squares and ignore any nearby absorption lines. In the
+future, we should switch to using a Gaussian process for the background to
+handle the correlated "background" (continuum).

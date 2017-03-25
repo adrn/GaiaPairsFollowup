@@ -196,7 +196,6 @@ class GUIWavelengthSolver(object):
         try:
             line_props = fit_emission_line(pix, flux, flux_ivar, n_bg_coef=2, **kwargs)
         except Exception as e:
-            raise
             msg = "Failed to fit line!"
             logger.error(msg)
             logger.error(str(e))
@@ -227,6 +226,12 @@ class GUIWavelengthSolver(object):
     def auto_identify(self):
         if self.line_list is None:
             raise ValueError("Can't auto-identify lines without a line list.")
+
+        if len(self._map_dict['wavel']) < 4:
+            msg = "Please identify at least 4 lines before trying auto-identify."
+            logger.error(msg)
+            self._ui['textbox'].setText("ERROR: {}".format(msg))
+            return None
 
         _idx = np.argsort(self._map_dict['wavel'])
         wvln = np.array(self._map_dict['wavel'])[_idx]
@@ -306,7 +311,6 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
     proc_path = path.realpath(path.expanduser(proc_path))
     if not path.exists(proc_path):
         raise IOError("Path '{}' doesn't exist".format(proc_path))
-    logger.info("Reading data from path: {}".format(proc_path))
 
     # read linelist if specified
     if linelist_file is not None:
@@ -318,11 +322,13 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
     if path.isdir(proc_path):
         wavelength_data_file = None
         output_path = proc_path
+        logger.info("Reading data from path: {}".format(proc_path))
 
     elif path.isfile(proc_path):
         wavelength_data_file = proc_path
         base_path, name = path.split(proc_path)
         output_path = base_path
+        logger.info("Reading from file: {}".format(proc_path))
 
     else:
         raise RuntimeError("how?!")

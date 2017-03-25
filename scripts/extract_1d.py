@@ -22,6 +22,10 @@ disperion direction.
 Wavelength calibration and radial velocity corrections are handled in
 subsequent scripts.
 
+TODO:
+- add support for pixel masks to remove nearby sources / pick the correct object
+- need to figure out best way to specify the true source and the nearby source...
+
 """
 
 # Standard library

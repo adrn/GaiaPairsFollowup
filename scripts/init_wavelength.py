@@ -3,24 +3,20 @@ Generate a rough, initial wavelength solution for a 1D spectrum.
 
 TODO:
 - Make wavelength button better (icon and make sure it doesn't stay pressed)
-- Add a "done" button to quit gracefully
 
 """
 
 # Standard library
-import os
 from os import path
 import logging
 
 # Third-party
-from astropy.io import fits
-import astropy.units as u
 import ccdproc
 from ccdproc import CCDData
 from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
 import numpy as np
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from scipy.interpolate import InterpolatedUnivariateSpline
 

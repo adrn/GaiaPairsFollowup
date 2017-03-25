@@ -404,7 +404,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-p', '--path', dest='night_path', required=True,
                         help='Path to a single night or chunk of data to process.')
-    parser.add_argument('--skip-list', dest='skip_list_file', default=None,
+    parser.add_argument('--skiplist', dest='skip_list_file', default=None,
                         help='Path to a file containing a list of filenames (not '
                              'paths) to skip.')
 

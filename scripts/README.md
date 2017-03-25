@@ -44,3 +44,26 @@ python init_wavelength.py -p ../data/mdm-spring-2017/n1_proc/proc_n1.0137.fit \
 --linelist=../comoving_rv/longslit/arc/hgne.txt -v
 ```
 
+If you've already run the interactive script and have an initial guess for the
+auto-identification of the lines, you can specify a CSV file containing two
+columns (pixel and wavelength):
+
+```bash
+python init_wavelength.py -p ../data/mdm-spring-2017/n1_proc/proc_n1.0137.fit \
+--linelist=../comoving_rv/longslit/arc/hgne.txt \
+--init-file=../data/mdm-spring-2017/n1_proc/init_wavelength.csv -v
+```
+
+The residuals should all be <~0.02 Angstroms.
+
+This outputs a pixel-to-wavelength map file in the same processed directory
+(in this case, ``../data/mdm-spring-2017/n1_proc/``) called
+``master_wavelength.csv``.
+
+Full wavelength calibration
+---------------------------
+
+The last step in the reduction process is to add wavelength values to the 1D
+extracted spectrum files (i.e. map the pixel values to wavelength values and add
+a column). This is done in two steps. For the first step, a polynomial function
+is fit to the

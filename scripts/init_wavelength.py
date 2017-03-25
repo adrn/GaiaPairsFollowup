@@ -377,11 +377,11 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
     pix = gui.solution['pixel']
 
     # write the pixel-wavelength nodes out to file
-    # with open(path.join(output_path, 'pix_to_wavelength.txt'), 'w') as f:
-    #     txt = ["# pixel wavelength"]
-    #     for row in zip(pix, wav):
-    #         txt.append("{:.5f} {:.5f}".format(*row))
-    #     f.write("\n".join(txt))
+    with open(path.join(output_path, 'master_wavelength.csv'), 'w') as f:
+        txt = ["# pixel, wavelength"]
+        for row in zip(pix, wav):
+            txt.append("{:.5f},{:.5f}".format(*row))
+        f.write("\n".join(txt))
 
     # TODO:
     fig2,axes2 = plt.subplots(2,1,figsize=(6,10))

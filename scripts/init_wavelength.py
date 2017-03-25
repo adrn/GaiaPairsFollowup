@@ -37,7 +37,7 @@ logger.propagate = False
 
 class GUIWavelengthSolver(object):
 
-    def __init__(self, pix, flux, flux_ivar=None, line_list=None):
+    def __init__(self, pix, flux, flux_ivar=None, line_list=None, init_map=None):
 
         # the spectrum data
         self.pix = pix
@@ -63,20 +63,22 @@ class GUIWavelengthSolver(object):
 
         # for caching
         self._map_dict = dict()
-        self._map_dict['wavel'] = []
-        self._map_dict['pixel'] = []
+
+        if init_map is None:
+            self._map_dict['wavel'] = []
+            self._map_dict['pixel'] = []
+
+        else:
+            self._map_dict['wavel'] = init_map['wavelength']
+            self._map_dict['pixel'] = init_map['pixel']
+
         self._line_std_G = None
         self._line_fwhm_L = None
         self._done_wavel_idx = []
 
-        # HACKKKKKKKK
-        # FOR TESTING:
-        self._map_dict = {
-            'pixel': [253.49776567137448, 350.48933365660855, 385.96682800595414, 611.8830370457823, 630.946098741436, 669.8844149439807, 702.3222611485875, 715.2450530491801, 766.3584402721303, 799.4864395301523, 832.6808030334421, 893.072235880927, 989.9800544605185, 1227.524397964227],
-            'wavel': [7438.8984, 7245.1666, 7173.9381, 6717.043, 6678.2762, 6598.9529, 6532.8822, 6506.5281, 6402.246, 6334.4278, 6266.495, 6143.0626, 5944.8342, 5460.74]
-        }
-        self._line_std_G = 6.14034197e-01
-        self._line_fwhm_L = 1.00875218e-01
+        # HACK: magic numbers, initial line widths
+        self._line_std_G = 0.6
+        self._line_fwhm_L = 0.1
 
         # for storing UI elements
         self._ui = dict()
@@ -302,7 +304,7 @@ class GUIWavelengthSolver(object):
         self.solution['pixel'] = self._map_dict['pixel']
         plt.close(self.fig)
 
-def main(proc_path, linelist_file, overwrite=False):
+def main(proc_path, linelist_file, init_file=None, overwrite=False):
     """ """
 
     proc_path = path.realpath(path.expanduser(proc_path))
@@ -344,6 +346,19 @@ def main(proc_path, linelist_file, overwrite=False):
 
     logger.info("Using file: {}".format(wavelength_data_file))
 
+    if init_file is not None:
+        logger.info("Using initial guess at pixel-to-wavelength mapping from "
+                    "initialization file: {}".format(init_file))
+
+        d = np.genfromtxt(init_file, names=True, delimiter=',')
+
+        init_map = dict()
+        init_map['pixel'] = d['pixel']
+        init_map['wavelength'] = d['wavelength']
+
+    else:
+        init_map = None
+
     # read 2D CCD data
     ccd = CCDData.read(wavelength_data_file)
 
@@ -356,23 +371,23 @@ def main(proc_path, linelist_file, overwrite=False):
     flux_ivar[np.isnan(flux_ivar)] = 0.
 
     gui = GUIWavelengthSolver(col_pix, flux, flux_ivar=flux_ivar,
-                              line_list=line_list)
+                              line_list=line_list, init_map=init_map)
 
     wav = gui.solution['wavelength']
     pix = gui.solution['pixel']
 
     # write the pixel-wavelength nodes out to file
-    with open(path.join(output_path, 'pix_to_wavelength.txt'), 'w') as f:
-        txt = ["# pixel wavelength"]
-        for row in zip(pix, wav):
-            txt.append("{:.5f} {:.5f}".format(*row))
-        f.write("\n".join(txt))
+    # with open(path.join(output_path, 'pix_to_wavelength.txt'), 'w') as f:
+    #     txt = ["# pixel wavelength"]
+    #     for row in zip(pix, wav):
+    #         txt.append("{:.5f} {:.5f}".format(*row))
+    #     f.write("\n".join(txt))
 
     # TODO:
     fig2,axes2 = plt.subplots(2,1,figsize=(6,10))
     axes2[0].plot(pix, wav, linestyle='none', marker='o')
 
-    coef = np.polynomial.polynomial.polyfit(pix, wav, deg=11) # MAGIC NUMBER
+    coef = np.polynomial.polynomial.polyfit(pix, wav, deg=9) # MAGIC NUMBER
     pred = np.polynomial.polynomial.polyval(pix, coef)
     axes2[1].plot(pix, wav-pred,
                   linestyle='none', marker='o')
@@ -399,6 +414,10 @@ if __name__ == "__main__":
                         help='Path to a text file where the 0th column is a list of '
                              'emission lines for the comparison lamp. Default is to '
                              'require the user to enter exact wavelengths.')
+    parser.add_argument('--init-file', dest='init_file', type=str, default=None,
+                        help='Path to a CSV file where the 0th column is a list of '
+                             'pixel values and the 1st column is a list of wavelength '
+                             'values to initialize the auto-solution.')
 
     args = parser.parse_args()
 

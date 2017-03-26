@@ -5,7 +5,7 @@ RM          = rm -rf
 TMP_SUFFS   = pdf aux bbl blg log dvi ps eps out brf
 CHECK_RERUN =
 
-NAME = mwgcs
+NAME = gwb-followup
 
 all: ${NAME}.pdf
 

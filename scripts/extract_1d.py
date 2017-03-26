@@ -23,7 +23,7 @@ Wavelength calibration and radial velocity corrections are handled in
 subsequent scripts.
 
 TODO:
-- add support for pixel masks to remove nearby sources
+-
 
 """
 
@@ -36,6 +36,7 @@ import logging
 from astropy.table import Table
 from astropy.io import fits
 from astropy.modeling.models import Polynomial1D
+from astropy.nddata.nduncertainty import StdDevUncertainty
 import astropy.units as u
 import ccdproc
 from ccdproc import CCDData
@@ -43,6 +44,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import leastsq
 from scipy.stats import scoreatpercentile
+import yaml
 
 # Project
 from comoving_rv.log import logger
@@ -59,9 +61,50 @@ oscan_size = 64
 #
 # -------------------------------
 
+def make_nearby_source_mask(mask_spec, ccd_shape):
+    """
+    Construct and return a boolean array mask to remove pixels
+    from the CCD image where there is a nearby source. The mask
+    is True where the pixels should be removed, or where the
+    uncertainty should be set to inf.
+
+    Parameters
+    ----------
+    mask_spec : list
+        Read from a mask specification yaml file. Should be a list
+        of dicts that contain 2 keys:
+
+            'top_bottom' : iterable
+                A length-2 iterable specifying the mask trace column
+                center at the top and bottom of the CCD region.
+            'width' : numeric
+                Width of the source mask.
+
+    ccd_shape : iterable
+        A tuple specifying the shape of the CCD.
+    """
+
+    n_row,n_col = ccd_shape
+    mask = np.zeros((n_row, n_col)).astype(bool)
+
+    for spec in mask_spec:
+        x1,x2 = spec['top_bottom'][::-1]
+        y1,y2 = 250,n_row-250
+
+        def mask_cen_func(row):
+            return (x2-x1)/(y2-y1) * (row - y1) + x1
+
+        for i in range(n_row):
+            j1 = int(np.floor(mask_cen_func(i) - spec['width']/2.))
+            j2 = int(np.ceil(mask_cen_func(i) + spec['width']/2.)) + 1
+            mask[i,j1:j2] = 1
+
+    return mask
+
 def process_raw_frame(ccd, master_bias, master_flat,
                       oscan_idx, oscan_size,
-                      ccd_gain, ccd_readnoise):
+                      ccd_gain, ccd_readnoise,
+                      nearby_source_mask=None):
     """
     Bias and flat-correct a raw CCD frame.
     """
@@ -95,6 +138,11 @@ def process_raw_frame(ccd, master_bias, master_flat,
 
     # comsic ray cleaning - this updates the uncertainty array as well
     nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
+
+    if nearby_source_mask is not None:
+        stddev = nccd.uncertainty.array
+        stddev[nearby_source_mask] = np.inf
+        ccd.uncertainty = StdDevUncertainty(stddev)
 
     return nccd
 
@@ -202,7 +250,7 @@ def extract_1d(ccd, lsf_p):
 
     return tbl
 
-def main(night_path, skip_list_file, overwrite=False):
+def main(night_path, skip_list_file, mask_file, overwrite=False):
     """
     See argparse block at bottom of script for description of parameters.
     """
@@ -224,6 +272,14 @@ def main(night_path, skip_list_file, overwrite=False):
 
     else:
         skip_list = []
+
+    # look for pixel mask file
+    if mask_file is not None:
+        with open(mask_file, 'r') as f:
+            pixel_mask_spec = yaml.load(f.read())
+
+    else:
+        pixel_mask_spec = None
 
     # generate the raw image file collection to process
     ic = SkippableImageFileCollection(night_path, skip_filenames=skip_list)
@@ -301,16 +357,29 @@ def main(night_path, skip_list_file, overwrite=False):
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
         new_fname = path.join(output_path, 'proc_{}'.format(fname))
 
-        logger.debug("\tProcessing '{}'".format(hdu.header['OBJECT']))
+        logger.debug("\tProcessing '{}' [{}]".format(hdu.header['OBJECT'], fname))
         if path.exists(new_fname) and not overwrite:
             logger.log(1, "\t\tAlready done! {}".format(new_fname))
             continue
 
         # read CCD frame
         ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
+
+        # check for a pixel mask
+        if pixel_mask_spec is not None and pixel_mask_spec.get(fname, None) is not None:
+            mask = make_nearby_source_mask(pixel_mask_spec[fname],
+                                           ccd_shape=ccd.shape)
+            logger.debug("\t\tSource mask loaded.")
+
+        else:
+            mask = None
+            logger.debug("\t\tNo source mask found.")
+
+        # process the frame!
         nccd = process_raw_frame(ccd, master_bias, master_flat,
                                  oscan_idx, oscan_size,
-                                 ccd_gain, ccd_readnoise)
+                                 ccd_gain, ccd_readnoise,
+                                 nearby_source_mask=mask)
         nccd.write(new_fname, overwrite=overwrite)
 
     # ==============================
@@ -404,6 +473,9 @@ if __name__ == "__main__":
     parser.add_argument('--skiplist', dest='skip_list_file', default=None,
                         help='Path to a file containing a list of filenames (not '
                              'paths) to skip.')
+    parser.add_argument('--mask', dest='mask_file', default=None,
+                        help='Path to a YAML file containing pixel regions to ignore '
+                             'in each frame. Useful for masking nearby sources.')
 
     args = parser.parse_args()
 
@@ -428,4 +500,5 @@ if __name__ == "__main__":
 
     main(night_path=args.night_path,
          skip_list_file=args.skip_list_file,
-         overwrite=args.overwrite)
+         overwrite=args.overwrite,
+         mask_file=args.mask_file)

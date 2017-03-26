@@ -21,15 +21,9 @@ from PyQt5.QtCore import Qt
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 # Package
+from comoving_rv.log import logger
 from comoving_rv.longslit import voigt_polynomial
 from comoving_rv.longslit.wavelength import fit_emission_line
-
-logger = logging.getLogger('init_wavelength')
-formatter = logging.Formatter('%(levelname)s:%(name)s:  %(message)s')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.propagate = False
 
 class GUIWavelengthSolver(object):
 

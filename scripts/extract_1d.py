@@ -24,7 +24,6 @@ subsequent scripts.
 
 TODO:
 - add support for pixel masks to remove nearby sources
-- for now, have to manually specify rectangular or tilted pixel mask...see google sheet
 
 """
 
@@ -46,6 +45,7 @@ from scipy.optimize import leastsq
 from scipy.stats import scoreatpercentile
 
 # Project
+from comoving_rv.log import logger
 from comoving_rv.longslit import SkippableImageFileCollection
 from comoving_rv.longslit.models import voigt
 
@@ -58,13 +58,6 @@ oscan_idx = 300
 oscan_size = 64
 #
 # -------------------------------
-
-logger = logging.getLogger('extract_1d')
-formatter = logging.Formatter('%(levelname)s:%(name)s:  %(message)s')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.propagate = False
 
 def process_raw_frame(ccd, master_bias, master_flat,
                       oscan_idx, oscan_size,

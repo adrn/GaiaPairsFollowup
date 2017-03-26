@@ -24,16 +24,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Project
+from comoving_rv.log import logger
 from comoving_rv.longslit import SkippableImageFileCollection
 from comoving_rv.longslit import voigt_polynomial
 from comoving_rv.longslit.wavelength import fit_spec_line
-
-logger = logging.getLogger('wavelength_calibrate')
-formatter = logging.Formatter('%(levelname)s:%(name)s:  %(message)s')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.propagate = False
 
 def bary_vel_corr(time, skycoord, location=None):
     """

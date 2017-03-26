@@ -22,10 +22,9 @@ python extract_1d.py -p ../data/mdm-spring-2017/n2 \
 The above example will process all files in the path
 ``../data/mdm-spring-2017/n1``, skipping any file listed in
 ``../data/mdm-spring-2017/n1/skip_files.txt``. The processed 2D frame files will
-be output to the path ``../data/mdm-spring-2017/n1_proc`` (for processed)
-starting with the name ``proc_*``. The 1D extracted spectra (not wavelength
-calibrated) will also be in this directory with filenames that start
-``1d_proc_*``.
+be output to the path ``../data/mdm-spring-2017/n1_processed`` starting with the
+name ``p_*``. The 1D extracted spectra (not wavelength calibrated) will also
+be in this directory with filenames that start ``1d_*``.
 
 Initializing the wavelength solution
 ------------------------------------
@@ -40,7 +39,7 @@ Angstroms, this file is provided in ``comoving_rv/longslit/arc/hgne.txt``. For
 example:
 
 ```bash
-python init_wavelength.py -p ../data/mdm-spring-2017/n1_proc/proc_n1.0137.fit \
+python init_wavelength.py -p ../data/mdm-spring-2017/n1_processed/p_n1.0137.fit
 --linelist=../comoving_rv/longslit/arc/hgne.txt -v
 ```
 

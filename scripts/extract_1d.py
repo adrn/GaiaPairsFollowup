@@ -23,7 +23,8 @@ Wavelength calibration and radial velocity corrections are handled in
 subsequent scripts.
 
 TODO:
--
+- Make the functions below part of a class so we can store diagnostic
+    plots along the way (easily keep track of paths)
 
 """
 
@@ -170,6 +171,17 @@ def get_lsf_pars(ccd, row_idx=800): # MAGIC NUMBER
     # initial guess for optimization
     p0 = [flux.max(), pix[np.argmax(flux)], 1., 1., scoreatpercentile(flux[flux>0], 16.)]
     p_opt,ier = leastsq(lsf_chi, x0=p0, args=(pix, flux, flux_ivar))
+
+    # TODO: save diagnostic plots
+    # plt.figure()
+    # plt.plot(pix, flux, marker='', drawstyle='steps-mid')
+    # plt.errorbar(pix, flux, 1/np.sqrt(flux_ivar),
+    #              marker='', linestyle='none', ecolor='#777777', zorder=-10)
+    # _grid = np.linspace(pix.min(), pix.max(), 1024)
+    # plt.plot(_grid, lsf_model(p_opt, _grid),
+    #          marker='', drawstyle='steps-mid', zorder=10, alpha=0.7)
+    # plt.yscale('log')
+    # plt.show()
 
     if ier < 1 or ier > 4:
         raise RuntimeError("Failed to fit for LSF at row {}".format(row_idx))
@@ -388,7 +400,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
 
     logger.info("Beginning comp. lamp frame processing...")
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='COMP'):
-        new_fname = path.join(output_path, 'proc_{}'.format(fname))
+        new_fname = path.join(output_path, 'p_{}'.format(fname))
 
         logger.debug("\tProcessing '{}'".format(hdu.header['OBJECT']))
         if path.exists(new_fname) and not overwrite:
@@ -406,14 +418,14 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
     # Extract 1D spectra
     # ==================
 
-    proc_ic = SkippableImageFileCollection(output_path, glob_pattr='proc_*')
+    proc_ic = SkippableImageFileCollection(output_path, glob_pattr='p_*')
     logger.info("{} raw frames already processed".format(len(proc_ic.files)))
 
     logger.info("Beginning 1D extraction...")
     for ccd, fname in proc_ic.ccds(return_fname=True, imagetyp='OBJECT'):
         logger.debug("\tExtracting '{}' [{}]".format(ccd.header['OBJECT'], fname))
 
-        fname_1d = path.join(output_path, '1d_{}'.format(fname))
+        fname_1d = path.join(output_path, '1d_{}'.format(fname[2:]))
         if path.exists(fname_1d) and not overwrite:
             logger.log(1, "\t\tAlready extracted! {}".format(fname_1d))
             continue
@@ -427,31 +439,32 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
             logger.error('--- Failed! --- {}'.format(e))
             continue
 
-        # # PLOT!!!
-        # fig,axes = plt.subplots(1, 2, figsize=(12,8), sharex='row')
+        # if fname == 'p_n1.0024.fit':
+        #     # PLOT!!!
+        #     fig,axes = plt.subplots(1, 2, figsize=(12,8), sharex='row')
 
-        # axes[0].plot(tbl['pix'], tbl['source_flux'], marker='', drawstyle='steps-mid')
-        # axes[0].errorbar(tbl['pix'], tbl['source_flux'], 1/np.sqrt(tbl['source_ivar']),
-        #                  linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
-        # axes[0].set_ylim(1e2, np.nanmax(tbl['source_flux']))
-        # axes[0].set_yscale('log')
+        #     axes[0].plot(tbl['pix'], tbl['source_flux'], marker='', drawstyle='steps-mid')
+        #     axes[0].errorbar(tbl['pix'], tbl['source_flux'], 1/np.sqrt(tbl['source_ivar']),
+        #                      linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        #     axes[0].set_ylim(1e2, np.nanmax(tbl['source_flux']))
+        #     axes[0].set_yscale('log')
 
-        # axes[1].plot(tbl['pix'], tbl['background_flux'], marker='', drawstyle='steps-mid')
-        # axes[1].errorbar(tbl['pix'], tbl['background_flux'], 1/np.sqrt(tbl['background_ivar']),
-        #                  linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
-        # axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
-        # axes[1].set_yscale('log')
+        #     axes[1].plot(tbl['pix'], tbl['background_flux'], marker='', drawstyle='steps-mid')
+        #     axes[1].errorbar(tbl['pix'], tbl['background_flux'], 1/np.sqrt(tbl['background_ivar']),
+        #                      linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        #     axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
+        #     axes[1].set_yscale('log')
 
-        # fig.tight_layout()
+        #     fig.tight_layout()
 
-        # plt.show()
-        # return
+        #     plt.show()
+        #     return
 
         hdu0 = fits.PrimaryHDU(header=ccd.header)
         hdu1 = fits.table_to_hdu(tbl)
         hdulist = fits.HDUList([hdu0, hdu1])
 
-        hdulist.writeto(fname_1d)
+        hdulist.writeto(fname_1d, overwrite=overwrite)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

@@ -11,8 +11,13 @@ Processing the raw CCD frames
 
 The first step is to bias-correct, flat-correct, and trim the raw frames. Some
 exposures may be known to be bad -- you can specify filenames to skip by
-creating a text file with one filename per line (in this case,
-``skip_files.txt``):
+creating a text file with one filename per line (in this case, ``n1_skip.txt``).
+Some frames will contain multiple sources. You can specify pixel mask regions to
+remove these extra sources by specifing a mask file (in this case,
+``n1_masks.yml``). See ``config/n1_masks.yml`` for an example of the expected
+format; ``top_bottom`` is the central column position of the mask at the top and
+bottom of the CCD as view from a DS9 window (top is larger row index values). To
+do the processing, run:
 
 ```bash
 python extract_1d.py -p ../data/mdm-spring-2017/n1 \
@@ -21,11 +26,11 @@ python extract_1d.py -p ../data/mdm-spring-2017/n1 \
 ```
 
 The above example will process all files in the path
-``../data/mdm-spring-2017/n1``, skipping any file listed in
-``../data/mdm-spring-2017/n1/skip_files.txt``. The processed 2D frame files will
-be output to the path ``../data/mdm-spring-2017/n1_processed`` starting with the
-name ``p_*``. The 1D extracted spectra (not wavelength calibrated) will also
-be in this directory with filenames that start ``1d_*``.
+``../data/mdm-spring-2017/n1``, skipping any file listed in ``n1_skip.txt``. The
+processed 2D frame files will be output to the path
+``../data/mdm-spring-2017/n1_processed`` starting with the name ``p_*``. The 1D
+extracted spectra (not wavelength calibrated) will also be in this directory
+with filenames that start ``1d_*``.
 
 Initializing the wavelength solution
 ------------------------------------

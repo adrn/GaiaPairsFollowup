@@ -72,8 +72,17 @@ Full wavelength calibration
 
 The last step in the reduction process is to add wavelength values to the 1D
 extracted spectrum files (i.e. map the pixel values to wavelength values and add
-a column). This is done in two steps. For the first step, a polynomial function
-is fit to the
+a column). The rough wavelength calibration is added in place to the 1D spectrum
+FITS file by running the ``wavelength_calibrate.py`` script. This is done by
+reading the ``master_wavelength.csv`` file created in the previous step, fitting
+a polynomial to the pixel vs. wavelength values of the identified spectral lines
+in the arc lamp, and then computing wavelength values for the pixel grid. You
+can specify the order (degree) of the polynomial using ``--polyorder``:
+
+```bash
+python wavelength_calibrate.py -p ../data/mdm-spring-2017/n1_processed/ \
+--polyorder=9 -v
+```
 
 
 Radial velocity determination

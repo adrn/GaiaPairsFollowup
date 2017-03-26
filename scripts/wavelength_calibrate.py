@@ -37,7 +37,7 @@ def add_wavelength(filename, wavelength_coef, overwrite=False):
     new_hdulist = fits.HDUList([hdulist[0], new_hdu1])
 
     logger.debug("\tWriting out file with wavelength array.")
-    new_hdulist.writeto(filename, overwrite=overwrite)
+    new_hdulist.writeto(filename, overwrite=True)
 
 def main(proc_path, polynomial_order, overwrite=False):
 
@@ -79,7 +79,7 @@ def main(proc_path, polynomial_order, overwrite=False):
         add_wavelength(data_file, coef, overwrite=overwrite)
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_proc_*')
+        proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_*')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
 
         logger.info("Beginning wavelength calibration...")

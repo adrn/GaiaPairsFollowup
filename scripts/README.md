@@ -15,8 +15,8 @@ creating a text file with one filename per line (in this case,
 ``skip_files.txt``):
 
 ```bash
-python extract_1d.py -p ../data/mdm-spring-2017/n1 \
---skiplist=../data/mdm-spring-2017/n1/skip_files.txt -v
+python extract_1d.py -p ../data/mdm-spring-2017/n2 \
+--skiplist=../data/mdm-spring-2017/n2/skip_files.txt -v
 ```
 
 The above example will process all files in the path

@@ -1,0 +1,51 @@
+n3.0031.fit:
+  - top_bottom: [221, 217]
+    width: 8
+n3.0032.fit:
+  - top_bottom: [33, 31]
+    width: 8
+n3.0035.fit:
+  - top_bottom: [180, 176]
+    width: 8
+n3.0039.fit:
+  - top_bottom: [111, 106]
+    width: 8
+n3.0082.fit:
+  - top_bottom: [241, 239]
+    width: 8
+n3.0125.fit:
+  - top_bottom: [173, 169]
+    width: 12
+n3.0127.fit:
+  - top_bottom: [136, 133]
+    width: 10
+n3.0145.fit:
+  - top_bottom: [89, 93]
+    width: 8
+n3.0159.fit:
+  - top_bottom: [54, 50]
+    width: 8
+n3.0160.fit:
+  - top_bottom: [51, 47]
+    width: 8
+n3.0191.fit:
+  - top_bottom: [34, 31]
+    width: 10
+n3.0202.fit:
+  - top_bottom: [73, 69]
+    width: 8
+n3.0203.fit:
+  - top_bottom: [119, 115]
+    width: 8
+n3.0205.fit:
+  - top_bottom: [235, 232]
+    width: 8
+n3.0211.fit:
+  - top_bottom: [190, 187]
+    width: 8
+n3.0212.fit:
+  - top_bottom: [264, 261]
+    width: 10
+n3.0218.fit:
+  - top_bottom: [65, 61]
+    width: 8

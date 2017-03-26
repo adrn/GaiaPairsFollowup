@@ -1,0 +1,29 @@
+n1.0024.fit:
+  - top_bottom: [192, 188]
+    width: 8
+n1.0028.fit:
+  - top_bottom: [151, 147]
+    width: 10
+  - top_bottom: [103, 97]
+    width: 8
+n1.0029.fit:
+  - top_bottom: [130, 126]
+    width: 13
+n1.0028.fit:
+  - top_bottom: [151, 147]
+    width: 10
+n1.0031.fit:
+  - top_bottom: [5, 5]
+    width: 20
+n1.0067.fit:
+  - top_bottom: [227, 223]
+    width: 8
+n1.0071.fit:
+  - top_bottom: [5, 5]
+    width: 20
+n1.0081.fit:
+  - top_bottom: [214, 212]
+    width: 8
+n1.0107.fit:
+  - top_bottom: [130, 124]
+    width: 10

@@ -1,0 +1,24 @@
+n5.0048.fit:
+  - top_bottom: [247, 243]
+    width: 10
+n5.0056.fit:
+  - top_bottom: [160, 156]
+    width: 8
+n5.0057.fit:
+  - top_bottom: [168, 164]
+    width: 10
+n5.0058.fit:
+  - top_bottom: [167, 163]
+    width: 8
+n5.0130.fit:
+  - top_bottom: [144, 139]
+    width: 7
+n5.0183.fit:
+  - top_bottom: [208, 201]
+    width: 14
+n5.0208.fit:
+  - top_bottom: [69, 65]
+    width: 8
+n5.0212.fit:
+  - top_bottom: [213, 209]
+    width: 8

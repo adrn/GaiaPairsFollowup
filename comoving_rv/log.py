@@ -27,6 +27,8 @@ class PackageLogger(Logger):
         sh = StreamHandler()
         self.addHandler(sh)
 
+        self.propagate = False
+
     def makeRecord(self, name, level, pathname, lineno, msg, args, exc_info,
                    func=None, extra=None, sinfo=None):
         if extra is None:

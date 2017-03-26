@@ -261,7 +261,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
     logger.info("Reading data from path: {}".format(night_path))
 
     base_path, name = path.split(night_path)
-    output_path = path.realpath(path.join(base_path, '{}_proc'.format(name)))
+    output_path = path.realpath(path.join(base_path, '{}_processed'.format(name)))
     os.makedirs(output_path, exist_ok=True)
     logger.info("Saving processed files to path: {}".format(output_path))
 
@@ -355,7 +355,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
 
     logger.info("Beginning object frame processing...")
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
-        new_fname = path.join(output_path, 'proc_{}'.format(fname))
+        new_fname = path.join(output_path, 'p_{}'.format(fname))
 
         logger.debug("\tProcessing '{}' [{}]".format(hdu.header['OBJECT'], fname))
         if path.exists(new_fname) and not overwrite:
@@ -411,7 +411,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
 
     logger.info("Beginning 1D extraction...")
     for ccd, fname in proc_ic.ccds(return_fname=True, imagetyp='OBJECT'):
-        logger.debug("\tExtracting '{}'".format(ccd.header['OBJECT']))
+        logger.debug("\tExtracting '{}' [{}]".format(ccd.header['OBJECT'], fname))
 
         fname_1d = path.join(output_path, '1d_{}'.format(fname))
         if path.exists(fname_1d) and not overwrite:

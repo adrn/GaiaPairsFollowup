@@ -1,0 +1,46 @@
+python extract_1d.py -p ../data/mdm-spring-2017/n1 \
+--skiplist=../config/mdm-spring-2017/n1_skip.txt \
+--mask=../config/mdm-spring-2017/n1_masks.yml -v
+
+python init_wavelength.py -p ../data/mdm-spring-2017/n1_processed/ \
+--linelist=../config/mdm-spring-2017/hgne.txt -v
+
+
+
+python extract_1d.py -p ../data/mdm-spring-2017/n2 \
+--skiplist=../config/mdm-spring-2017/n2_skip.txt \
+--mask=../config/mdm-spring-2017/n2_masks.yml -v
+
+python init_wavelength.py -p ../data/mdm-spring-2017/n2_processed/ \
+--linelist=../config/mdm-spring-2017/hgne.txt -v \
+--init-file=../config/mdm-spring-2017/init_wavelength.csv -v
+
+
+
+python extract_1d.py -p ../data/mdm-spring-2017/n3 \
+--skiplist=../config/mdm-spring-2017/n3_skip.txt \
+--mask=../config/mdm-spring-2017/n3_masks.yml -v
+
+python init_wavelength.py -p ../data/mdm-spring-2017/n2_processed/ \
+--linelist=../config/mdm-spring-2017/hgne.txt -v \
+--init-file=../config/mdm-spring-2017/init_wavelength.csv -v
+
+
+
+python extract_1d.py -p ../data/mdm-spring-2017/n4 \
+--skiplist=../config/mdm-spring-2017/n4_skip.txt \
+--mask=../config/mdm-spring-2017/n4_masks.yml -v
+
+python init_wavelength.py -p ../data/mdm-spring-2017/n4_processed/ \
+--linelist=../config/mdm-spring-2017/hgne.txt -v \
+--init-file=../config/mdm-spring-2017/init_wavelength.csv -v
+
+
+
+python extract_1d.py -p ../data/mdm-spring-2017/n5 \
+--skiplist=../config/mdm-spring-2017/n5_skip.txt \
+--mask=../config/mdm-spring-2017/n5_masks.yml -v
+
+python init_wavelength.py -p ../data/mdm-spring-2017/n5_processed/ \
+--linelist=../config/mdm-spring-2017/hgne.txt -v \
+--init-file=../config/mdm-spring-2017/init_wavelength.csv -v

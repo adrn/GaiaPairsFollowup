@@ -1,6 +1,7 @@
 """
 
 TODO:
+- Need to do sky-spectrum adjustments here
 - Some sky spectra have [OI] 5577Å, others have [OI] 6300Å, others have
     neither...wat do?!
 
@@ -17,6 +18,71 @@ import numpy as np
 # Project
 from comoving_rv.log import logger
 from comoving_rv.longslit import SkippableImageFileCollection
+from comoving_rv.longslit.wavelength import fit_spec_line
+from comoving_rv.longslit.models import voigt_polynomial
+
+def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
+    """
+    Arc lamp spectrum determines non-linear relation between pixel and
+    wavelength. This function tries to find a bright sky line to use to
+    determine small absolute shifts to the wavelength solution. This
+    works by fitting a Voigt profile to the [OI] line at 6300Å and
+    5577Å and uses the line with a larger amplitude. If neither line has
+    an amplitude > XX TODO, it raises an error.
+
+    Parameters
+    ----------
+    TODO
+    """
+
+    wavelength = np.array(wavelength)
+    bg_flux = np.array(bg_flux)
+    bg_ivar = np.array(bg_ivar)
+
+    # for target_wave in [5577.3387]:
+    #   [OI] from: http://www.star.ucl.ac.uk/~msw/lines.html
+    target_wave = 5577.3387
+
+    # extract region of SKY spectrum around line
+    _i1 = np.argmin(np.abs(wavelength - (target_wave-25)))
+    _i2 = np.argmin(np.abs(wavelength - (target_wave+25)))
+    i1 = min(_i1, _i2)
+    i2 = max(_i1, _i2)
+
+    wave = wavelength[i1:i2+1]
+    flux = bg_flux[i1:i2+1]
+    ivar = bg_ivar[i1:i2+1]
+
+    try:
+        OI_fit_p = fit_spec_line(wave, flux, ivar, std_G0=1.,
+                                 n_bg_coef=2, target_x=target_wave,
+                                 absorp_emiss=1.)
+    except (RuntimeError, ValueError) as e:
+        print("FIT FAILED")
+        raise RuntimeError("FAILED TO FIT [OI] sky line")
+        # TODO: if fail, what do?
+
+    logger.debug("[OI] {:.2f}, ∆x_0: {:.3f}, amp: {:.3e}".format(target_wave,
+                                                                 OI_fit_p['x_0']-target_wave,
+                                                                 OI_fit_p['amp']))
+
+    if plot:
+        _grid = np.linspace(wave.min(), wave.max(), 512)
+        fit_flux = voigt_polynomial(_grid, **OI_fit_p)
+
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(14,8))
+        plt.plot(wave, flux, marker='', drawstyle='steps-mid', alpha=0.5)
+        plt.errorbar(wave, flux, 1/np.sqrt(ivar), linestyle='none',
+                     marker='', ecolor='#666666', alpha=0.75, zorder=-10)
+        plt.plot(_grid, fit_flux, marker='', alpha=0.75)
+        plt.show()
+
+    if OI_fit_p['amp'] < 10.:
+        logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
+        return 0.
+
+    return OI_fit_p['x_0']-target_wave
 
 def add_wavelength(filename, wavelength_coef, overwrite=False):
     hdulist = fits.open(filename)
@@ -29,10 +95,18 @@ def add_wavelength(filename, wavelength_coef, overwrite=False):
 
     if 'wavelength' in tbl.colnames and not overwrite:
         logger.debug("\tTable already contains wavelength values!")
+        return
 
     # compute wavelength array for the pixels
     tbl['wavelength'] = np.polynomial.polynomial.polyval(tbl['pix'],
                                                          wavelength_coef)
+
+    # TODO: here, need to do sky line adjustment to wavelength values
+    dlambda = sky_line_shift(tbl['wavelength'], tbl['background_flux'],
+                             tbl['background_ivar'],
+                             plot=True)
+    tbl['wavelength'] = tbl['wavelength'] - dlambda
+
     new_hdu1 = fits.table_to_hdu(tbl)
     new_hdulist = fits.HDUList([hdulist[0], new_hdu1])
 

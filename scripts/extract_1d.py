@@ -90,7 +90,7 @@ def make_nearby_source_mask(mask_spec, ccd_shape):
 
     for spec in mask_spec:
         x1,x2 = spec['top_bottom'][::-1]
-        y1,y2 = 250,n_row-250
+        y1,y2 = 250,n_row-250 # remove top and bottom of CCD
 
         def mask_cen_func(row):
             return (x2-x1)/(y2-y1) * (row - y1) + x1
@@ -98,6 +98,8 @@ def make_nearby_source_mask(mask_spec, ccd_shape):
         for i in range(n_row):
             j1 = int(np.floor(mask_cen_func(i) - spec['width']/2.))
             j2 = int(np.ceil(mask_cen_func(i) + spec['width']/2.)) + 1
+            j1 = max(0, j1)
+            j2 = min(n_col, j2)
             mask[i,j1:j2] = 1
 
     return mask
@@ -105,7 +107,7 @@ def make_nearby_source_mask(mask_spec, ccd_shape):
 def process_raw_frame(ccd, master_bias, master_flat,
                       oscan_idx, oscan_size,
                       ccd_gain, ccd_readnoise,
-                      nearby_source_mask=None):
+                      pixel_mask_spec=None):
     """
     Bias and flat-correct a raw CCD frame.
     """
@@ -140,9 +142,14 @@ def process_raw_frame(ccd, master_bias, master_flat,
     # comsic ray cleaning - this updates the uncertainty array as well
     nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
 
-    if nearby_source_mask is not None:
+    # check for a pixel mask
+    if pixel_mask_spec is not None:
+        mask = make_nearby_source_mask(pixel_mask_spec,
+                                       ccd_shape=nccd.shape)
+        logger.debug("\t\tSource mask loaded.")
+
         stddev = nccd.uncertainty.array
-        stddev[nearby_source_mask] = np.inf
+        stddev[mask] = np.inf
         ccd.uncertainty = StdDevUncertainty(stddev)
 
     return nccd
@@ -377,21 +384,11 @@ def main(night_path, skip_list_file, mask_file, overwrite=False):
         # read CCD frame
         ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
 
-        # check for a pixel mask
-        if pixel_mask_spec is not None and pixel_mask_spec.get(fname, None) is not None:
-            mask = make_nearby_source_mask(pixel_mask_spec[fname],
-                                           ccd_shape=ccd.shape)
-            logger.debug("\t\tSource mask loaded.")
-
-        else:
-            mask = None
-            logger.debug("\t\tNo source mask found.")
-
         # process the frame!
         nccd = process_raw_frame(ccd, master_bias, master_flat,
                                  oscan_idx, oscan_size,
                                  ccd_gain, ccd_readnoise,
-                                 nearby_source_mask=mask)
+                                 pixel_mask_spec=pixel_mask_spec.get(fname, None))
         nccd.write(new_fname, overwrite=overwrite)
 
     # ==============================

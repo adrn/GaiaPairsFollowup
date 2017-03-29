@@ -3,7 +3,10 @@ import numpy as np
 from numpy.polynomial.polynomial import polyval
 from scipy.special import wofz
 
-__all__ = ['voigt', 'voigt_constant', 'voigt_polynomial']
+__all__ = ['gaussian_1d', 'voigt', 'voigt_constant', 'voigt_polynomial']
+
+def gaussian_1d(x, amp=1., x0=0., stddev=1.):
+    return amp/np.sqrt(2*np.pi)/stddev * np.exp(-0.5 * (x-x0)**2/stddev**2)
 
 def voigt(x, amp, x0, G_std, L_fwhm):
     """

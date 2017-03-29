@@ -1,3 +1,10 @@
+TODO
+====
+
+* During extract 1d step, plot many diagnostics. Plot trace vs. pixel!
+* How to figure out wavelength polynomial order? Is that introducing systematics?
+* Propagate uncertainties in arc lamp line centroids
+
 Running the extraction pipeline
 ===============================
 
@@ -83,7 +90,6 @@ can specify the order (degree) of the polynomial using ``--polyorder``:
 python wavelength_calibrate.py -p ../data/mdm-spring-2017/n1_processed/ \
 --polyorder=9 -v
 ```
-
 
 Radial velocity determination
 -----------------------------

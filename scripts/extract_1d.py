@@ -532,9 +532,6 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
 
             hdulist.writeto(fname_1d, overwrite=overwrite)
 
-        import sys
-        sys.exit(0)
-
     # ==============================
     # Process comparison lamp frames
     # ==============================
@@ -548,64 +545,12 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             logger.log(1, "\t\tAlready done! {}".format(new_fname))
             continue
 
-        # read CCD frame
-        ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
-        nccd = process_raw_frame(ccd, master_bias, master_flat,
-                                 oscan_idx, oscan_size,
-                                 ccd_gain, ccd_readnoise)
+        # process the frame!
+        ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path)
+        nccd = ext.process_raw_frame(pixel_mask_spec.get(fname, None),
+                                     master_bias=master_bias,
+                                     master_flat=master_flat,)
         nccd.write(new_fname, overwrite=overwrite)
-
-    # ==================
-    # Extract 1D spectra
-    # ==================
-
-    # proc_ic = SkippableImageFileCollection(output_path, glob_pattr='p_*')
-    # logger.info("{} raw frames already processed".format(len(proc_ic.files)))
-
-    # logger.info("Beginning 1D extraction...")
-    # for ccd, fname in proc_ic.ccds(return_fname=True, imagetyp='OBJECT'):
-    #     logger.debug("\tExtracting '{}' [{}]".format(ccd.header['OBJECT'], fname))
-
-    #     fname_1d = path.join(output_path, '1d_{}'.format(fname[2:]))
-    #     if path.exists(fname_1d) and not overwrite:
-    #         logger.log(1, "\t\tAlready extracted! {}".format(fname_1d))
-    #         continue
-
-    #     # first step is to fit a voigt profile to a middle-ish row to determine LSF
-    #     lsf_p = get_lsf_pars(ccd, row_idx=800) # MAGIC NUMBER
-
-    #     try:
-    #         tbl = extract_1d(ccd, lsf_p)
-    #     except Exception as e:
-    #         logger.error('--- Failed! --- {}'.format(e))
-    #         continue
-
-    #     # if fname == 'p_n1.0024.fit':
-    #     #     # PLOT!!!
-    #     #     fig,axes = plt.subplots(1, 2, figsize=(12,8), sharex='row')
-
-    #     #     axes[0].plot(tbl['pix'], tbl['source_flux'], marker='', drawstyle='steps-mid')
-    #     #     axes[0].errorbar(tbl['pix'], tbl['source_flux'], 1/np.sqrt(tbl['source_ivar']),
-    #     #                      linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
-    #     #     axes[0].set_ylim(1e2, np.nanmax(tbl['source_flux']))
-    #     #     axes[0].set_yscale('log')
-
-    #     #     axes[1].plot(tbl['pix'], tbl['background_flux'], marker='', drawstyle='steps-mid')
-    #     #     axes[1].errorbar(tbl['pix'], tbl['background_flux'], 1/np.sqrt(tbl['background_ivar']),
-    #     #                      linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
-    #     #     axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
-    #     #     axes[1].set_yscale('log')
-
-    #     #     fig.tight_layout()
-
-    #     #     plt.show()
-    #     #     return
-
-    #     hdu0 = fits.PrimaryHDU(header=ccd.header)
-    #     hdu1 = fits.table_to_hdu(tbl)
-    #     hdulist = fits.HDUList([hdu0, hdu1])
-
-    #     hdulist.writeto(fname_1d, overwrite=overwrite)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

@@ -1,9 +1,9 @@
 """
 
 TODO:
-- Need to do sky-spectrum adjustments here
-- Some sky spectra have [OI] 5577Å, others have [OI] 6300Å, others have
-    neither...wat do?!
+- Better propagate wavelength calibration fit (line centroid) uncertainties
+- Do some cross-validation to figure out best power-law to use to fit? pix vs. wavelength?
+- Need to do sky-spectrum adjustments here when we can
 
 """
 

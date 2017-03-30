@@ -3,6 +3,7 @@ Generate a rough, initial wavelength solution for a 1D spectrum.
 
 TODO:
 - Make wavelength button better (icon and make sure it doesn't stay pressed)
+- Store centroiding error
 
 """
 
@@ -391,7 +392,6 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
-    import logging
 
     # Define parser object
     parser = ArgumentParser(description="")

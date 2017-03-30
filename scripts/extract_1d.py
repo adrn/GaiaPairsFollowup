@@ -157,10 +157,10 @@ class CCDExtractor(object):
 
         # correct for master bias frame
         # - this does some crazy shit at the blue end, but we can live with it
-        nccd = ccdproc.subtract_bias(nccd, self.master_bias)
+        nccd = ccdproc.subtract_bias(nccd, master_bias)
 
         # correct for master flat frame
-        nccd = ccdproc.flat_correct(nccd, self.master_flat)
+        nccd = ccdproc.flat_correct(nccd, master_flat)
 
         # comsic ray cleaning - this updates the uncertainty array as well
         nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
@@ -500,16 +500,16 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         else:
             # process the frame!
             ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path)
-            nccd = ext.process_raw_frame(pixel_mask_spec.get(fname, None),
+            nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                          master_bias=master_bias,
-                                         master_flat=master_flat,)
+                                         master_flat=master_flat)
             nccd.write(new_fname, overwrite=overwrite)
 
         # -------------------------------------------
         # Now do the 1D extraction
         # -------------------------------------------
 
-        fname_1d = path.join(output_path, '1d_{}'.format(fname[2:]))
+        fname_1d = path.join(output_path, '1d_{0}'.format(fname))
         if path.exists(fname_1d) and not overwrite:
             logger.log(1, "\tAlready extracted! {}".format(fname_1d))
             continue
@@ -547,7 +547,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
 
         # process the frame!
         ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path)
-        nccd = ext.process_raw_frame(pixel_mask_spec.get(fname, None),
+        nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                      master_bias=master_bias,
                                      master_flat=master_flat,)
         nccd.write(new_fname, overwrite=overwrite)

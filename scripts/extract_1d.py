@@ -69,11 +69,11 @@ cmap = 'Greys_r'
 
 class CCDExtractor(object):
 
-    def __init__(self, filename, plot_path=None):
+    def __init__(self, filename, plot_path=None, **read_kwargs):
         # TODO: put overscan stuff, gain, etc. into CCDData.meta instead of globals
 
         # read CCD frame
-        self.ccd = CCDData.read(filename, unit='adu')
+        self.ccd = CCDData.read(filename, **read_kwargs)
         self.filename = filename
         self._filename_base = path.splitext(path.basename(self.filename))[0]
         self._obj_name = self.ccd.header['OBJECT']
@@ -165,6 +165,9 @@ class CCDExtractor(object):
         # comsic ray cleaning - this updates the uncertainty array as well
         nccd = ccdproc.cosmicray_lacosmic(nccd, sigclip=8.)
 
+        # replace ccd with processed ccd
+        self.ccd = nccd
+
         # check for a pixel mask
         if pixel_mask_spec is not None:
             mask = self.make_nearby_source_mask(pixel_mask_spec)
@@ -195,9 +198,7 @@ class CCDExtractor(object):
 
             fig.tight_layout()
             fig.savefig(path.join(self.plot_path, '{}_frame.png'.format(self._filename_base)))
-
-        # replace ccd with processed ccd
-        self.ccd = nccd
+            plt.close(fig)
 
         return nccd
 
@@ -243,6 +244,7 @@ class CCDExtractor(object):
 
             fig.tight_layout()
             fig.savefig(path.join(self.plot_path, '{0}_lsf.png'.format(self._filename_base)))
+            plt.close(fig)
 
         if ier < 1 or ier > 4:
             raise RuntimeError("Failed to fit for LSF at row {}".format(row_idx))
@@ -340,6 +342,7 @@ class CCDExtractor(object):
 
             fig.tight_layout()
             fig.savefig(path.join(self.plot_path, '{0}_1d.png'.format(self._filename_base)))
+            plt.close(fig)
 
         return tbl
 
@@ -430,6 +433,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         fig.colorbar(cs)
         fig.tight_layout()
         fig.savefig(path.join(plot_path, 'master_bias.png'))
+        plt.close(fig)
 
     # ============================
     # Create the master flat field
@@ -474,6 +478,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         fig.colorbar(cs)
         fig.tight_layout()
         fig.savefig(path.join(plot_path, 'master_flat.png'))
+        plt.close(fig)
 
     # =====================
     # Process object frames
@@ -499,7 +504,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
 
         else:
             # process the frame!
-            ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path)
+            ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
+                               unit='adu')
             nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                          master_bias=master_bias,
                                          master_flat=master_flat)
@@ -531,6 +537,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             hdulist = fits.HDUList([hdu0, hdu1])
 
             hdulist.writeto(fname_1d, overwrite=overwrite)
+
+        del ext
 
     # ==============================
     # Process comparison lamp frames

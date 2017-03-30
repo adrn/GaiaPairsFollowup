@@ -554,7 +554,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             continue
 
         # process the frame!
-        ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path)
+        ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
+                           unit='adu')
         nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                      master_bias=master_bias,
                                      master_flat=master_flat,)

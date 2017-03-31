@@ -3,12 +3,12 @@ Generate a rough, initial wavelength solution for a 1D spectrum.
 
 TODO:
 - Make wavelength button better (icon and make sure it doesn't stay pressed)
+- Fix this to keep track of uncertainty in fit at each line
 
 """
 
 # Standard library
 from os import path
-import logging
 
 # Third-party
 import ccdproc
@@ -23,7 +23,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 # Package
 from comoving_rv.log import logger
 from comoving_rv.longslit import voigt_polynomial
-from comoving_rv.longslit.wavelength import fit_emission_line
+from comoving_rv.longslit.wavelength import fit_spec_line
 
 class GUIWavelengthSolver(object):
 
@@ -57,10 +57,12 @@ class GUIWavelengthSolver(object):
         if init_map is None:
             self._map_dict['wavel'] = []
             self._map_dict['pixel'] = []
+            self._map_dict['pixel_err'] = []
 
         else:
             self._map_dict['wavel'] = init_map['wavelength']
             self._map_dict['pixel'] = init_map['pixel']
+            self._map_dict['pixel_err'] = np.zeros_like(init_map['pixel']) # TODO: hack
 
         self._line_std_G = None
         self._line_fwhm_L = None
@@ -159,7 +161,7 @@ class GUIWavelengthSolver(object):
             wave_val = self.line_list[idx]
             self._done_wavel_idx.append(idx)
 
-        line_props = self.get_line_props(xmin, xmax)
+        line_props, line_cov = self.get_line_props(xmin, xmax)
         if line_props is None:
             return
 
@@ -171,9 +173,7 @@ class GUIWavelengthSolver(object):
 
         self._map_dict['wavel'].append(wave_val)
         self._map_dict['pixel'].append(line_props['x_0'])
-
-        print(self._map_dict['wavel'])
-        print(self._map_dict['pixel'])
+        self._map_dict['pixel_err'].append(np.sqrt(line_cov[1,1]))
 
     def get_line_props(self, xmin, xmax, **kwargs):
         i1 = int(np.floor(xmin))
@@ -188,7 +188,8 @@ class GUIWavelengthSolver(object):
             flux_ivar = None
 
         try:
-            line_props = fit_emission_line(pix, flux, flux_ivar, n_bg_coef=2, **kwargs)
+            line_props,line_cov = fit_spec_line(pix, flux, flux_ivar, n_bg_coef=3,
+                                                return_cov=True, **kwargs)
         except Exception as e:
             msg = "Failed to fit line!"
             logger.error(msg)
@@ -200,7 +201,7 @@ class GUIWavelengthSolver(object):
         self._line_std_G = line_props['std_G']
         self._line_fwhm_L = line_props['fwhm_L']
 
-        return line_props
+        return line_props, line_cov
 
     def draw_line_marker(self, line_props, wavelength, xmin, xmax):
         pix_grid = np.linspace(xmin, xmax, 512)
@@ -238,6 +239,7 @@ class GUIWavelengthSolver(object):
 
         new_wavels = []
         new_pixels = []
+        new_pixel_errs = []
 
         # from Wikipedia: https://en.wikipedia.org/wiki/Voigt_profile
         fG = 2*self._line_std_G*np.sqrt(2*np.log(2))
@@ -258,9 +260,9 @@ class GUIWavelengthSolver(object):
             logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
                          .format(pix_ctr, wave))
             try:
-                lp = self.get_line_props(xmin, xmax,
-                                         std_G0=self._line_std_G,
-                                         fwhm_L0=self._line_fwhm_L)
+                lp,lc = self.get_line_props(xmin, xmax,
+                                            std_G0=self._line_std_G,
+                                            fwhm_L0=self._line_fwhm_L)
             except Exception as e:
                 logger.error("Failed to auto-fit line at {} ({msg})"
                              .format(wave, msg=str(e)))
@@ -285,6 +287,7 @@ class GUIWavelengthSolver(object):
             self.draw_line_marker(lp, wave, xmin, xmax)
             new_wavels.append(wave)
             new_pixels.append(pix_ctr)
+            new_pixel_errs.append(np.sqrt(lc[1,1]))
             self._done_wavel_idx.append(wave_idx)
 
         self.fig.canvas.draw()
@@ -292,11 +295,13 @@ class GUIWavelengthSolver(object):
         _idx = np.argsort(new_wavels)
         self._map_dict['wavel'] = np.array(new_wavels)[_idx]
         self._map_dict['pixel'] = np.array(new_pixels)[_idx]
+        self._map_dict['pixel_err'] = np.array(new_pixel_errs)[_idx]
 
     def _finish(self):
         self.solution = dict()
         self.solution['wavelength'] = self._map_dict['wavel']
         self.solution['pixel'] = self._map_dict['pixel']
+        self.solution['pixel_err'] = self._map_dict['pixel_err']
         plt.close(self.fig)
 
 def main(proc_path, linelist_file, init_file=None, overwrite=False):
@@ -361,33 +366,26 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
     # create 1D pixel and flux grids
     col_pix = np.arange(ccd.shape[0])
 
-    # HACK: this is a total hack, but seems to be ok for the comp lamp spectra we have
-    flux = np.mean(ccd.data[:,100:200], axis=1)
-    flux_ivar = np.sum(1/ccd.uncertainty[:,100:200].array**2, axis=1)
+    # HACK: this is a hack, but seems to be ok for the comp lamp spectra we have
+    flux_ivar = 1 / ccd.uncertainty[:,100:200].array**2
     flux_ivar[np.isnan(flux_ivar)] = 0.
+
+    flux = np.sum(flux_ivar * ccd.data[:,100:200], axis=1) / np.sum(flux_ivar, axis=1)
+    flux_ivar = np.sum(flux_ivar, axis=1)
 
     gui = GUIWavelengthSolver(col_pix, flux, flux_ivar=flux_ivar,
                               line_list=line_list, init_map=init_map)
 
     wav = gui.solution['wavelength']
     pix = gui.solution['pixel']
+    pix_err = gui.solution['pixel_err']
 
     # write the pixel-wavelength nodes out to file
     with open(path.join(output_path, 'master_wavelength.csv'), 'w') as f:
-        txt = ["# pixel, wavelength"]
-        for row in zip(pix, wav):
-            txt.append("{:.5f},{:.5f}".format(*row))
+        txt = ["# wavelength, pixel, pixel_err"]
+        for row in zip(wav, pix, pix_err):
+            txt.append("{:.5f},{:.5f},{:.5f}".format(*row))
         f.write("\n".join(txt))
-
-    # TODO:
-    fig2,axes2 = plt.subplots(2,1,figsize=(6,10))
-    axes2[0].plot(pix, wav, linestyle='none', marker='o')
-
-    coef = np.polynomial.polynomial.polyfit(pix, wav, deg=9) # MAGIC NUMBER
-    pred = np.polynomial.polynomial.polyval(pix, coef)
-    axes2[1].plot(pix, wav-pred,
-                  linestyle='none', marker='o')
-    plt.show()
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

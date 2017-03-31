@@ -75,7 +75,7 @@ def fit_emission_line(pix, flux, flux_ivar=None,
 def fit_spec_line(x, flux, flux_ivar=None,
                   amp0=None, x0=None, std_G0=None, fwhm_L0=None,
                   bg0=None, n_bg_coef=2, target_x=None,
-                  absorp_emiss=1.):
+                  absorp_emiss=1., return_cov=False):
     """
     Assumes that the input arrays are trimmed to be a sensible region around
     the line of interest.
@@ -107,6 +107,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
 
     if x0 is None: # estimate the initial guess for the centroid
         relmins = argrelmin(-absorp_emiss*flux)[0]
+
         if len(relmins) > 1 and target_x is None:
             raise ValueError("If auto-finding x0, must supply a target value for x.")
         elif len(relmins) == 1:
@@ -145,8 +146,6 @@ def fit_spec_line(x, flux, flux_ivar=None,
         _i = np.argmin(np.abs(x))
         amp0 = np.sqrt(2*np.pi) * (flux[_i] - (bg0[0] + bg0[1]*x[_i]))
 
-    print([amp0, 0, std_G0, fwhm_L0, bg0.tolist()])
-
     p0 = [amp0, 0., std_G0, fwhm_L0] + bg0.tolist()
     p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, p0, args=(x, flux, flux_ivar),
                                       full_output=True, maxfev=1000000,
@@ -163,6 +162,12 @@ def fit_spec_line(x, flux, flux_ivar=None,
     if fit_x0 < min(_x) or fit_x0 > max(_x):
         raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
 
-    return OrderedDict(amp=fit_amp, x_0=fit_x0,
-                       std_G=fit_std_G, fwhm_L=fit_fwhm_L,
-                       bg_coef=fit_bg)
+    par_dict = OrderedDict(amp=fit_amp, x_0=fit_x0,
+                           std_G=fit_std_G, fwhm_L=fit_fwhm_L,
+                           bg_coef=fit_bg)
+
+    if return_cov:
+        return par_dict, p_cov
+
+    else:
+        return par_dict

@@ -19,7 +19,8 @@ def errfunc(p, pix, flux, flux_ivar):
 def fit_spec_line(x, flux, flux_ivar=None,
                   amp0=None, x0=None, std_G0=None, fwhm_L0=None,
                   bg0=None, n_bg_coef=2, target_x=None,
-                  absorp_emiss=1., return_cov=False):
+                  absorp_emiss=1., return_cov=False,
+                  leastsq_kw=None):
     """
     Assumes that the input arrays are trimmed to be a sensible region around
     the line of interest.
@@ -90,10 +91,14 @@ def fit_spec_line(x, flux, flux_ivar=None,
         _i = np.argmin(np.abs(x))
         amp0 = np.sqrt(2*np.pi) * (flux[_i] - (bg0[0] + bg0[1]*x[_i]))
 
+    # kwargs for leastsq:
+    leastsq_kw.setdefault('ftol', 1e-10)
+    leastsq_kw.setdefault('xtol', 1e-10)
+    leastsq_kw.setdefault('maxfev', 100000)
+
     p0 = [amp0, 0., std_G0, fwhm_L0] + bg0.tolist()
     p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, p0, args=(x, flux, flux_ivar),
-                                      full_output=True, maxfev=1000000,
-                                      ftol=1E-10, xtol=1E-10)
+                                      full_output=True, **leastsq_kw)
 
     fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
     fit_x0 = fit_x0 + x0

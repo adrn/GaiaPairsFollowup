@@ -4,6 +4,8 @@ TODO
 * During extract 1d step, plot many diagnostics. Plot trace vs. pixel!
 * How to figure out wavelength polynomial order? Is that introducing systematics?
 * Propagate uncertainties in arc lamp line centroids
+* IMFIT paper nicely describes relevant poisson likelihood:
+  https://arxiv.org/pdf/1408.1097.pdf
 
 Running the extraction pipeline
 ===============================
@@ -35,7 +37,7 @@ python extract_1d.py -p ../data/mdm-spring-2017/n1 \
 The above example will process all files in the path
 ``../data/mdm-spring-2017/n1``, skipping any file listed in ``n1_skip.txt``. The
 processed 2D frame files will be output to the path
-``../data/mdm-spring-2017/n1_processed`` starting with the name ``p_*``. The 1D
+``../data/mdm-spring-2017/processed/n1`` starting with the name ``p_*``. The 1D
 extracted spectra (not wavelength calibrated) will also be in this directory
 with filenames that start ``1d_*``.
 

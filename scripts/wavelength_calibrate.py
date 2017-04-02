@@ -2,8 +2,7 @@
 
 TODO:
 - Need to do sky-spectrum adjustments here
-- Some sky spectra have [OI] 5577Å, others have [OI] 6300Å, others have
-    neither...wat do?!
+- Always try to use [OI] 5577Å - if it's not there, move on!
 
 """
 
@@ -42,6 +41,7 @@ def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
     # for target_wave in [5577.3387]:
     #   [OI] from: http://www.star.ucl.ac.uk/~msw/lines.html
     target_wave = 5577.3387
+    # target_wave = 6300.30
 
     # extract region of SKY spectrum around line
     _i1 = np.argmin(np.abs(wavelength - (target_wave-25)))
@@ -53,18 +53,28 @@ def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
     flux = bg_flux[i1:i2+1]
     ivar = bg_ivar[i1:i2+1]
 
+    if plot:
+        _grid = np.linspace(wave.min(), wave.max(), 512)
+
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(14,8))
+        plt.plot(wave, flux, marker='', drawstyle='steps-mid', alpha=0.5)
+        plt.errorbar(wave, flux, 1/np.sqrt(ivar), linestyle='none',
+                     marker='', ecolor='#666666', alpha=0.75, zorder=-10)
+        plt.show()
+
     try:
         OI_fit_p = fit_spec_line(wave, flux, ivar, std_G0=1.,
                                  n_bg_coef=2, target_x=target_wave,
                                  absorp_emiss=1.)
     except (RuntimeError, ValueError) as e:
-        print("FIT FAILED")
-        raise RuntimeError("FAILED TO FIT [OI] sky line")
-        # TODO: if fail, what do?
+        logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
+        return 0.
 
-    logger.debug("[OI] {:.2f}, ∆x_0: {:.3f}, amp: {:.3e}".format(target_wave,
-                                                                 OI_fit_p['x_0']-target_wave,
-                                                                 OI_fit_p['amp']))
+    dlambda = OI_fit_p['x_0']-target_wave
+    logger.debug("[OI] {:.2f}, ∆λ: {:.3f}, amp: {:.3e}".format(target_wave,
+                                                               dlambda,
+                                                               OI_fit_p['amp']))
 
     if plot:
         _grid = np.linspace(wave.min(), wave.max(), 512)
@@ -82,9 +92,9 @@ def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
         logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
         return 0.
 
-    return OI_fit_p['x_0']-target_wave
+    return dlambda
 
-def add_wavelength(filename, wavelength_coef, overwrite=False):
+def add_wavelength(filename, wavelength_coef, overwrite=False, pix_range=None):
     hdulist = fits.open(filename)
 
     # read both hdu's
@@ -97,13 +107,22 @@ def add_wavelength(filename, wavelength_coef, overwrite=False):
         logger.debug("\tTable already contains wavelength values!")
         return
 
+    if pix_range is not None:
+        good_idx = (tbl['pix'] > min(pix_range)) & (tbl['pix'] < max(pix_range))
+    else:
+        good_idx = np.ones(len(tbl)).astype(bool)
+
+    print(pix_range, good_idx)
+
     # compute wavelength array for the pixels
     tbl['wavelength'] = np.polynomial.polynomial.polyval(tbl['pix'],
                                                          wavelength_coef)
+    tbl['wavelength'][~good_idx] = np.nan
 
-    # TODO: here, need to do sky line adjustment to wavelength values
-    dlambda = sky_line_shift(tbl['wavelength'], tbl['background_flux'],
-                             tbl['background_ivar'],
+    # here, need to do sky line adjustment to wavelength values
+    dlambda = sky_line_shift(tbl['wavelength'][good_idx],
+                             tbl['background_flux'][good_idx],
+                             tbl['background_ivar'][good_idx],
                              plot=True)
     tbl['wavelength'] = tbl['wavelength'] - dlambda
 
@@ -136,21 +155,24 @@ def main(proc_path, polynomial_order, overwrite=False):
     pix_wav = np.genfromtxt(path.join(proc_path, 'master_wavelength.csv'),
                             delimiter=',', names=True)
 
+    idx = pix_wav['wavelength'] < 6929 # HACK: see notebook 'Wavelength fit residuals'
+    pix_wav = pix_wav[idx] # HACK
+    pix_range = [min(pix_wav['pixel']), max(pix_wav['pixel'])]
+
     # fit a polynomial to pixel vs. wavelength
     coef = np.polynomial.polynomial.polyfit(pix_wav['pixel'], pix_wav['wavelength'],
                                             deg=polynomial_order)
     pred = np.polynomial.polynomial.polyval(pix_wav['pixel'], coef) # TODO: plot residuals?
-    if np.any((pred - pix_wav['wavelength']) > 0.1):
-        logger.warning("Wavelength residuals are large! Consider using a higher-order "
-                       "polynomial, or check your wavelength calibration file." +
-                       str(pred - pix_wav['wavelength']))
+    if np.any((pred - pix_wav['wavelength']) > 0.01):
+        logger.warning("Wavelength residuals are large! Check your wavelength "
+                       "calibration init file." + str(pred - pix_wav['wavelength']))
 
     # ========================
     # Compute wavelength grids
     # ========================
 
     if data_file is not None: # filename passed - only operate on that
-        add_wavelength(data_file, coef, overwrite=overwrite)
+        add_wavelength(data_file, coef, overwrite=overwrite, pix_range=pix_range)
 
     else: # a path was passed - operate on all 1D extracted files
         proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_*')
@@ -159,7 +181,7 @@ def main(proc_path, polynomial_order, overwrite=False):
         logger.info("Beginning wavelength calibration...")
         for base_fname in proc_ic.files_filtered(imagetyp='OBJECT'):
             fname = path.join(proc_ic.location, base_fname)
-            add_wavelength(fname, coef, overwrite=overwrite)
+            add_wavelength(fname, coef, overwrite=overwrite, pix_range=pix_range)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -181,8 +203,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--polyorder', dest='polynomial_order', default=9, type=int,
                         help='TODO')
-
-    # TODO: polynomial order
 
     args = parser.parse_args()
 

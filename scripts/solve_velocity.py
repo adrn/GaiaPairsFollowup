@@ -27,6 +27,10 @@ from comoving_rv.longslit.wavelength import fit_spec_line
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 
 def solve_radial_velocity(wavelength, flux, flux_ivar, header, plot=False):
+    good_idx = np.isfinite(wavelength) & np.isfinite(flux) & np.isfinite(flux_ivar)
+    wavelength = wavelength[good_idx]
+    flux = flux[good_idx]
+    flux_ivar = flux_ivar[good_idx]
 
     _sort = wavelength.argsort()
     wavelength = wavelength[_sort]
@@ -52,6 +56,7 @@ def solve_radial_velocity(wavelength, flux, flux_ivar, header, plot=False):
     wave = wavelength[i1:i2]
     flux = flux[i1:i2]
     ivar = flux_ivar[i1:i2]
+
     halpha_fit_p = fit_spec_line(wave, flux, ivar,
                                  n_bg_coef=2, target_x=6563., absorp_emiss=-1.)
 

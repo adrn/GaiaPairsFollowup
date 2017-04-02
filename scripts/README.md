@@ -52,7 +52,7 @@ Angstroms, this file is provided in ``config/mdm-spring-2017/hgne.txt``. For
 example:
 
 ```bash
-python init_wavelength.py -p ../data/mdm-spring-2017/n1_processed/p_n1.0137.fit
+python init_wavelength.py -p ../data/mdm-spring-2017/processed/n1/p_n1.0137.fit
 --linelist=../config/mdm-spring-2017/hgne.txt -v
 ```
 
@@ -63,7 +63,7 @@ run at MDM, this file is provided as
 ``config/mdm-spring-2017/init_wavelength.csv``:
 
 ```bash
-python init_wavelength.py -p ../data/mdm-spring-2017/n1_processed/p_n1.0137.fit \
+python init_wavelength.py -p ../data/mdm-spring-2017/processed/n2/ \
 --linelist=../config/mdm-spring-2017/hgne.txt \
 --init-file=../config/mdm-spring-2017/init_wavelength.csv -v
 ```
@@ -71,7 +71,7 @@ python init_wavelength.py -p ../data/mdm-spring-2017/n1_processed/p_n1.0137.fit 
 The residuals should all be <~0.02 Angstroms.
 
 This outputs a pixel-to-wavelength map file in the same processed directory
-(in this case, ``../data/mdm-spring-2017/n1_processed/``) called
+(in this case, ``../data/mdm-spring-2017/processed/n1/``) called
 ``master_wavelength.csv``.
 
 Full wavelength calibration
@@ -87,7 +87,7 @@ in the arc lamp, and then computing wavelength values for the pixel grid. You
 can specify the order (degree) of the polynomial using ``--polyorder``:
 
 ```bash
-python wavelength_calibrate.py -p ../data/mdm-spring-2017/n1_processed/ \
+python wavelength_calibrate.py -p ../data/mdm-spring-2017/processed/n1/ \
 --polyorder=9 -v
 ```
 
@@ -98,3 +98,5 @@ As a first pass, we fit a voigt profile to Halpha in each spectrum. We do this
 with nonlinear least-squares and ignore any nearby absorption lines. In the
 future, we should switch to using a Gaussian process for the background to
 handle the correlated "background" (continuum).
+
+python solve_velocity.py -p ../data/mdm-spring-2017/processed/n1/1d_n1.0123.fit -v

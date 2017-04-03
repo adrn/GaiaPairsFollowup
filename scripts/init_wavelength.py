@@ -172,7 +172,7 @@ class GUIWavelengthSolver(object):
         self.fig.canvas.draw()
 
         self._map_dict['wavel'].append(wave_val)
-        self._map_dict['pixel'].append(line_props['x_0'])
+        self._map_dict['pixel'].append(line_props['x0'])
         self._map_dict['pixel_err'].append(np.sqrt(line_cov[1,1]))
 
     def get_line_props(self, xmin, xmax, **kwargs):
@@ -208,7 +208,7 @@ class GUIWavelengthSolver(object):
         flux_grid = voigt_polynomial(pix_grid, **line_props)
 
         peak = flux_grid.max()
-        x0 = line_props['x_0']
+        x0 = line_props['x0']
 
         space = 0.05*peak
         self.ax.plot([x0,x0], [peak+space,peak+3*space],
@@ -274,7 +274,7 @@ class GUIWavelengthSolver(object):
             # figure out closest line
             # _all_pix = np.concatenate((self._map_dict['pixel'], new_pixels))
             # _all_wav = np.concatenate((self._map_dict['wavel'], new_wavels))
-            # _diff = np.abs(lp['x_0'] - np.array(_all_pix))
+            # _diff = np.abs(lp['x0'] - np.array(_all_pix))
             # min_diff_idx = np.argmin(_diff)
             # min_diff_pix = _all_pix[min_diff_idx]
             # min_diff_wav = _all_wav[min_diff_idx]

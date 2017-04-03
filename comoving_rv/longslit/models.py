@@ -33,7 +33,7 @@ def voigt(x, amp, x0, G_std, L_fwhm):
 
     return amp * wofz(z).real / (np.sqrt(2.*np.pi)*G_std)
 
-def voigt_constant(x, amp, x_0, std_G, fwhm_L, C):
+def voigt_constant(x, amp, x0, std_G, fwhm_L, C):
     """
     Voigt profile plus a constant background.
 
@@ -51,9 +51,9 @@ def voigt_constant(x, amp, x_0, std_G, fwhm_L, C):
     C : numeric
         Background
     """
-    return voigt(x, amp, x_0, std_G, fwhm_L) + C
+    return voigt(x, amp, x0, std_G, fwhm_L) + C
 
-def voigt_polynomial(x, amp, x_0, std_G, fwhm_L, bg_coef):
+def voigt_polynomial(x, amp, x0, std_G, fwhm_L, bg_coef):
     """
     Voigt profile plus a constant background.
 
@@ -71,4 +71,4 @@ def voigt_polynomial(x, amp, x_0, std_G, fwhm_L, bg_coef):
     bg_coef : iterable
         List of polynomial coefficients.
     """
-    return voigt(x, amp, x_0, std_G, fwhm_L) + polyval(x-x_0, np.atleast_1d(bg_coef))
+    return voigt(x, amp, x0, std_G, fwhm_L) + polyval(x-x0, np.atleast_1d(bg_coef))

@@ -74,7 +74,7 @@ def solve_radial_velocity(wavelength, flux, flux_ivar, header, plot=False):
         plt.plot(_grid, fit_flux, marker='', alpha=0.75)
         plt.show()# TODO
 
-    dHalpha = halpha_fit_p['x_0'] - target_wave
+    dHalpha = halpha_fit_p['x0'] - target_wave
     RV = dHalpha / Halpha * c
     print("Object: {}".format(header['OBJECT']))
     print("Radial velocity: ", RV.to(u.km/u.s))

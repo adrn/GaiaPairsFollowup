@@ -52,6 +52,7 @@ def bary_vel_corr(time, skycoord, location=None):
     velocity = ev + ov
 
     # get unit ICRS vector in direction of SkyCoord
-    sc_cartesian = skycoord.icrs.represent_as(coord.UnitSphericalRepresentation)\
-                                .represent_as(coord.CartesianRepresentation)
+    icrs = skycoord.transform_to(coord.ICRS)
+    sc_cartesian = icrs.represent_as(coord.UnitSphericalRepresentation)\
+                       .represent_as(coord.CartesianRepresentation)
     return sc_cartesian.dot(velocity).to(u.km/u.s)

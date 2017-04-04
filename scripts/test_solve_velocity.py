@@ -1,5 +1,12 @@
 # coding: utf-8
 
+"""
+TODO:
+- n1.0073 Halpha is emission
+- Save results to a database file of some kind...sqlite? yaml file?
+
+"""
+
 import os
 from os import path
 from collections import OrderedDict
@@ -16,7 +23,7 @@ import emcee
 import corner
 import schwimmbad
 
-from comoving_rv.longslit.wavelength import fit_spec_line, fit_spec_line_GP
+from comoving_rv.longslit.wavelength import fit_spec_line_GP
 from comoving_rv.longslit.models import voigt_polynomial
 
 def get_fit_pars(gp):

@@ -159,6 +159,21 @@ def fit_spec_line(x, flux, flux_ivar=None,
     else:
         return par_dict
 
+class MeanModel(Model):
+
+    def __init__(self, n_bg_coef, absorp_emiss, *args, **kwargs):
+        self._n_bg_coef = n_bg_coef
+        self._absorp_emiss = absorp_emiss
+        self.parameter_names = (["ln_amp", "x0", "ln_std_G", "ln_fwhm_L"] +
+                                ["bg{}".format(i) for i in range(n_bg_coef)])
+        super(MeanModel, self).__init__(*args, **kwargs)
+
+    def get_value(self, x):
+        return voigt_polynomial(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
+                                np.exp(self.ln_std_G), np.exp(self.ln_fwhm_L),
+                                [getattr(self, "bg{}".format(i))
+                                 for i in range(self._n_bg_coef)])
+
 def fit_spec_line_GP(x, flux, flux_ivar=None,
                      amp0=None, x0=None, std_G0=None, fwhm_L0=None,
                      bg0=None, n_bg_coef=2, target_x=None,
@@ -186,18 +201,6 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     # x = np.array(_x) - _x0
     # p0['x0'] = 0. # recenter to initial guess
 
-    class MeanModel(Model):
-        parameter_names = (["ln_amp", "x0", "ln_std_G", "ln_fwhm_L"] +
-                           ["bg{}".format(i) for i in range(n_bg_coef)])
-        _n_bg_coef = n_bg_coef
-        _absorp_emiss = absorp_emiss
-
-        def get_value(self, x):
-            return voigt_polynomial(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
-                                    np.exp(self.ln_std_G), np.exp(self.ln_fwhm_L),
-                                    [getattr(self, "bg{}".format(i))
-                                     for i in range(self._n_bg_coef)])
-
     # replace log parameters
     p0['ln_amp'] = np.log(absorp_emiss * p0.pop('amp'))
     p0['ln_std_G'] = np.log(p0.pop('std_G'))
@@ -209,7 +212,7 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
         p0['bg{}'.format(i)] = bgs[i]
 
     # initialize model
-    mean_model = MeanModel(**p0)
+    mean_model = MeanModel(n_bg_coef=n_bg_coef, absorp_emiss=absorp_emiss, **p0)
 
     # Set up the GP model
     y_MAD = np.median(np.abs(flux - np.median(flux)))

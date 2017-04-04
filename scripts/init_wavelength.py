@@ -389,6 +389,7 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
+    import logging
 
     # Define parser object
     parser = ArgumentParser(description="")

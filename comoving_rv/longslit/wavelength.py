@@ -10,6 +10,7 @@ from celerite.modeling import Model
 from celerite import terms, GP
 
 # Project
+from ..log import logger
 from .models import voigt_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP']
@@ -223,7 +224,7 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     gp = GP(kernel, mean=mean_model, fit_mean=True)
     gp.compute(x, flux_err) # need to do this
     init_params = gp.get_parameter_vector()
-    print("Initial log-likelihood: {0}".format(gp.log_likelihood(flux)))
+    logger.debug("Initial log-likelihood: {0}".format(gp.log_likelihood(flux)))
 
     # Define a cost function
     def neg_log_like(params, y, gp):
@@ -235,9 +236,6 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     soln = minimize(neg_log_like, init_params, method="L-BFGS-B",
                     bounds=bounds, args=(flux, gp))
     gp.set_parameter_vector(soln.x)
-    print("Success: {}".format(soln.success))
-    print("Final log-likelihood: {0}".format(-soln.fun))
-
-    # pars = gp.get_parameter_dict()
+    logger.debug("Success: {}, Final log-likelihood: {}".format(soln.success, -soln.fun))
 
     return gp

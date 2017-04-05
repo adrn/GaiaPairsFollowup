@@ -7,15 +7,18 @@ TODO:
 
 """
 
+# Standard library
 import os
 from os import path
 from collections import OrderedDict
 import glob
 
+# Third-party
+from astropy.constants import c
 import astropy.coordinates as coord
 import astropy.units as u
 from astropy.io import fits
-from astropy.table import Table
+from astropy.table import Table, Column
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('apw-notebook')
@@ -23,6 +26,8 @@ import emcee
 import corner
 import schwimmbad
 
+# Project
+from comoving_rv.log import logger
 from comoving_rv.longslit.wavelength import fit_spec_line_GP
 from comoving_rv.longslit.models import voigt_polynomial
 
@@ -58,9 +63,7 @@ def log_probability(params, gp, flux_data):
     if not np.isfinite(lp):
         return -np.inf
 
-#     if params[1] < -5:
-#         return -np.inf
-    # HACK:
+    # HACK: Gaussian prior on log(rho)
     var = 1.
     lp += -0.5*(params[1]-1)**2/var - 0.5*np.log(2*np.pi*var)
 
@@ -73,19 +76,32 @@ def log_probability(params, gp, flux_data):
 
     return ll + lp
 
-def main():
-    night = 'n1'
+def main(overwrite=False):
+    night = 'n5'
 
-    plot_path = path.normpath('../plots/')
-    root_path = path.normpath('../data/mdm-spring-2017/processed/')
-    Halpha = 6562.8
+    plot_path = path.abspath('../plots/')
+    root_path = path.abspath('../data/mdm-spring-2017/processed/')
+    table_path = path.join(root_path, 'rough_velocity.ecsv')
+    Halpha = 6562.8 * u.angstrom
 
     if not path.exists(plot_path):
         os.makedirs(plot_path, exist_ok=True)
 
-    # check sky position
-    # hdr = fits.getheader(path.join(root_path, night, '1d_{}.{:04d}.fit'.format(night, frame)), 0)
-    # coord.SkyCoord(ra=hdr['RA'], dec=hdr['DEC'], unit=(u.hourangle, u.degree))
+    if not path.exists(table_path):
+        logger.debug('Creaing table at {}'.format(table_path))
+        tbl_init = [Column(name='object_name', dtype='|S30', data=[], length=0),
+                    Column(name='group_id', dtype=int, length=0),
+                    Column(name='filename', dtype='|S128', data=[], length=0),
+                    Column(name='wave0', dtype=float, unit=u.angstrom, length=0),
+                    Column(name='rv', dtype=float, unit=u.km/u.s, length=0),
+                    Column(name='rv_precision', dtype=float, unit=u.km/u.s, length=0)]
+        velocity_tbl = Table(tbl_init)
+        velocity_tbl.write(table_path, format='ascii.ecsv', delimiter=',')
+        logger.debug('Table: {}'.format(velocity_tbl.colnames))
+
+    else:
+        logger.debug('Table exists, reading ({})'.format(table_path))
+        velocity_tbl = Table.read(table_path, format='ascii.ecsv', delimiter=',')
 
     # read master_wavelength file
     pix_wav = np.genfromtxt(path.join(root_path, night, 'master_wavelength.csv'),
@@ -100,8 +116,22 @@ def main():
         filename = path.basename(file_path)
         filebase,ext = path.splitext(filename)
 
-        spec = Table.read(file_path)
+        # read FITS header
         hdr = fits.getheader(file_path, 0)
+        object_name = hdr['OBJECT']
+
+        if object_name in velocity_tbl['object_name']:
+            if overwrite:
+                logger.debug('Object {} already done - overwriting!'.format(object_name))
+                idx, = np.where(velocity_tbl['object_name'] == object_name)
+                velocity_tbl.remove_row(idx[0])
+
+            else:
+                logger.debug('Object {} already done.'.format(object_name))
+                continue
+
+        # read the spectrum data and get wavelength solution
+        spec = Table.read(file_path)
         coef = np.polynomial.polynomial.polyfit(pix_wav['pixel'], pix_wav['wavelength'], deg=9)
 
         # compute wavelength array for the pixels
@@ -113,7 +143,7 @@ def main():
         flux_data = spec['source_flux'][near_Ha]
         ivar_data = spec['source_ivar'][near_Ha]
         absorp_emiss = -1.
-        target_x = Halpha
+        target_x = Halpha.value
 
         wave_data = wave[near_Ha]
 
@@ -131,7 +161,6 @@ def main():
                               absorp_emiss=absorp_emiss, target_x=target_x,
                               fwhm_L0=4., std_G0=1., n_bg_coef=2)
 
-        print(gp.get_parameter_dict())
         fit_pars = get_fit_pars(gp)
 
         # Make the maximum likelihood prediction
@@ -162,7 +191,7 @@ def main():
 
         fig.tight_layout()
         fig.savefig(path.join(plot_path, '{}_maxlike.png'.format(filebase)), dpi=256)
-        del fig
+        plt.close(fig)
         # ------------------------------------------------------------------------
 
         # Run `emcee` instead to sample over GP model parameters:
@@ -177,19 +206,20 @@ def main():
         ndim, nwalkers = len(initial), 64
 
         with schwimmbad.MultiPool() as pool:
+            # with schwimmbad.SerialPool() as pool:
             sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, pool=pool,
                                             args=(gp, flux_data))
 
-            print("Running burn-in...")
+            logger.debug("Running burn-in...")
             p0 = initial + 1e-6 * np.random.randn(nwalkers, ndim)
             p0, lp, _ = sampler.run_mcmc(p0, 256)
 
-            print("Running 2nd burn-in...")
+            logger.debug("Running 2nd burn-in...")
             sampler.reset()
             p0 = p0[lp.argmax()] + 1e-3 * np.random.randn(nwalkers, ndim)
             p0, lp, _ = sampler.run_mcmc(p0, 512)
 
-            print("Running production...")
+            logger.debug("Running production...")
             sampler.reset()
             pos, lp, _ = sampler.run_mcmc(p0, 512)
 
@@ -202,7 +232,7 @@ def main():
             axes.flat[i].set_title(gp.get_parameter_names()[i], fontsize=12)
         fig.tight_layout()
         fig.savefig(path.join(plot_path, '{}_mcmc_trace.png'.format(filebase)), dpi=256)
-        del fig
+        plt.close(fig)
         # --------------------------------------------------------------------
 
         # --------------------------------------------------------------------
@@ -234,7 +264,7 @@ def main():
 
         fig.tight_layout()
         fig.savefig(path.join(plot_path, '{}_mcmc_fits.png'.format(filebase)), dpi=256)
-        del fig
+        plt.close(fig)
         # --------------------------------------------------------------------
 
         # --------------------------------------------------------------------
@@ -242,20 +272,67 @@ def main():
         fig = corner.corner(sampler.flatchain[::10, :],
                             labels=[x.split(':')[1] for x in gp.get_parameter_names()])
         fig.savefig(path.join(plot_path, '{}_corner.png'.format(filebase)), dpi=256)
-        del fig
+        plt.close(fig)
 
-        MAD = np.median(np.abs(sampler.flatchain[:, 3] - np.median(sampler.flatchain[:, 3])))
-        v_precision = 1.48 * MAD / Halpha * 300000. * u.km/u.s
-        centroid = np.median(sampler.flatchain[:, 3])
-        rv = (centroid - Halpha) / Halpha * 300000. * u.km/u.s
+        x0 = sampler.flatchain[:, 3] * u.angstrom
+        MAD = np.median(np.abs(x0 - np.median(x0)))
+        v_precision = 1.48 * MAD / Halpha * c.to(u.km/u.s)
+        centroid = np.median(x0)
+        rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s)
 
-        print('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'.format(hdr['OBJECT'],
-                                                                    filebase,
-                                                                    x0=centroid,
-                                                                    err=v_precision,
-                                                                    rv=rv))
-        c = coord.SkyCoord(ra=hdr['RA'], dec=hdr['DEC'], unit=(u.hourangle, u.degree))
-        print('\t ra dec = {:.5f} {:.5f}'.format(c.ra.degree, c.dec.degree))
+        if '-' in object_name:
+            group_id,*_ = object_name.split('-')
 
-if __name__ == '__main__':
-    main()
+        else:
+            group_id = 0
+
+        velocity_tbl.add_row(dict(object_name=object_name, group_id=group_id,
+                                  filename=file_path, wave0=centroid,
+                                  rv=rv, rv_precision=v_precision))
+
+        logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'
+                    .format(object_name, filebase, x0=centroid,
+                            err=v_precision, rv=rv))
+
+        velocity_tbl.write(table_path, format='ascii.ecsv',
+                           overwrite=True, delimiter=',')
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    import logging
+
+    # Define parser object
+    parser = ArgumentParser(description="")
+
+    vq_group = parser.add_mutually_exclusive_group()
+    vq_group.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
+    vq_group.add_argument('-q', '--quiet', action='count', default=0, dest='quietness')
+
+    parser.add_argument('-s', '--seed', dest='seed', default=None,
+                        type=int, help='Random number generator seed.')
+    parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
+                        default=False, help='Destroy everything.')
+
+    args = parser.parse_args()
+
+    # Set logger level based on verbose flags
+    if args.verbosity != 0:
+        if args.verbosity == 1:
+            logger.setLevel(logging.DEBUG)
+        else: # anything >= 2
+            logger.setLevel(1)
+
+    elif args.quietness != 0:
+        if args.quietness == 1:
+            logger.setLevel(logging.WARNING)
+        else: # anything >= 2
+            logger.setLevel(logging.ERROR)
+
+    else: # default
+        logger.setLevel(logging.INFO)
+
+    if args.seed is not None:
+        np.random.seed(args.seed)
+
+    main(overwrite=args.overwrite)
+

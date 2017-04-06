@@ -209,8 +209,8 @@ class CCDExtractor(object):
         """
 
         def lsf_model(p, x):
-            amp, x_0, std_G, fwhm_L, C = p
-            return voigt(x, amp, x_0, std_G, fwhm_L) + C
+            amp, x0, std_G, fwhm_L, C = p
+            return voigt(x, amp, x0, std_G, fwhm_L) + C
 
         def lsf_chi(p, pix, flux, flux_ivar):
             return (lsf_model(p, pix) - flux) * np.sqrt(flux_ivar)
@@ -262,8 +262,8 @@ class CCDExtractor(object):
         """
 
         def row_model(p, lsf_p, x):
-            amp, x_0, C = p
-            return voigt(x, amp, x_0, G_std=lsf_p['std_G'], L_fwhm=lsf_p['fwhm_L']) + C
+            amp, x0, C = p
+            return voigt(x, amp, x0, G_std=lsf_p['std_G'], L_fwhm=lsf_p['fwhm_L']) + C
 
         def row_chi(p, pix, flux, flux_ivar, lsf_p):
             return (row_model(p, lsf_p, pix) - flux) * np.sqrt(flux_ivar)

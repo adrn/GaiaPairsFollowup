@@ -89,7 +89,7 @@ def solve_radial_velocity(filename, wavelength_coef, done_list=None, plot=False)
                                  absorp_emiss=1.)
 
         print('[OI] {:.2f}'.format(target_wave))
-        print('∆x_0: {:.3f}'.format(OI_fit_p['x_0'] - target_wave))
+        print('∆x0: {:.3f}'.format(OI_fit_p['x0'] - target_wave))
         print('amp: {:.3e}'.format(OI_fit_p['amp']))
 
         chi2 = np.sum((voigt_polynomial(wave, **OI_fit_p) - flux)**2 * ivar)
@@ -113,8 +113,8 @@ def solve_radial_velocity(filename, wavelength_coef, done_list=None, plot=False)
     # OI_5577 = 5577.3387 # air, STP
     # OI_6300 = 6300.30 # air, STP
 
-    # dOI = OI_fit_p['x_0'] - OI_5577
-    # dHalpha = halpha_fit_p['x_0'] - Halpha
+    # dOI = OI_fit_p['x0'] - OI_5577
+    # dHalpha = halpha_fit_p['x0'] - Halpha
     # dlambda = dHalpha - dOI
 
     # RV = dlambda / Halpha * c

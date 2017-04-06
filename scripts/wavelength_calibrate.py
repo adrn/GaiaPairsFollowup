@@ -72,7 +72,7 @@ def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
         logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
         return 0.
 
-    dlambda = OI_fit_p['x_0']-target_wave
+    dlambda = OI_fit_p['x0']-target_wave
     logger.debug("[OI] {:.2f}, ∆λ: {:.3f}, amp: {:.3e}".format(target_wave,
                                                                dlambda,
                                                                OI_fit_p['amp']))

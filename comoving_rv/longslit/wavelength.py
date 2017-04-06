@@ -4,7 +4,6 @@ from collections import OrderedDict
 # Third-party
 import numpy as np
 from scipy.optimize import minimize, leastsq
-from scipy.stats import scoreatpercentile
 from scipy.signal import argrelmin
 from celerite.modeling import Model
 from celerite import terms, GP
@@ -27,9 +26,12 @@ def get_init_guess(x, flux, ivar,
         relmins = argrelmin(-absorp_emiss*flux)[0]
 
         if len(relmins) > 1 and target_x is None:
-            raise ValueError("If auto-finding x0, must supply a target value for x.")
-        elif len(relmins) == 1:
+            logger.debug("no target_x specified - taking largest line in spec region")
+            target_x = x[np.argmin(-absorp_emiss*flux)]
+
+        if len(relmins) == 1:
             x0 = x[relmins[0]]
+
         else:
             x0_idx = relmins[np.abs(x[relmins] - target_x).argmin()]
             x0 = x[x0_idx]

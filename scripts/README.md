@@ -1,10 +1,10 @@
 TODO
 ====
 
-* During extract 1d step, plot many diagnostics. Plot trace vs. pixel!
-* How to figure out wavelength polynomial order? Is that introducing systematics?
+* Use the Gaussian process fitter to fit for the source spectrum trace at each
+  row of the CCD? Should prevent blending of the source spectrum into the sky...
 * Propagate uncertainties in arc lamp line centroids
-* IMFIT paper nicely describes relevant poisson likelihood:
+* IMFIT paper nicely describes a relevant poisson likelihood:
   https://arxiv.org/pdf/1408.1097.pdf
 
 Running the extraction pipeline
@@ -15,8 +15,8 @@ The input files are expected to be 2D raw CCD frames from the output of the
 telescope instrument software. The output files are a set of FITS files
 containing 1D extracted, wavelength-calibrated spectra for each source file.
 
-Processing the raw CCD frames
------------------------------
+Process the raw CCD frames
+--------------------------
 
 The first step is to bias-correct, flat-correct, and trim the raw frames. Some
 exposures may be known to be bad -- you can specify filenames to skip by
@@ -26,7 +26,7 @@ remove these extra sources by specifing a mask file (in this case,
 ``n1_masks.yml``). See ``config/mdm-spring-2017/n1_masks.yml`` for an example of
 the expected format; ``top_bottom`` is the central column position of the mask
 at the top and bottom of the CCD as view from a DS9 window (top is larger row
-index values). To do the processing, run:
+index values). To run the processing (from the `scripts/` directory):
 
 ```bash
 python extract_1d.py -p ../data/mdm-spring-2017/n1 \
@@ -41,56 +41,57 @@ processed 2D frame files will be output to the path
 extracted spectra (not wavelength calibrated) will also be in this directory
 with filenames that start ``1d_*``.
 
-Initializing the wavelength solution
-------------------------------------
+Identify lines in a comparison lamp spectrum
+--------------------------------------------
 
-The next step is to interactively identify emission lines in a comparison lamp
-spectrum. To do that, you'll need to either specify the path to a processed
-HgNe+Ne arc lamp frame, or to a directory containing one (and the first one
-found will be used). You also need to specify a path to a text file containing
-known lines that should be auto-identified in the spectrum once enough lines
-have been found. For an HgNe+Ne lamp and for a wavelength range ~3600-7200
-Angstroms, this file is provided in ``config/mdm-spring-2017/hgne.txt``. For
-example:
+Before solving for a rough wavelength solution, the next step is to
+interactively identify emission lines in a comparison lamp spectrum. To do that,
+you'll need to either specify the path to a processed HgNe+Ne arc lamp frame, or
+to a directory containing one (and the first one found will be used). You also
+need to specify a path to a text file containing known lines that should be
+auto-identified in the spectrum once enough lines have been found. For an
+HgNe+Ne lamp and for a wavelength range ~3600-7200 Angstroms, this file is
+provided in ``config/mdm-spring-2017/hgne.txt``. To run this script:
 
 ```bash
-python init_wavelength.py -p ../data/mdm-spring-2017/processed/n1/p_n1.0137.fit
+python identify_wavelengths.py -p ../data/mdm-spring-2017/processed/n1/
 --linelist=../config/mdm-spring-2017/hgne.txt -v
 ```
 
-If you've already run the interactive script and have an initial guess for the
-auto-identification of the lines, you can specify a CSV file containing two
-columns (pixel and wavelength). For this spectrograph setup for the spring 2017
-run at MDM, this file is provided as
-``config/mdm-spring-2017/init_wavelength.csv``:
-
-```bash
-python init_wavelength.py -p ../data/mdm-spring-2017/processed/n2/ \
---linelist=../config/mdm-spring-2017/hgne.txt \
---init-file=../config/mdm-spring-2017/init_wavelength.csv -v
-```
-
-The residuals should all be <~0.02 Angstroms.
-
-This outputs a pixel-to-wavelength map file in the same processed directory
-(in this case, ``../data/mdm-spring-2017/processed/n1/``) called
-``master_wavelength.csv``.
+This will output a CSV file that contains a rough wavelength mapping from known
+lines (in ``../config/mdm-spring-2017/hgne.txt``) to predicted pixel centroids.
+This file will be in ``../data/mdm-spring-2017/processed/wavelength_guess.csv``.
 
 Full wavelength calibration
 ---------------------------
 
 The last step in the reduction process is to add wavelength values to the 1D
 extracted spectrum files (i.e. map the pixel values to wavelength values and add
-a column). The rough wavelength calibration is added in place to the 1D spectrum
-FITS file by running the ``wavelength_calibrate.py`` script. This is done by
-reading the ``master_wavelength.csv`` file created in the previous step, fitting
-a polynomial to the pixel vs. wavelength values of the identified spectral lines
-in the arc lamp, and then computing wavelength values for the pixel grid. You
-can specify the order (degree) of the polynomial using ``--polyorder``:
+a column). This is done by fitting for line centroids in small regions of a
+per-night comparison lamp spectrum at the pixels specified the previously
+generated ``wavelength_guess.csv`` file. We then fit a polynomial to the new
+pixel centroids vs. wavelength values and use this polynomial to create
+wavelength arrays for each extracted spectrum.
+
+From experimentation, we have found that as long as the source trace is within
+the central 100 pixels of the CCD (as it usually is), a full 2D wavelength
+solution is not required (the induced systematic shift in pixel values is <
+0.01). We have also found through cross-validation that a polynomial of degree=4
+is the best model to use; this is the default polynomial degree, but this can be
+configured using the command-line argument ``--poly-deg``.
+
+The wavelength solution at this stage should correct the spectrum for the
+non-linear behavior of the wavelength solution, but because of flexure in the
+instrument, there could still be significant linear offsets from the appropriate
+rest-frame solution. To solve for final corrections to the wavelength solution,
+we also fit for the positions of the night sky lines [OI] 5577Å, [OI] 6300Å, and
+[OI] 6364Å and use these lines to apply final shifts to the wavelength solution.
+
+The wavelength calibration for each source is added in place to the 1D spectrum
+FITS file. To run this procedure:
 
 ```bash
-python wavelength_calibrate.py -p ../data/mdm-spring-2017/processed/n1/ \
---polyorder=9 -v
+python wavelength_calibrate.py -p ../data/mdm-spring-2017/processed/n1/ -v
 ```
 
 Radial velocity determination

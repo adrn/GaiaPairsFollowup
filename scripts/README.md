@@ -54,7 +54,7 @@ HgNe+Ne lamp and for a wavelength range ~3600-7200 Angstroms, this file is
 provided in ``config/mdm-spring-2017/hgne.txt``. To run this script:
 
 ```bash
-python identify_wavelengths.py -p ../data/mdm-spring-2017/processed/n1/
+python identify_wavelengths.py -p ../data/mdm-spring-2017/processed/n1/ \
 --linelist=../config/mdm-spring-2017/hgne.txt -v
 ```
 
@@ -69,23 +69,22 @@ The last step in the reduction process is to add wavelength values to the 1D
 extracted spectrum files (i.e. map the pixel values to wavelength values and add
 a column). This is done by fitting for line centroids in small regions of a
 per-night comparison lamp spectrum at the pixels specified the previously
-generated ``wavelength_guess.csv`` file. We then fit a polynomial to the new
-pixel centroids vs. wavelength values and use this polynomial to create
-wavelength arrays for each extracted spectrum.
+generated ``wavelength_guess.csv`` file. We then fit a linear model plus a
+Gaussian process to the new pixel centroids vs. wavelength values and use this
+model to create wavelength arrays (and uncertainties in wavelength) for each
+extracted spectrum.
 
 From experimentation, we have found that as long as the source trace is within
 the central 100 pixels of the CCD (as it usually is), a full 2D wavelength
 solution is not required (the induced systematic shift in pixel values is <
-0.01). We have also found through cross-validation that a polynomial of degree=4
-is the best model to use; this is the default polynomial degree, but this can be
-configured using the command-line argument ``--poly-deg``.
+0.01).
 
 The wavelength solution at this stage should correct the spectrum for the
 non-linear behavior of the wavelength solution, but because of flexure in the
 instrument, there could still be significant linear offsets from the appropriate
 rest-frame solution. To solve for final corrections to the wavelength solution,
-we also fit for the positions of the night sky lines [OI] 5577Å, [OI] 6300Å, and
-[OI] 6364Å and use these lines to apply final shifts to the wavelength solution.
+we also fit for the positions of the night sky lines [OI] 6300Å and [OI] 6364Å
+and use these lines to apply final shifts to the wavelength solution.
 
 The wavelength calibration for each source is added in place to the 1D spectrum
 FITS file. To run this procedure:

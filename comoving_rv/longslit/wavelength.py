@@ -15,7 +15,7 @@ from .models import voigt_polynomial
 __all__ = ['fit_spec_line', 'fit_spec_line_GP']
 
 def par_dict_to_list(p):
-    return [p['amp'], p['x0'], p['std_G'], p['fwhm_L']] + p['bg'].tolist()
+    return [p['amp'], p['x0'], p['std_G'], p['fwhm_L']] + p['bg_coef'].tolist()
 
 def get_init_guess(x, flux, ivar,
                    amp0=None, x0=None, std_G0=None, fwhm_L0=None,
@@ -75,7 +75,7 @@ def get_init_guess(x, flux, ivar,
     p0['x0'] = x0
     p0['std_G'] = std_G0
     p0['fwhm_L'] = fwhm_L0
-    p0['bg'] = bg0
+    p0['bg_coef'] = bg0
     return p0
 
 # ---
@@ -177,9 +177,40 @@ class MeanModel(Model):
                                 [getattr(self, "bg{}".format(i))
                                  for i in range(self._n_bg_coef)])
 
+def gp_to_fit_pars(gp, absorp_emiss):
+    """
+    Given a GP instance, return a parameter dictionary for the
+    mean model parameters only.
+    """
+    fit_pars = OrderedDict()
+    for k,v in gp.get_parameter_dict().items():
+        if 'mean' not in k:
+            continue
+
+        k = k[5:] # remove 'mean:'
+        if k.startswith('ln'):
+            if 'amp' in k:
+                fit_pars[k[3:]] = absorp_emiss * np.exp(v)
+            else:
+                fit_pars[k[3:]] = np.exp(v)
+
+        elif k.startswith('bg'):
+            if 'bg_coef' not in fit_pars:
+                fit_pars['bg_coef'] = []
+            fit_pars['bg_coef'].append(v)
+
+        else:
+            fit_pars[k] = v
+
+    if 'std_G' not in fit_pars:
+        fit_pars['std_G'] = 1E-10
+
+    return fit_pars
+
 def fit_spec_line_GP(x, flux, flux_ivar=None,
                      amp0=None, x0=None, std_G0=None, fwhm_L0=None,
                      bg0=None, n_bg_coef=2, target_x=None,
+                     log_sigma0=None, log_rho0=None, # GP parameters
                      absorp_emiss=1., minimize_kw=None):
 
     sort_idx = np.argsort(x)
@@ -210,7 +241,7 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     p0['ln_fwhm_L'] = np.log(p0.pop('fwhm_L'))
 
     # expand bg parameters
-    bgs = p0.pop('bg')
+    bgs = p0.pop('bg_coef')
     for i in range(n_bg_coef):
         p0['bg{}'.format(i)] = bgs[i]
 
@@ -218,9 +249,15 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     mean_model = MeanModel(n_bg_coef=n_bg_coef, absorp_emiss=absorp_emiss, **p0)
 
     # Set up the GP model
-    y_MAD = np.median(np.abs(flux - np.median(flux)))
+    if log_sigma0 is None:
+        y_MAD = np.median(np.abs(flux - np.median(flux)))
+        log_sigma0 = np.log(y_MAD)
+
+    if log_rho0 is None:
+        log_rho0 = np.log(10.)
+
     # kernel = terms.RealTerm(log_a=np.log(y_MAD), log_c=-np.log(0.1)) # MAGIC NUMBERs
-    kernel = terms.Matern32Term(log_sigma=np.log(y_MAD), log_rho=np.log(10.)) # MAGIC NUMBERs
+    kernel = terms.Matern32Term(log_sigma=log_sigma0, log_rho=log_rho0) # MAGIC NUMBERs
 
     # set up the gp model
     gp = GP(kernel, mean=mean_model, fit_mean=True)
@@ -231,7 +268,10 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     # Define a cost function
     def neg_log_like(params, y, gp):
         gp.set_parameter_vector(params)
-        return -gp.log_likelihood(y)
+        ll = gp.log_likelihood(y)
+        if np.isnan(ll):
+            return np.inf
+        return -ll
 
     # Fit for the maximum likelihood parameters
     bounds = gp.get_parameter_bounds()

@@ -23,7 +23,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 # Package
 from comoving_rv.log import logger
 from comoving_rv.longslit import voigt_polynomial
-from comoving_rv.longslit.wavelength import fit_spec_line
+from comoving_rv.longslit.wavelength import fit_spec_line_GP, gp_to_fit_pars
 
 class GUIWavelengthSolver(object):
 
@@ -57,12 +57,12 @@ class GUIWavelengthSolver(object):
         if init_map is None:
             self._map_dict['wavel'] = []
             self._map_dict['pixel'] = []
-            self._map_dict['pixel_err'] = []
+            # self._map_dict['pixel_err'] = []
 
         else:
             self._map_dict['wavel'] = init_map['wavelength']
             self._map_dict['pixel'] = init_map['pixel']
-            self._map_dict['pixel_err'] = np.zeros_like(init_map['pixel']) # TODO: hack
+            # self._map_dict['pixel_err'] = np.zeros_like(init_map['pixel']) # TODO: hack
 
         self._line_std_G = None
         self._line_fwhm_L = None
@@ -161,7 +161,8 @@ class GUIWavelengthSolver(object):
             wave_val = self.line_list[idx]
             self._done_wavel_idx.append(idx)
 
-        line_props, line_cov = self.get_line_props(xmin, xmax)
+        # line_props, line_cov = self.get_line_props(xmin, xmax)
+        line_props,_ = self.get_line_props(xmin, xmax)
         if line_props is None:
             return
 
@@ -173,7 +174,7 @@ class GUIWavelengthSolver(object):
 
         self._map_dict['wavel'].append(wave_val)
         self._map_dict['pixel'].append(line_props['x0'])
-        self._map_dict['pixel_err'].append(np.sqrt(line_cov[1,1]))
+        # self._map_dict['pixel_err'].append(np.sqrt(line_cov[1,1]))
 
     def get_line_props(self, xmin, xmax, **kwargs):
         i1 = int(np.floor(xmin))
@@ -188,8 +189,8 @@ class GUIWavelengthSolver(object):
             flux_ivar = None
 
         try:
-            line_props,line_cov = fit_spec_line(pix, flux, flux_ivar, n_bg_coef=3,
-                                                return_cov=True, **kwargs)
+            gp = fit_spec_line_GP(pix, flux, flux_ivar, n_bg_coef=1, absorp_emiss=1.,
+                                  log_sigma0=np.log(10.), **kwargs)
         except Exception as e:
             msg = "Failed to fit line!"
             logger.error(msg)
@@ -197,13 +198,15 @@ class GUIWavelengthSolver(object):
             self._ui['textbox'].setText("ERROR: See terminal for more information.")
             return None
 
+        line_props = gp_to_fit_pars(gp, absorp_emiss=1.)
+
         # store these to help auto-identify
         self._line_std_G = line_props['std_G']
         self._line_fwhm_L = line_props['fwhm_L']
 
-        return line_props, line_cov
+        return line_props, gp
 
-    def draw_line_marker(self, line_props, wavelength, xmin, xmax):
+    def draw_line_marker(self, line_props, wavelength, xmin, xmax, gp=None):
         pix_grid = np.linspace(xmin, xmax, 512)
         flux_grid = voigt_polynomial(pix_grid, **line_props)
 
@@ -217,6 +220,19 @@ class GUIWavelengthSolver(object):
                      lw=1., linestyle='-', marker='', alpha=1., c='#31a354')
         self.ax.text(x0, peak+4*space, "{:.3f} $\AA$".format(wavelength),
                      ha='center', va='bottom', rotation='vertical')
+
+        if gp is not None:
+            i1 = int(np.floor(xmin))
+            i2 = int(np.ceil(xmax))+1
+            flux = self.flux[i1:i2]
+
+            # also plot the full GP model
+            gp_color = "#ff7f0e"
+            mu, var = gp.predict(flux, pix_grid, return_var=True)
+            std = np.sqrt(var)
+            self.ax.plot(pix_grid, mu, color=gp_color, marker='')
+            self.ax.fill_between(pix_grid, mu+std, mu-std, color=gp_color,
+                                 alpha=0.3, edgecolor="none")
 
     def auto_identify(self):
         if self.line_list is None:
@@ -233,21 +249,20 @@ class GUIWavelengthSolver(object):
         pixl = np.array(self._map_dict['pixel'])[_idx]
 
         # build an approximate wavelength solution to predict where lines are
-        spl = InterpolatedUnivariateSpline(wvln, pixl, k=3)
+        spl = InterpolatedUnivariateSpline(wvln, pixl, k=1) # use linear interp.
 
         predicted_pixels = spl(self.line_list)
 
         new_wavels = []
         new_pixels = []
-        new_pixel_errs = []
 
         # from Wikipedia: https://en.wikipedia.org/wiki/Voigt_profile
         fG = 2*self._line_std_G*np.sqrt(2*np.log(2))
         fL = self._line_fwhm_L
         lw = 0.5346*fL + np.sqrt(0.2166*fL**2 + fG**2)
         for pix_ctr,xmin,xmax,wave_idx,wave in zip(predicted_pixels,
-                                                   predicted_pixels-3*lw,
-                                                   predicted_pixels+3*lw,
+                                                   predicted_pixels-5*lw,
+                                                   predicted_pixels+5*lw,
                                                    range(len(self.line_list)),
                                                    self.line_list):
 
@@ -260,7 +275,7 @@ class GUIWavelengthSolver(object):
             logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
                          .format(pix_ctr, wave))
             try:
-                lp,lc = self.get_line_props(xmin, xmax,
+                lp,gp = self.get_line_props(xmin, xmax,
                                             std_G0=self._line_std_G,
                                             fwhm_L0=self._line_fwhm_L)
             except Exception as e:
@@ -268,6 +283,7 @@ class GUIWavelengthSolver(object):
                              .format(wave, msg=str(e)))
                 continue
 
+            print(lp['amp'], lp['x0'])
             if lp is None or lp['amp'] < 100.: # HACK
                 continue
 
@@ -284,10 +300,9 @@ class GUIWavelengthSolver(object):
             #                  .format(min_diff_pix, min_diff_wav))
             #     continue
 
-            self.draw_line_marker(lp, wave, xmin, xmax)
+            self.draw_line_marker(lp, wave, xmin, xmax, gp=gp)
             new_wavels.append(wave)
             new_pixels.append(pix_ctr)
-            new_pixel_errs.append(np.sqrt(lc[1,1]))
             self._done_wavel_idx.append(wave_idx)
 
         self.fig.canvas.draw()
@@ -295,17 +310,19 @@ class GUIWavelengthSolver(object):
         _idx = np.argsort(new_wavels)
         self._map_dict['wavel'] = np.array(new_wavels)[_idx]
         self._map_dict['pixel'] = np.array(new_pixels)[_idx]
-        self._map_dict['pixel_err'] = np.array(new_pixel_errs)[_idx]
+        # self._map_dict['pixel_err'] = np.array(new_pixel_errs)[_idx]
 
     def _finish(self):
         self.solution = dict()
         self.solution['wavelength'] = self._map_dict['wavel']
         self.solution['pixel'] = self._map_dict['pixel']
-        self.solution['pixel_err'] = self._map_dict['pixel_err']
+        # self.solution['pixel_err'] = self._map_dict['pixel_err']
         plt.close(self.fig)
 
-def main(proc_path, linelist_file, init_file=None, overwrite=False):
+def main(proc_path, linelist_file, overwrite=False):
     """ """
+
+    init_file = '/Users/adrian/projects/gaia-comoving-followup/config/mdm-spring-2017/init_wavelength.csv'
 
     proc_path = path.realpath(path.expanduser(proc_path))
     if not path.exists(proc_path):
@@ -320,13 +337,13 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
 
     if path.isdir(proc_path):
         wavelength_data_file = None
-        output_path = proc_path
+        output_path = path.abspath(path.join(proc_path, '..'))
         logger.info("Reading data from path: {}".format(proc_path))
 
     elif path.isfile(proc_path):
         wavelength_data_file = proc_path
         base_path, name = path.split(proc_path)
-        output_path = base_path
+        output_path = path.abspath(path.join(base_path, '..'))
         logger.info("Reading from file: {}".format(proc_path))
 
     else:
@@ -378,13 +395,12 @@ def main(proc_path, linelist_file, init_file=None, overwrite=False):
 
     wav = gui.solution['wavelength']
     pix = gui.solution['pixel']
-    pix_err = gui.solution['pixel_err']
 
     # write the pixel-wavelength nodes out to file
-    with open(path.join(output_path, 'master_wavelength.csv'), 'w') as f:
-        txt = ["# wavelength, pixel, pixel_err"]
-        for row in zip(wav, pix, pix_err):
-            txt.append("{:.5f},{:.5f},{:.5f}".format(*row))
+    with open(path.join(output_path, 'wavelength_guess.csv'), 'w') as f:
+        txt = ["# wavelength, pixel"]
+        for row in zip(wav, pix):
+            txt.append("{:.5f},{:.5f}".format(*row))
         f.write("\n".join(txt))
 
 if __name__ == "__main__":
@@ -408,10 +424,6 @@ if __name__ == "__main__":
                         help='Path to a text file where the 0th column is a list of '
                              'emission lines for the comparison lamp. Default is to '
                              'require the user to enter exact wavelengths.')
-    parser.add_argument('--init-file', dest='init_file', type=str, default=None,
-                        help='Path to a CSV file where the 0th column is a list of '
-                             'pixel values and the 1st column is a list of wavelength '
-                             'values to initialize the auto-solution.')
 
     args = parser.parse_args()
 

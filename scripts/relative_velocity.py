@@ -20,7 +20,7 @@ import numpy as np
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import SkippableImageFileCollection, voigt_polynomial
+from comoving_rv.longslit import GlobImageFileCollection, voigt_polynomial
 from comoving_rv.longslit.wavelength import fit_spec_line
 
 def solve_radial_velocity(filename, wavelength_coef, done_list=None, plot=False):
@@ -170,7 +170,7 @@ def main(proc_path, overwrite=False):
         solve_radial_velocity(data_file, coef, done_list=None, plot=True)
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_proc_*')
+        proc_ic = GlobImageFileCollection(proc_path, glob_include='1d_proc_*')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
 
         logger.info("Beginning wavelength calibration...")

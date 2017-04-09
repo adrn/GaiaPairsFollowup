@@ -22,7 +22,7 @@ import numpy as np
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import SkippableImageFileCollection, voigt_polynomial
+from comoving_rv.longslit import GlobImageFileCollection, voigt_polynomial
 from comoving_rv.longslit.wavelength import fit_spec_line
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 
@@ -124,7 +124,7 @@ def main(proc_path, overwrite=False):
         file_list = [data_file]
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_proc_*')
+        proc_ic = GlobImageFileCollection(proc_path, glob_include='1d_proc_*')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
         file_list = proc_ic.files_filtered(imagetyp='OBJECT')
         file_list = [path.join(proc_ic.location, base_fname) for base_fname in file_list]

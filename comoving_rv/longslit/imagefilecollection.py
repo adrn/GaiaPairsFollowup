@@ -5,12 +5,13 @@ from fnmatch import fnmatch
 from ccdproc import ImageFileCollection
 import six
 
-__all__ = ['SkippableImageFileCollection']
+__all__ = ['GlobImageFileCollection']
 
-class SkippableImageFileCollection(ImageFileCollection):
+class GlobImageFileCollection(ImageFileCollection):
 
     def __init__(self, location=None, keywords=None, info_file=None,
-                 filenames=None, glob_pattr=None, skip_filenames=None):
+                 filenames=None, glob_include=None, glob_exclude=None,
+                 skip_filenames=None):
 
         if skip_filenames is None:
             self.skip_filenames = list()
@@ -18,12 +19,13 @@ class SkippableImageFileCollection(ImageFileCollection):
         else:
             self.skip_filenames = list(skip_filenames)
 
-        self.glob_pattr = glob_pattr
+        self.glob_exclude = glob_exclude
+        self.glob_include = glob_include
 
-        super(SkippableImageFileCollection, self).__init__(location=location,
-                                                           keywords=keywords,
-                                                           info_file=info_file,
-                                                           filenames=filenames)
+        super(GlobImageFileCollection, self).__init__(location=location,
+                                                      keywords=keywords,
+                                                      info_file=info_file,
+                                                      filenames=filenames)
 
     def _get_files(self):
         """ Helper method which checks whether ``files`` should be set
@@ -47,7 +49,11 @@ class SkippableImageFileCollection(ImageFileCollection):
                 if fn in self.skip_filenames:
                     continue
 
-                if self.glob_pattr is not None and not fnmatch(fn, self.glob_pattr):
+                # logic is backwards because we continue if fnmatch() doesn't evaluate
+                if self.glob_include is not None and not fnmatch(fn, self.glob_include):
+                    continue
+
+                if self.glob_exclude is not None and fnmatch(fn, self.glob_exclude):
                     continue
 
                 files.append(fn)

@@ -24,7 +24,7 @@ from celerite import terms, GP
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import SkippableImageFileCollection
+from comoving_rv.longslit import GlobImageFileCollection
 from comoving_rv.longslit.wavelength import (extract_1d_comp_spectrum, fit_spec_line_GP,
                                              gp_to_fit_pars)
 from comoving_rv.longslit.models import voigt_polynomial
@@ -351,7 +351,7 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
         add_wavelength(data_file, coef, overwrite=overwrite, pix_range=pix_range)
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = SkippableImageFileCollection(proc_path, glob_pattr='1d_*')
+        proc_ic = GlobImageFileCollection(proc_path, glob_include='1d_*')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
 
         logger.info("Beginning wavelength calibration...")

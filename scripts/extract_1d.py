@@ -46,7 +46,7 @@ import yaml
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import SkippableImageFileCollection
+from comoving_rv.longslit import GlobImageFileCollection
 from comoving_rv.longslit.models import voigt
 
 # -------------------------------
@@ -379,7 +379,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         pixel_mask_spec = None
 
     # generate the raw image file collection to process
-    ic = SkippableImageFileCollection(night_path, skip_filenames=skip_list)
+    ic = GlobImageFileCollection(night_path, skip_filenames=skip_list)
     logger.info("Frames to process:")
     logger.info("- Bias frames: {}".format(len(ic.files_filtered(imagetyp='BIAS'))))
     logger.info("- Flat frames: {}".format(len(ic.files_filtered(imagetyp='FLAT'))))

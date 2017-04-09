@@ -14,6 +14,8 @@ This README describes how to process one night's worth of spectroscopic data.
 The input files are expected to be 2D raw CCD frames from the output of the
 telescope instrument software. The output files are a set of FITS files
 containing 1D extracted, wavelength-calibrated spectra for each source file.
+All scripts below are assumed to be run from the `scripts/` directory of this
+project.
 
 Process the raw CCD frames
 --------------------------
@@ -21,17 +23,19 @@ Process the raw CCD frames
 The first step is to bias-correct, flat-correct, and trim the raw frames. Some
 exposures may be known to be bad -- you can specify filenames to skip by
 creating a text file with one filename per line (in this case, ``n1_skip.txt``).
-Some frames will contain multiple sources. You can specify pixel mask regions to
+
+The next step is to extract the 1D spectra from the 2D processed frames. Some
+frames will contain multiple sources. You can specify pixel mask regions to
 remove these extra sources by specifing a mask file (in this case,
 ``n1_masks.yml``). See ``config/mdm-spring-2017/n1_masks.yml`` for an example of
 the expected format; ``top_bottom`` is the central column position of the mask
 at the top and bottom of the CCD as view from a DS9 window (top is larger row
-index values). To run the processing (from the `scripts/` directory):
+index values - sorry). To run the processing (from the `scripts/` directory):
 
 ```bash
 python extract_1d.py -p ../data/mdm-spring-2017/n1 \
 --skiplist=../config/mdm-spring-2017/n1_skip.txt \
---mask=../config/mdm-spring-2017/n1_masks.yml -v
+--mask=../config/mdm-spring-2017/n1_masks.yml -v --plot
 ```
 
 The above example will process all files in the path
@@ -39,7 +43,9 @@ The above example will process all files in the path
 processed 2D frame files will be output to the path
 ``../data/mdm-spring-2017/processed/n1`` starting with the name ``p_*``. The 1D
 extracted spectra (not wavelength calibrated) will also be in this directory
-with filenames that start ``1d_*``.
+with filenames that start ``1d_*``. By specifying the ``--plot`` flag to the
+extraction script, a bunch of diagnostic plots will be saved to the ``plots``
+subdirectory of the ``processed/n1`` path.
 
 Identify lines in a comparison lamp spectrum
 --------------------------------------------

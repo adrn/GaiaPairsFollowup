@@ -23,7 +23,8 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 # Package
 from comoving_rv.log import logger
 from comoving_rv.longslit import voigt_polynomial
-from comoving_rv.longslit.wavelength import fit_spec_line_GP, gp_to_fit_pars
+from comoving_rv.longslit.wavelength import (extract_1d_comp_spectrum, fit_spec_line_GP,
+                                             gp_to_fit_pars)
 
 class GUIWavelengthSolver(object):
 
@@ -265,7 +266,8 @@ class GUIWavelengthSolver(object):
                                                    predicted_pixels+5*lw,
                                                    range(len(self.line_list)),
                                                    self.line_list):
-
+            print(lw)
+            sys.exit(0)
             if pix_ctr < 200 or pix_ctr > 1600: # skip if outside good rows
                 continue
 
@@ -322,7 +324,8 @@ class GUIWavelengthSolver(object):
 def main(proc_path, linelist_file, overwrite=False):
     """ """
 
-    init_file = '/Users/adrian/projects/gaia-comoving-followup/config/mdm-spring-2017/init_wavelength.csv'
+    # HACK:
+    init_file = '../config/mdm-spring-2017/init_wavelength.csv'
 
     proc_path = path.realpath(path.expanduser(proc_path))
     if not path.exists(proc_path):
@@ -379,17 +382,7 @@ def main(proc_path, linelist_file, overwrite=False):
 
     # read 2D CCD data
     ccd = CCDData.read(wavelength_data_file)
-
-    # create 1D pixel and flux grids
-    col_pix = np.arange(ccd.shape[0])
-
-    # HACK: this is a hack, but seems to be ok for the comp lamp spectra we have
-    flux_ivar = 1 / ccd.uncertainty[:,100:200].array**2
-    flux_ivar[np.isnan(flux_ivar)] = 0.
-
-    flux = np.sum(flux_ivar * ccd.data[:,100:200], axis=1) / np.sum(flux_ivar, axis=1)
-    flux_ivar = np.sum(flux_ivar, axis=1)
-
+    col_pix, flux, flux_ivar = extract_1d_comp_spectrum(ccd)
     gui = GUIWavelengthSolver(col_pix, flux, flux_ivar=flux_ivar,
                               line_list=line_list, init_map=init_map)
 

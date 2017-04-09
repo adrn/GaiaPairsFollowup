@@ -22,10 +22,6 @@ disperion direction.
 Wavelength calibration and radial velocity corrections are handled in
 subsequent scripts.
 
-TODO:
-- Make the functions below part of a class so we can store diagnostic
-    plots along the way (easily keep track of paths)
-
 """
 
 # Standard library

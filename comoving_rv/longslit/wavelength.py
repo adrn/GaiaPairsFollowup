@@ -12,7 +12,20 @@ from celerite import terms, GP
 from ..log import logger
 from .models import voigt_polynomial
 
-__all__ = ['fit_spec_line', 'fit_spec_line_GP']
+__all__ = ['extract_1d_comp_spectrum', 'fit_spec_line', 'fit_spec_line_GP']
+
+def extract_1d_comp_spectrum(ccd_data, column_slice=slice(100,200)):
+    # create 1D pixel and flux grids
+    col_pix = np.arange(ccd_data.shape[0])
+
+    # HACK: this is a hack, but seems to be ok for the comp lamp spectra we have
+    flux_ivar = 1 / ccd_data.uncertainty[:,column_slice].array**2
+    flux_ivar[np.isnan(flux_ivar)] = 0.
+
+    flux = np.sum(flux_ivar * ccd_data.data[:,column_slice], axis=1) / np.sum(flux_ivar, axis=1)
+    flux_ivar = np.sum(flux_ivar, axis=1)
+
+    return col_pix, flux, flux_ivar
 
 def par_dict_to_list(p):
     return [p['amp'], p['x0'], p['std_G'], p['fwhm_L']] + p['bg_coef'].tolist()
@@ -264,6 +277,16 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     gp.compute(x, flux_err) # need to do this
     init_params = gp.get_parameter_vector()
     logger.debug("Initial log-likelihood: {0}".format(gp.log_likelihood(flux)))
+
+    # TEST:
+    # pars = gp_to_fit_pars(gp, absorp_emiss)
+    # import matplotlib.pyplot as plt
+    # plt.clf()
+    # plt.plot(x, flux)
+    # _grid = np.linspace(x.min(), x.max(), 256)
+    # plt.plot(_grid, voigt_polynomial(_grid, **pars), marker='')
+    # plt.show()
+    # sys.exit(0)
 
     # Define a cost function
     def neg_log_like(params, y, gp):

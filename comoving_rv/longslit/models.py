@@ -22,9 +22,9 @@ def voigt(x, amp, x0, G_std, L_fwhm):
         Amplitude of the profile (integral).
     x0 : numeric
         Centroid.
-    G_std : numeric
+    std_G : numeric
         Standard of deviation of the Gaussian component.
-    L_fwhm : numeric
+    fwhm_L : numeric
         FWHM of the Lorentzian component.
     """
 
@@ -44,9 +44,9 @@ def voigt_constant(x, amp, x0, std_G, fwhm_L, C):
         Amplitude of the profile (integral).
     x0 : numeric
         Centroid.
-    G_std : numeric
+    std_G : numeric
         Standard of deviation of the Gaussian component.
-    L_fwhm : numeric
+    fwhm_L : numeric
         FWHM of the Lorentzian component.
     C : numeric
         Background
@@ -64,11 +64,11 @@ def voigt_polynomial(x, amp, x0, std_G, fwhm_L, bg_coef):
         Amplitude of the profile (integral).
     x0 : numeric
         Centroid.
-    G_std : numeric
+    std_G : numeric
         Standard of deviation of the Gaussian component.
-    L_fwhm : numeric
+    fwhm_L : numeric
         FWHM of the Lorentzian component.
     bg_coef : iterable
-        List of polynomial coefficients.
+        List of polynomial coefficients for the background component.
     """
     return voigt(x, amp, x0, std_G, fwhm_L) + polyval(x-x0, np.atleast_1d(bg_coef))

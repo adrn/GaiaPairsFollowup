@@ -11,8 +11,7 @@ TODO:
 from os import path
 
 # Third-party
-import ccdproc
-from ccdproc import CCDData
+from astropy.table import Table
 from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,9 +21,8 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 # Package
 from comoving_rv.log import logger
-from comoving_rv.longslit import voigt_polynomial
-from comoving_rv.longslit.wavelength import (extract_1d_comp_spectrum, fit_spec_line_GP,
-                                             gp_to_fit_pars)
+from comoving_rv.longslit import voigt_polynomial, GlobImageFileCollection
+from comoving_rv.longslit.fitting import fit_spec_line # fit_spec_line_GP, gp_to_fit_pars
 
 class GUIWavelengthSolver(object):
 
@@ -189,23 +187,27 @@ class GUIWavelengthSolver(object):
         else:
             flux_ivar = None
 
-        try:
-            gp = fit_spec_line_GP(pix, flux, flux_ivar, n_bg_coef=1, absorp_emiss=1.,
-                                  log_sigma0=np.log(10.), **kwargs)
-        except Exception as e:
-            msg = "Failed to fit line!"
-            logger.error(msg)
-            logger.error(str(e))
-            self._ui['textbox'].setText("ERROR: See terminal for more information.")
-            return None
+        # try:
+        #     gp = fit_spec_line_GP(pix, flux, flux_ivar, n_bg_coef=1, absorp_emiss=1.,
+        #                           log_sigma0=np.log(10.), **kwargs)
+        # except Exception as e:
+        #     msg = "Failed to fit line!"
+        #     logger.error(msg)
+        #     logger.error(str(e))
+        #     self._ui['textbox'].setText("ERROR: See terminal for more information.")
+        #     return None
 
-        line_props = gp_to_fit_pars(gp, absorp_emiss=1.)
+        # line_props = gp_to_fit_pars(gp, absorp_emiss=1.)
+
+        line_props = fit_spec_line(pix, flux, flux_ivar, n_bg_coef=1,
+                                   absorp_emiss=1., **kwargs)
 
         # store these to help auto-identify
         self._line_std_G = line_props['std_G']
         self._line_fwhm_L = line_props['fwhm_L']
 
-        return line_props, gp
+        # return line_props, gp
+        return line_props, None
 
     def draw_line_marker(self, line_props, wavelength, xmin, xmax, gp=None):
         pix_grid = np.linspace(xmin, xmax, 512)
@@ -266,8 +268,7 @@ class GUIWavelengthSolver(object):
                                                    predicted_pixels+5*lw,
                                                    range(len(self.line_list)),
                                                    self.line_list):
-            print(lw)
-            sys.exit(0)
+
             if pix_ctr < 200 or pix_ctr > 1600: # skip if outside good rows
                 continue
 
@@ -355,7 +356,7 @@ def main(proc_path, linelist_file, overwrite=False):
     logger.info("Saving processed files to path: {}".format(output_path))
 
     if wavelength_data_file is None: # find a COMP lamp:
-        ic = ccdproc.ImageFileCollection(proc_path)
+        ic = GlobImageFileCollection(proc_path, glob_include='1d_*')
 
         hdu = None
         for hdu,wavelength_data_file in ic.hdus(return_fname=True, imagetyp='COMP'):
@@ -380,10 +381,9 @@ def main(proc_path, linelist_file, overwrite=False):
     else:
         init_map = None
 
-    # read 2D CCD data
-    ccd = CCDData.read(wavelength_data_file)
-    col_pix, flux, flux_ivar = extract_1d_comp_spectrum(ccd)
-    gui = GUIWavelengthSolver(col_pix, flux, flux_ivar=flux_ivar,
+    # read 1D extracted comp lamp spectrum
+    tbl = Table.read(wavelength_data_file)
+    gui = GUIWavelengthSolver(tbl['pix'], tbl['flux'], flux_ivar=tbl['ivar'],
                               line_list=line_list, init_map=init_map)
 
     wav = gui.solution['wavelength']
@@ -412,7 +412,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-p', '--path', dest='proc_path', required=True,
                         help='Path to a PROCESSED night or chunk of data to process. Or, '
-                             'path to a specific comp file.')
+                             'path to a specific 1D comp spectrum file.')
     parser.add_argument('--linelist', dest='linelist_file', type=str, default=None,
                         help='Path to a text file where the 0th column is a list of '
                              'emission lines for the comparison lamp. Default is to '

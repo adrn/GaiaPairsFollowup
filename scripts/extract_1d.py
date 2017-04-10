@@ -53,6 +53,12 @@ oscan_size = 64
 #
 # -------------------------------
 
+ccd_props = dict()
+ccd_props['ccd_gain'] = ccd_gain
+ccd_props['ccd_readnoise'] = ccd_readnoise
+ccd_props['oscan_idx'] = oscan_idx
+ccd_props['oscan_size'] = oscan_size
+
 # plotting configuration
 from astropy.visualization import ZScaleInterval
 zscaler = ZScaleInterval(32768, krej=5., max_iterations=16)
@@ -208,9 +214,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         if path.exists(new_fname) and not overwrite:
             logger.log(1, "\tAlready processed! {}".format(new_fname))
             ext = CCDExtractor(filename=path.join(ic.location, new_fname),
-                               ccd_gain=ccd_gain, ccd_readnoise=ccd_readnoise,
-                               oscan_idx=oscan_idx, oscan_size=oscan_size,
-                               plot_path=plot_path, zscaler=zscaler, cmap=cmap)
+                               plot_path=plot_path, zscaler=zscaler, cmap=cmap,
+                               unit='adu', **ccd_props)
             nccd = ext.ccd
 
             # HACK: FUCK this is a bad hack
@@ -219,7 +224,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         else:
             # process the frame!
             ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
-                               unit='adu')
+                               unit='adu', **ccd_props)
             nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                          master_bias=master_bias,
                                          master_flat=master_flat)
@@ -238,12 +243,14 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             logger.debug("\tExtracting to 1D")
 
             # first step is to fit a voigt profile to a middle-ish row to determine LSF
-            lsf_p = ext.get_lsf_pars(row_idx=800) # MAGIC NUMBER
+            lsf_p = ext.get_lsf_pars() # MAGIC NUMBER
 
             try:
                 tbl = ext.extract_1d(lsf_p)
             except Exception as e:
-                logger.error('--- Failed! --- {}'.format(e))
+                logger.error('Failed! {}: {}'.format(e.__class__.__name__,
+                                                     str(e)))
+                raise e
                 continue
 
             hdu0 = fits.PrimaryHDU(header=nccd.header)
@@ -269,7 +276,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
 
         # process the frame!
         ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
-                           unit='adu')
+                           unit='adu', **ccd_props)
         nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                      master_bias=master_bias,
                                      master_flat=master_flat,)

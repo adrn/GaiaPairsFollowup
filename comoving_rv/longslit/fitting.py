@@ -26,7 +26,8 @@ def get_init_guess(x, flux, ivar,
         relmins = argrelmin(-absorp_emiss*flux)[0]
 
         if len(relmins) > 1 and target_x is None:
-            logger.debug("no target_x specified - taking largest line in spec region")
+            logger.log(0, "no target_x specified - taking largest line "
+                       "in spec region")
             target_x = x[np.argmin(-absorp_emiss*flux)]
 
         if len(relmins) == 1:

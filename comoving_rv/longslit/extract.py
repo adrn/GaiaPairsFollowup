@@ -3,7 +3,7 @@ from os import path
 from collections import OrderedDict
 
 # Third-party
-from astropy.modeling import Polynomial1D
+from astropy.modeling.models import Polynomial1D
 from astropy.nddata.nduncertainty import StdDevUncertainty
 from astropy.visualization import ZScaleInterval
 from astropy.table import Table
@@ -12,7 +12,6 @@ from ccdproc import CCDData
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import leastsq
-from scipy.stats import scoreatpercentile
 
 # Project
 from ..log import logger
@@ -29,13 +28,16 @@ def errfunc(p, pix, flux, flux_ivar, lsf_pars):
     model_flux = voigt_polynomial(pix, amp, x0, bg_coef=bg_coef, **lsf_pars)
     return (flux - model_flux) * np.sqrt(flux_ivar)
 
-def fit_spec_flux(x, flux, flux_ivar,
-                  std_G, fwhm_L,
+def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
                   amp0=None, x0=None,
                   bg0=None, n_bg_coef=2, target_x=None,
                   leastsq_kw=None):
     """
-    Fit for the source and background flux at a given row in the CCD.
+    Custom fitting function to fit for the source and background flux at a given
+    row in the CCD.
+
+    TODO: could be combined with ``fit_spec_line`` and ``fit_spec_line_GP`` into
+    a class that can handle all types of fitting.
 
     Parameters
     ----------
@@ -45,8 +47,7 @@ def fit_spec_flux(x, flux, flux_ivar,
         Array of fluxes. Must be the same shape as ``x``.
     flux_var : array_like
         Invere-variance (uncertainty) array. Must be the same shape as ``x``.
-    std_G : numeric
-    fwhm_L : numeric
+    lsf_pars : dict
     amp0 : numeric (optional)
         Initial guess for line amplitude.
     x0 : numeric (optional)
@@ -65,12 +66,13 @@ def fit_spec_flux(x, flux, flux_ivar,
 
     # initial guess
     p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
-                        amp0=amp0, x0=x0, std_G0=std_G, fwhm_L0=fwhm_L,
+                        amp0=amp0, x0=x0,
+                        std_G0=lsf_pars['std_G'], fwhm_L0=lsf_pars['fwhm_L'],
                         bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
                         absorp_emiss=1.)
 
-    p0['std_G'] = std_G
-    p0['fwhm_L'] = fwhm_L
+    p0['std_G'] = lsf_pars['std_G']
+    p0['fwhm_L'] = lsf_pars['fwhm_L']
 
     # shift x array so that line is approximately at 0
     _x = np.array(x, copy=True)
@@ -85,14 +87,14 @@ def fit_spec_flux(x, flux, flux_ivar,
     leastsq_kw.setdefault('xtol', 1e-10)
     leastsq_kw.setdefault('maxfev', 100000)
 
-    args = (x, flux, flux_ivar)
+    args = (x, flux, flux_ivar, lsf_pars)
     p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, par_dict_to_list(p0),
                                       args=args, full_output=True, **leastsq_kw)
 
     s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
     p_cov = p_cov * s_sq
 
-    fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
+    fit_amp, fit_x0, *fit_bg = p_opt
     fit_x0 = fit_x0 + _x0
 
     fail_msg = "Fitting spectral line in comp lamp spectrum failed. {msg}"
@@ -104,7 +106,7 @@ def fit_spec_flux(x, flux, flux_ivar,
         raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
 
     par_dict = OrderedDict(amp=fit_amp, x0=fit_x0,
-                           std_G=fit_std_G, fwhm_L=fit_fwhm_L,
+                           std_G=lsf_pars['std_G'], fwhm_L=lsf_pars['fwhm_L'],
                            bg_coef=fit_bg)
 
     return par_dict, p_cov
@@ -340,8 +342,8 @@ class CCDExtractor(object):
             flux_ivar[~np.isfinite(flux_ivar)] = 0.
 
             try:
-                p_fit, p_cov = fit_spec_flux(pix, flux, flux_ivar, **lsf_p)
-            except RuntimeError:
+                p_fit, p_cov = fit_spec_flux(pix, flux, flux_ivar, lsf_p)
+            except (RuntimeError, ValueError):
                 flux_1d[i] = np.nan
                 sky_flux_1d[i] = np.nan
                 logger.log(0, "Fit failed for {}".format(i)) # TODO: ignored for now
@@ -349,7 +351,7 @@ class CCDExtractor(object):
 
             flux_1d[i] = p_fit['amp']
             trace_1d[i] = p_fit['x0']
-            sky_flux_1d[i] = p_fit['bg0']
+            sky_flux_1d[i] = p_fit['bg_coef'][0] # constant
 
             # TODO: ignores centroiding covariances...
             flux_1d_err[i] = np.sqrt(p_cov[0,0])

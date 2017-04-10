@@ -1,6 +1,8 @@
 TODO
 ====
 
+* Is there an issue with fitting to (x-x0) twice? See source of
+  voigt_polynomial, then source of fit_spec_line
 * Use the Gaussian process fitter to fit for the source spectrum trace at each
   row of the CCD? Should prevent blending of the source spectrum into the sky...
 * Propagate uncertainties in arc lamp line centroids

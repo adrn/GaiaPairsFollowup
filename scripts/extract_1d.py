@@ -41,7 +41,7 @@ import yaml
 # Project
 from comoving_rv.log import logger
 from comoving_rv.longslit import GlobImageFileCollection
-from comoving_rv.longslit.extract import CCDExtractor
+from comoving_rv.longslit.extract import SourceCCDExtractor, CompCCDExtractor
 
 # -------------------------------
 # CCD properties
@@ -213,9 +213,9 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         logger.debug("Processing '{}' [{}]".format(hdu.header['OBJECT'], fname))
         if path.exists(new_fname) and not overwrite:
             logger.log(1, "\tAlready processed! {}".format(new_fname))
-            ext = CCDExtractor(filename=path.join(ic.location, new_fname),
-                               plot_path=plot_path, zscaler=zscaler, cmap=cmap,
-                               unit='adu', **ccd_props)
+            ext = SourceCCDExtractor(filename=path.join(ic.location, new_fname),
+                                     plot_path=plot_path, zscaler=zscaler,
+                                     cmap=cmap, **ccd_props)
             nccd = ext.ccd
 
             # HACK: FUCK this is a bad hack
@@ -223,8 +223,9 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
 
         else:
             # process the frame!
-            ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
-                               unit='adu', **ccd_props)
+            ext = SourceCCDExtractor(filename=path.join(ic.location, fname),
+                                     plot_path=plot_path, zscaler=zscaler,
+                                     cmap=cmap, unit='adu', **ccd_props)
             nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
                                          master_bias=master_bias,
                                          master_flat=master_flat)
@@ -250,7 +251,6 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             except Exception as e:
                 logger.error('Failed! {}: {}'.format(e.__class__.__name__,
                                                      str(e)))
-                raise e
                 continue
 
             hdu0 = fits.PrimaryHDU(header=nccd.header)
@@ -270,17 +270,50 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         new_fname = path.join(output_path, 'p_{}'.format(fname))
 
         logger.debug("\tProcessing '{}'".format(hdu.header['OBJECT']))
+
         if path.exists(new_fname) and not overwrite:
-            logger.log(1, "\t\tAlready done! {}".format(new_fname))
+            logger.log(1, "\tAlready processed! {}".format(new_fname))
+            ext = CompCCDExtractor(filename=path.join(ic.location, new_fname),
+                                   plot_path=plot_path, zscaler=zscaler,
+                                   cmap=cmap, **ccd_props)
+            nccd = ext.ccd
+
+            # HACK: FUCK this is a bad hack
+            ext._filename_base = ext._filename_base[2:]
+
+        else:
+            # process the frame!
+            ext = CompCCDExtractor(filename=path.join(ic.location, fname),
+                                   plot_path=plot_path, unit='adu', **ccd_props)
+            nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
+                                         master_bias=master_bias,
+                                         master_flat=master_flat,)
+            nccd.write(new_fname, overwrite=overwrite)
+
+        # -------------------------------------------
+        # Now do the 1D extraction
+        # -------------------------------------------
+
+        fname_1d = path.join(output_path, '1d_{0}'.format(fname))
+        if path.exists(fname_1d) and not overwrite:
+            logger.log(1, "\tAlready extracted! {}".format(fname_1d))
             continue
 
-        # process the frame!
-        ext = CCDExtractor(filename=path.join(ic.location, fname), plot_path=plot_path,
-                           unit='adu', **ccd_props)
-        nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
-                                     master_bias=master_bias,
-                                     master_flat=master_flat,)
-        nccd.write(new_fname, overwrite=overwrite)
+        else:
+            logger.debug("\tExtracting to 1D")
+
+            try:
+                tbl = ext.extract_1d()
+            except Exception as e:
+                logger.error('Failed! {}: {}'.format(e.__class__.__name__,
+                                                     str(e)))
+                continue
+
+            hdu0 = fits.PrimaryHDU(header=nccd.header)
+            hdu1 = fits.table_to_hdu(tbl)
+            hdulist = fits.HDUList([hdu0, hdu1])
+
+            hdulist.writeto(fname_1d, overwrite=overwrite)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

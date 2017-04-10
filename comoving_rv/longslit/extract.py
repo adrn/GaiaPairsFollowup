@@ -18,7 +18,7 @@ from ..log import logger
 from .models import voigt_polynomial
 from .fitting import fit_spec_line, get_init_guess, par_dict_to_list
 
-__all__ = ['CCDExtractor']
+__all__ = ['SourceCCDExtractor', 'CompCCDExtractor']
 
 def errfunc(p, pix, flux, flux_ivar, lsf_pars):
     """
@@ -111,6 +111,7 @@ def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
 
     return par_dict, p_cov
 
+
 class CCDExtractor(object):
 
     def __init__(self, filename,
@@ -139,46 +140,6 @@ class CCDExtractor(object):
 
         if cmap is None:
             self.cmap = 'Greys_r'
-
-    def make_nearby_source_mask(self, mask_spec):
-        """
-        Construct and return a boolean array mask to remove pixels
-        from the CCD image where there is a nearby source. The mask
-        is True where the pixels should be removed, or where the
-        uncertainty should be set to inf.
-
-        Parameters
-        ----------
-        mask_spec : list
-            Read from a mask specification yaml file. Should be a list
-            of dicts that contain 2 keys:
-
-                'top_bottom' : iterable
-                    A length-2 iterable specifying the mask trace column
-                    center at the top and bottom of the CCD region.
-                'width' : numeric
-                    Width of the source mask.
-
-        """
-
-        n_row,n_col = self.ccd.shape
-        mask = np.zeros((n_row, n_col)).astype(bool)
-
-        for spec in mask_spec:
-            x1,x2 = spec['top_bottom'][::-1] # trace position to mask at top and bottom of CCD
-            y1,y2 = 250,n_row-250 # remove top and bottom of CCD
-
-            def mask_cen_func(row):
-                return (x2-x1)/(y2-y1) * (row - y1) + x1
-
-            for i in range(n_row):
-                j1 = int(np.floor(mask_cen_func(i) - spec['width']/2.))
-                j2 = int(np.ceil(mask_cen_func(i) + spec['width']/2.)) + 1
-                j1 = max(0, j1)
-                j2 = min(n_col, j2)
-                mask[i,j1:j2] = 1
-
-        return mask
 
     def process_raw_frame(self, master_bias, master_flat, pixel_mask_spec=None):
         """
@@ -262,6 +223,59 @@ class CCDExtractor(object):
             plt.close(fig)
 
         return nccd
+
+    def extract_1d(self):
+        """
+        Use the fit LSF widths, but fit for amplitude and background at each
+        row on the detector to get source and background fluxes.
+        """
+
+        raise NotImplementedError('')
+
+
+# ----------------------------------------------------------------------------
+
+class SourceCCDExtractor(CCDExtractor):
+
+    def make_nearby_source_mask(self, mask_spec):
+        """
+        Construct and return a boolean array mask to remove pixels
+        from the CCD image where there is a nearby source. The mask
+        is True where the pixels should be removed, or where the
+        uncertainty should be set to inf.
+
+        Parameters
+        ----------
+        mask_spec : list
+            Read from a mask specification yaml file. Should be a list
+            of dicts that contain 2 keys:
+
+                'top_bottom' : iterable
+                    A length-2 iterable specifying the mask trace column
+                    center at the top and bottom of the CCD region.
+                'width' : numeric
+                    Width of the source mask.
+
+        """
+
+        n_row,n_col = self.ccd.shape
+        mask = np.zeros((n_row, n_col)).astype(bool)
+
+        for spec in mask_spec:
+            x1,x2 = spec['top_bottom'][::-1] # trace position to mask at top and bottom of CCD
+            y1,y2 = 250,n_row-250 # remove top and bottom of CCD
+
+            def mask_cen_func(row):
+                return (x2-x1)/(y2-y1) * (row - y1) + x1
+
+            for i in range(n_row):
+                j1 = int(np.floor(mask_cen_func(i) - spec['width']/2.))
+                j2 = int(np.ceil(mask_cen_func(i) + spec['width']/2.)) + 1
+                j1 = max(0, j1)
+                j2 = min(n_col, j2)
+                mask[i,j1:j2] = 1
+
+        return mask
 
     def get_lsf_pars(self, row_idxs=None):
         """
@@ -394,6 +408,51 @@ class CCDExtractor(object):
                              linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
             axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
             axes[1].set_yscale('log')
+
+            fig.tight_layout()
+            fig.savefig(path.join(self.plot_path, '{0}_1d.png'.format(self._filename_base)))
+            plt.close(fig)
+
+        return tbl
+
+
+# ----------------------------------------------------------------------------
+
+class CompCCDExtractor(CCDExtractor):
+
+    def extract_1d(self, column_range=[100,200]):
+        """
+        Use the fit LSF widths, but fit for amplitude and background at each
+        row on the detector to get source and background fluxes.
+        """
+
+        column_slice = slice(*column_range)
+
+        n_rows,n_cols = self.ccd.data.shape
+        pix = np.arange(n_rows)
+
+        # HACK: this is a hack, but seems to be ok for the comp lamp spectra we have
+        flux_ivar = 1 / self.ccd.uncertainty[:,column_slice].array**2
+        flux_ivar[np.isnan(flux_ivar)] = 0.
+
+        _norm = np.sum(flux_ivar, axis=1)
+        flux = np.sum(flux_ivar * self.ccd.data[:,column_slice], axis=1) / _norm
+        flux_ivar = np.sum(flux_ivar, axis=1)
+
+        tbl = Table()
+        tbl['pix'] = pix
+        tbl['flux'] = flux
+        tbl['ivar'] = flux_ivar
+
+        if self.plot_path is not None:
+            fig,ax = plt.subplots(1, 1, figsize=(12,4), sharex=True)
+
+            ax.plot(tbl['pix'], tbl['flux'],
+                    marker='', drawstyle='steps-mid', linewidth=1.)
+            ax.errorbar(tbl['pix'], tbl['flux'], 1/np.sqrt(tbl['ivar']),
+                        linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+            ax.set_ylim(1., np.nanmax(tbl['flux']))
+            # ax.set_yscale('log')
 
             fig.tight_layout()
             fig.savefig(path.join(self.plot_path, '{0}_1d.png'.format(self._filename_base)))

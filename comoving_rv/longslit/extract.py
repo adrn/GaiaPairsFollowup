@@ -1,7 +1,9 @@
 # Standard library
 from os import path
+from collections import OrderedDict
 
 # Third-party
+from astropy.modeling import Polynomial1D
 from astropy.nddata.nduncertainty import StdDevUncertainty
 from astropy.visualization import ZScaleInterval
 from astropy.table import Table
@@ -14,8 +16,98 @@ from scipy.stats import scoreatpercentile
 
 # Project
 from ..log import logger
+from .models import voigt_polynomial
+from .fitting import fit_spec_line, get_init_guess, par_dict_to_list
 
 __all__ = ['CCDExtractor']
+
+def errfunc(p, pix, flux, flux_ivar, lsf_pars):
+    """
+    Custom error function for fixing the LSF widths.
+    """
+    amp, x0, *bg_coef = p
+    model_flux = voigt_polynomial(pix, amp, x0, bg_coef=bg_coef, **lsf_pars)
+    return (flux - model_flux) * np.sqrt(flux_ivar)
+
+def fit_spec_flux(x, flux, flux_ivar,
+                  std_G, fwhm_L,
+                  amp0=None, x0=None,
+                  bg0=None, n_bg_coef=2, target_x=None,
+                  leastsq_kw=None):
+    """
+    Fit for the source and background flux at a given row in the CCD.
+
+    Parameters
+    ----------
+    x : array_like
+        Pixel or wavelength array.
+    flux : array_like
+        Array of fluxes. Must be the same shape as ``x``.
+    flux_var : array_like
+        Invere-variance (uncertainty) array. Must be the same shape as ``x``.
+    std_G : numeric
+    fwhm_L : numeric
+    amp0 : numeric (optional)
+        Initial guess for line amplitude.
+    x0 : numeric (optional)
+        Initial guess for line centroid.
+    n_bg_coef : int
+        Number of terms in the background polynomial fit.
+    """
+
+    sort_idx = np.argsort(x)
+    x = np.array(x)[sort_idx]
+    flux = np.array(flux)[sort_idx]
+    if flux_ivar is not None:
+        flux_ivar = np.array(flux_ivar)[sort_idx]
+    else:
+        flux_ivar = np.ones_like(flux)
+
+    # initial guess
+    p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
+                        amp0=amp0, x0=x0, std_G0=std_G, fwhm_L0=fwhm_L,
+                        bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
+                        absorp_emiss=1.)
+
+    p0['std_G'] = std_G
+    p0['fwhm_L'] = fwhm_L
+
+    # shift x array so that line is approximately at 0
+    _x = np.array(x, copy=True)
+    _x0 = float(p0['x0'])
+    x = np.array(_x) - _x0
+    p0['x0'] = 0. # recenter to initial guess
+
+    # kwargs for leastsq:
+    if leastsq_kw is None:
+        leastsq_kw = dict()
+    leastsq_kw.setdefault('ftol', 1e-10)
+    leastsq_kw.setdefault('xtol', 1e-10)
+    leastsq_kw.setdefault('maxfev', 100000)
+
+    args = (x, flux, flux_ivar)
+    p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, par_dict_to_list(p0),
+                                      args=args, full_output=True, **leastsq_kw)
+
+    s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
+    p_cov = p_cov * s_sq
+
+    fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
+    fit_x0 = fit_x0 + _x0
+
+    fail_msg = "Fitting spectral line in comp lamp spectrum failed. {msg}"
+
+    if ier < 1 or ier > 4:
+        raise RuntimeError(fail_msg.format(msg=mesg))
+
+    if fit_x0 < min(_x) or fit_x0 > max(_x):
+        raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
+
+    par_dict = OrderedDict(amp=fit_amp, x0=fit_x0,
+                           std_G=fit_std_G, fwhm_L=fit_fwhm_L,
+                           bg_coef=fit_bg)
+
+    return par_dict, p_cov
 
 class CCDExtractor(object):
 
@@ -169,30 +261,36 @@ class CCDExtractor(object):
 
         return nccd
 
-    def get_lsf_pars(self, row_idx=800): # MAGIC NUMBER
+    def get_lsf_pars(self, row_idxs=None):
         """
-        Fit a Voigt profile + background to the specified row to
-        get the LSF parameters.
+        Fit a Voigt profile + background to a few rows to
+        get the LSF width parameters. These are then used to
+        extract the source flux at each CCD row by fitting
+        for the trace amplitude and background at fixed LSF
+        width parameters.
         """
 
-        def lsf_model(p, x):
-            amp, x0, std_G, fwhm_L, C = p
-            return voigt(x, amp, x0, std_G, fwhm_L) + C
+        if row_idxs is None:
+            row_idxs = np.linspace(750, 850, 16).astype(int)
 
-        def lsf_chi(p, pix, flux, flux_ivar):
-            return (lsf_model(p, pix) - flux) * np.sqrt(flux_ivar)
+        std_Gs = []
+        fwhm_Ls = []
+        for row_idx in row_idxs:
+            flux = self.ccd.data[row_idx]
+            flux_err = self.ccd.uncertainty.array[row_idx]
 
-        flux = self.ccd.data[row_idx]
-        flux_err = self.ccd.uncertainty.array[row_idx]
+            flux_ivar = 1/flux_err**2.
+            flux_ivar[~np.isfinite(flux_ivar)] = 0.
 
-        flux_ivar = 1/flux_err**2.
-        flux_ivar[~np.isfinite(flux_ivar)] = 0.
+            pix = np.arange(len(flux))
 
-        pix = np.arange(len(flux))
+            # initial guess for optimization
+            initx0 = pix[np.argmax(flux*flux_ivar)]
+            fit_p,fit_pcov = fit_spec_line(pix, flux, flux_ivar,
+                                           absorp_emiss=1., return_cov=True, x0=initx0)
 
-        # initial guess for optimization
-        p0 = [flux.max(), pix[np.argmax(flux)], 1., 1., scoreatpercentile(flux[flux>0], 16.)]
-        p_opt,ier = leastsq(lsf_chi, x0=p0, args=(pix, flux, flux_ivar))
+            std_Gs.append(fit_p['std_G'])
+            fwhm_Ls.append(fit_p['fwhm_L'])
 
         if self.plot_path is not None:
             fig,ax = plt.subplots(1,1,figsize=(8,5))
@@ -201,39 +299,29 @@ class CCDExtractor(object):
                         marker='', linestyle='none', ecolor='#777777', zorder=-10)
 
             _grid = np.linspace(pix.min(), pix.max(), 1024)
-            ax.plot(_grid, lsf_model(p_opt, _grid),
-                    marker='', drawstyle='steps-mid', zorder=10, alpha=0.7)
+            ax.plot(_grid, voigt_polynomial(_grid, **fit_p),
+                    marker='', zorder=10, alpha=0.7)
 
             ax.set_xlabel('column pixel')
             ax.set_ylabel('flux')
             ax.set_yscale('log')
-            ax.set_title('Object: {0}, fit ier: {1}'.format(self._obj_name, ier))
+            ax.set_title('Object: {0}, Row: {1}'.format(self._obj_name, row_idx))
 
             fig.tight_layout()
             fig.savefig(path.join(self.plot_path, '{0}_lsf.png'.format(self._filename_base)))
             plt.close(fig)
 
-        if ier < 1 or ier > 4:
-            raise RuntimeError("Failed to fit for LSF at row {}".format(row_idx))
-
         lsf_p = dict()
-        lsf_p['std_G'] = p_opt[2]
-        lsf_p['fwhm_L'] = p_opt[3]
+        lsf_p['std_G'] = np.median(std_Gs)
+        lsf_p['fwhm_L'] = np.median(fwhm_Ls)
 
         return lsf_p
 
     def extract_1d(self, lsf_p):
         """
-        Use the fit LSF, but fit for amplitude and background at each row
-        on the detector to get source and background flux.
+        Use the fit LSF widths, but fit for amplitude and background at each
+        row on the detector to get source and background fluxes.
         """
-
-        def row_model(p, lsf_p, x):
-            amp, x0, C = p
-            return voigt(x, amp, x0, G_std=lsf_p['std_G'], L_fwhm=lsf_p['fwhm_L']) + C
-
-        def row_chi(p, pix, flux, flux_ivar, lsf_p):
-            return (row_model(p, lsf_p, pix) - flux) * np.sqrt(flux_ivar)
 
         n_rows,n_cols = self.ccd.data.shape
         pix = np.arange(n_cols)
@@ -251,19 +339,17 @@ class CCDExtractor(object):
             flux_ivar = 1/flux_err**2.
             flux_ivar[~np.isfinite(flux_ivar)] = 0.
 
-            p0 = [flux.max(), pix[np.argmax(flux)], scoreatpercentile(flux[flux>0], 16.)]
-            p_opt,p_cov,*_,mesg,ier = leastsq(row_chi, x0=p0, full_output=True,
-                                              args=(pix, flux, flux_ivar, lsf_p))
-
-            if ier < 1 or ier > 4 or p_cov is None:
+            try:
+                p_fit, p_cov = fit_spec_flux(pix, flux, flux_ivar, **lsf_p)
+            except RuntimeError:
                 flux_1d[i] = np.nan
                 sky_flux_1d[i] = np.nan
                 logger.log(0, "Fit failed for {}".format(i)) # TODO: ignored for now
                 continue
 
-            flux_1d[i] = p_opt[0]
-            trace_1d[i] = p_opt[1]
-            sky_flux_1d[i] = p_opt[2]
+            flux_1d[i] = p_fit['amp']
+            trace_1d[i] = p_fit['x0']
+            sky_flux_1d[i] = p_fit['bg0']
 
             # TODO: ignores centroiding covariances...
             flux_1d_err[i] = np.sqrt(p_cov[0,0])

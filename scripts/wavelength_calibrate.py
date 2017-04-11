@@ -350,8 +350,7 @@ def main(night_path, wavelength_gp_path=None, comp_lamp_path=None,
                        plot_path=plot_path)
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = GlobImageFileCollection(night_path, glob_include='1d_*',
-                                          imagetyp='OBJECT')
+        proc_ic = GlobImageFileCollection(night_path, glob_include='1d_*')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
 
         logger.info("Beginning wavelength calibration...")

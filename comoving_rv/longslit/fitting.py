@@ -12,7 +12,7 @@ from celerite import terms, GP
 from ..log import logger
 from .models import voigt_polynomial
 
-__all__ = ['fit_spec_line', 'fit_spec_line_GP']
+__all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
 def par_dict_to_list(p):
     return [p['amp'], p['x0'], p['std_G'], p['fwhm_L']] + p['bg_coef'].tolist()

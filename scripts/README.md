@@ -54,12 +54,12 @@ Identify lines in a comparison lamp spectrum
 
 Before solving for a rough wavelength solution, the next step is to
 interactively identify emission lines in a comparison lamp spectrum. To do that,
-you'll need to either specify the path to a processed HgNe+Ne arc lamp frame, or
-to a directory containing one (and the first one found will be used). You also
-need to specify a path to a text file containing known lines that should be
-auto-identified in the spectrum once enough lines have been found. For an
-HgNe+Ne lamp and for a wavelength range ~3600-7200 Angstroms, this file is
-provided in ``config/mdm-spring-2017/hgne.txt``. To run this script:
+you'll need to either specify the path to a processed 1D HgNe+Ne arc lamp
+spectrum, or to a directory containing one (and the first one found will be
+used). You also need to specify a path to a text file containing known lines
+that should be auto-identified in the spectrum once enough lines have been
+found. For an HgNe+Ne lamp and for a wavelength range ~3600-7200 Angstroms, this
+file is provided in ``config/mdm-spring-2017/hgne.txt``. To run this script:
 
 ```bash
 python identify_wavelengths.py -p ../data/mdm-spring-2017/processed/n1/ \

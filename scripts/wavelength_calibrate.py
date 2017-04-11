@@ -13,8 +13,6 @@ from os import path
 from astropy.table import Table
 import astropy.units as u
 from astropy.io import fits
-import ccdproc
-from ccdproc import CCDData
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial.polynomial import polyval
@@ -25,9 +23,17 @@ from celerite import terms, GP
 # Project
 from comoving_rv.log import logger
 from comoving_rv.longslit import GlobImageFileCollection
-from comoving_rv.longslit.wavelength import (extract_1d_comp_spectrum, fit_spec_line_GP,
-                                             gp_to_fit_pars)
+# from comoving_rv.longslit.fitting import fit_spec_line_GP, gp_to_fit_pars
+from comoving_rv.longslit.fitting import fit_spec_line
 from comoving_rv.longslit.models import voigt_polynomial
+
+# ----------------------------------------------------------------------------
+# Settings, or arbitrary choices / magic numbers
+#
+n_bg_coef = 2 # linear
+wave_err = 0.04
+#
+# ----------------------------------------------------------------------------
 
 def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
 
@@ -37,41 +43,28 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
 
     fit_centroids = []
 
-    half_width = 7.5 # MAGIC NUMBER: number of pixels on either side of line to fit to
-    for pix_ctr,xmin,xmax,wave_idx,wave in zip(pixl, pixl-half_width, pixl+half_width,
-                                               range(len(wvln)), wvln):
+    half_width = 5 # MAGIC NUMBER: number of pixels on either side of line to fit to
+    for pix_ctr,wave in zip(pixl, wvln):
 
         logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
                      .format(pix_ctr, wave))
 
         # indices for region around line
-        i1 = int(np.floor(xmin))
-        i2 = int(np.ceil(xmax))+1
+        i1 = int(np.floor(pix_ctr-half_width))
+        i2 = int(np.ceil(pix_ctr+half_width))+1
+
+        # recenter window
+        i0 = i1 + flux[i1:i2].argmax()
+        i1 = int(np.floor(i0-half_width))
+        i2 = int(np.ceil(i0+half_width))+1
 
         _pixl = pixels[i1:i2]
         _flux = flux[i1:i2]
-        _ivar = flux_ivar[i1:i2]
 
-        gp = fit_spec_line_GP(_pixl, _flux, _ivar, n_bg_coef=1, absorp_emiss=1.,
-                              log_sigma0=np.log(10.), fwhm_L0=1E-3, std_G0=0.75)
-        pars = gp_to_fit_pars(gp, absorp_emiss=1.)
-
-        if pars['amp'] < 10. or np.abs(pars['x0']-pix_ctr) > 2.:
-            raise RuntimeError("Failed to fit line at pix={:.2f}, λ={:.2f}; "
-                               "amp={:.2f}, x0={:.3f}"
-                               .format(pix_ctr, wave, pars['amp'], pars['x0']))
-
-        # plt.clf()
-        # plt.title(pars['x0'])
-        # plt.plot(_pixl, _flux, marker='', drawstyle='steps-mid')
-        # _grid = np.linspace(_pixl.min(), _pixl.max(), 256)
-        # mu, var = gp.predict(_flux, _grid, return_var=True)
-        # plt.plot(_grid, mu, color='r', marker='', alpha=0.7)
-        # plt.fill_between(_grid, mu+np.sqrt(var), mu-np.sqrt(var), color='r',
-        #                  alpha=0.3, edgecolor="none")
-        # plt.show()
-
-        fit_centroids.append(pars['x0'])
+        # instead of doing anything fancy (e.g., fitting a profile), just
+        # estimate the mean...
+        x0 = np.sum(_pixl * _flux) / np.sum(_flux)
+        fit_centroids.append(x0)
 
     return np.array(fit_centroids)
 
@@ -220,7 +213,7 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
     plot_path = path.join(night_path, 'plots')
 
     if comp_lamp_path is None:
-        ic = ccdproc.ImageFileCollection(night_path)
+        ic = GlobImageFileCollection(night_path, glob_include='1d_*')
 
         hdu = None
         for hdu,wavelength_data_file in ic.hdus(return_fname=True, imagetyp='COMP'):
@@ -228,19 +221,20 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
         else:
             raise IOError("No COMP lamp file found in {}".format(night_path))
 
-        logger.info("No comp. lamp spectrum file specified - using: {}"
-                    .format(wavelength_data_file))
         comp_lamp_path = path.join(ic.location, wavelength_data_file)
+        logger.info("No comp. lamp spectrum file specified - using: {}"
+                    .format(comp_lamp_path))
 
-    ccd = CCDData.read(comp_lamp_path)
-    pixels, flux, flux_ivar = extract_1d_comp_spectrum(ccd)
+    # read 1D comp lamp spectrum
+    spec = Table.read(comp_lamp_path)
 
     # read wavelength guess file
-    pix_wav = np.genfromtxt(path.abspath(path.join(night_path, '..', 'wavelength_guess.csv')),
-                            delimiter=',', names=True)
+    guess_path = path.abspath(path.join(night_path,
+                                        '..', 'wavelength_guess.csv'))
+    pix_wav = np.genfromtxt(guess_path, delimiter=',', names=True)
 
     # fit line profiles to each emission line at the guessed positions of the lines
-    pix_x0s = fit_all_lines(pixels, flux, flux_ivar,
+    pix_x0s = fit_all_lines(spec['pix'], spec['flux'], spec['ivar'],
                             pix_wav['wavelength'], pix_wav['pixel'])
 
     # ---------------------------------------------------------------------------------------------
@@ -256,12 +250,13 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
     a0 = y[-1] - a1*x[-1] # estimate constant term
 
     # initialize model
-    mean_model = MeanModel(n_bg_coef=2, a0=a0, a1=a1)
+    mean_model = MeanModel(n_bg_coef=n_bg_coef, a0=a0, a1=a1,
+                           **dict([('a{}'.format(i),0.) for i in range(2,n_bg_coef)]))
     kernel = terms.Matern32Term(log_sigma=np.log(1.), log_rho=np.log(10.)) # MAGIC NUMBERs
 
     # set up the gp
     gp = GP(kernel, mean=mean_model, fit_mean=True)
-    gp.compute(x, yerr=0.05) # MAGIC NUMBER: yerr
+    gp.compute(x, yerr=wave_err) # MAGIC NUMBER: yerr
     init_params = gp.get_parameter_vector()
     logger.debug("Initial log-likelihood: {0}".format(gp.log_likelihood(y)))
 
@@ -282,7 +277,7 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
 
     # ---
     # residuals to the mean model
-    x_grid = np.linspace(0, 1600, 1024)- med_x
+    x_grid = np.linspace(0, 1600, 1024) - med_x
     mu, var = gp.predict(y, x_grid, return_var=True)
     std = np.sqrt(var)
 
@@ -303,6 +298,7 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
 
     ax.set_xlabel('pixel')
     ax.set_ylabel(r'wavelength [$\AA$]')
+    ax.set_title(path.basename(comp_lamp_path))
 
     fig.tight_layout()
     fig.savefig(path.join(plot_path, 'wavelength_mean_subtracted.png'), dpi=200)
@@ -328,6 +324,7 @@ def main(night_path, comp_lamp_path=None, overwrite=False):
 
     ax.set_xlabel('pixel')
     ax.set_ylabel(r'wavelength residual [$\AA$]')
+    ax.set_title(path.basename(comp_lamp_path))
 
     ax.set_ylim(-0.4, 0.4)
     ax.axvline(683., zorder=-10, color='#666666', alpha=0.5)

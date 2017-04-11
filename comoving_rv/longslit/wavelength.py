@@ -37,7 +37,7 @@ class GPModel(object):
 
     def __init__(self, x, y, n_bg_coef, wave_err=0.04, # MAGIC NUMBER: wavelength error hack
                  log_sigma0=0., log_rho0=np.log(10.), # initial params for GP
-                 ):
+                 x_shift=None):
 
         self.x = np.array(x)
         self.y = np.array(y)
@@ -61,6 +61,11 @@ class GPModel(object):
         self.gp.compute(x, yerr=wave_err)
         logger.debug("Initial log-likelihood: {0}"
                      .format(self.gp.log_likelihood(y)))
+
+        if x_shift is None:
+            self.x_shift = 0.
+        else:
+            self.x_shift = x_shift
 
     def neg_ln_like(self, params):
         # minimize -log(likelihood)

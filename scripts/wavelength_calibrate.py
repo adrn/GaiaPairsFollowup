@@ -37,6 +37,24 @@ n_bg_coef = 2 # linear
 # ----------------------------------------------------------------------------
 
 def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
+    """
+    Given a wavelength guess (a list of rough pixel-wavelength correspondences),
+    measure more precise line centroids to then fit for a wavelength
+    calibratrion function.
+
+    Parameters
+    ----------
+    pixels : array_like
+        Pixel array for a 1D comp. lamp spectrum.
+    flux : array_like
+        Flux array for a 1D comp. lamp spectrum.
+    flux_ivar : array_like
+        Inverse-variance array for a 1D comp. lamp spectrum.
+    line_waves : array_like
+        List of wavelength values for emission lines in a comp. lamp spectrum.
+    line_pixels : array_like
+        List of pixel centroids for emission lines in a comp. lamp spectrum.
+    """
 
     _idx = np.argsort(line_waves)
     wvln = np.array(line_waves)[_idx]
@@ -44,7 +62,7 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
 
     fit_centroids = []
 
-    half_width = 5 # MAGIC NUMBER: number of pixels on either side of line to fit to
+    half_width = 5 # MAGIC NUMBER: number of pixels on either side of line
     for pix_ctr,wave in zip(pixl, wvln):
 
         logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
@@ -69,119 +87,18 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
 
     return np.array(fit_centroids)
 
-def sky_line_shift(wavelength, bg_flux, bg_ivar, plot=False):
+def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     """
-    Arc lamp spectrum determines non-linear relation between pixel and
-    wavelength. This function tries to find a bright sky line to use to
-    determine small absolute shifts to the wavelength solution. This
-    works by fitting a Voigt profile to the [OI] line at 6300Å and
-    5577Å and uses the line with a larger amplitude. If neither line has
-    an amplitude > XX TODO, it raises an error.
+    Fit a line + Gaussian Process model to the pixel vs. wavelength relation for
+    identified and centroided comp. lamp spectrum emission lines.
 
     Parameters
     ----------
-    TODO
+    comp_lamp_path : str
+    night_path : str
+    plot_path : str
+
     """
-
-    wavelength = np.array(wavelength)
-    bg_flux = np.array(bg_flux)
-    bg_ivar = np.array(bg_ivar)
-
-    # for target_wave in [5577.3387]:
-    #   [OI] from: http://www.star.ucl.ac.uk/~msw/lines.html
-    target_wave = 5577.3387
-    # target_wave = 6300.30
-
-    # extract region of SKY spectrum around line
-    _i1 = np.argmin(np.abs(wavelength - (target_wave-25)))
-    _i2 = np.argmin(np.abs(wavelength - (target_wave+25)))
-    i1 = min(_i1, _i2)
-    i2 = max(_i1, _i2)
-
-    wave = wavelength[i1:i2+1]
-    flux = bg_flux[i1:i2+1]
-    ivar = bg_ivar[i1:i2+1]
-
-    if plot:
-        _grid = np.linspace(wave.min(), wave.max(), 512)
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(14,8))
-        plt.plot(wave, flux, marker='', drawstyle='steps-mid', alpha=0.5)
-        plt.errorbar(wave, flux, 1/np.sqrt(ivar), linestyle='none',
-                     marker='', ecolor='#666666', alpha=0.75, zorder=-10)
-        plt.show()
-
-    try:
-        OI_fit_p = fit_spec_line(wave, flux, ivar, std_G0=1.,
-                                 n_bg_coef=2, target_x=target_wave,
-                                 absorp_emiss=1.)
-    except (RuntimeError, ValueError) as e:
-        logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
-        return 0.
-
-    dlambda = OI_fit_p['x0']-target_wave
-    logger.debug("[OI] {:.2f}, ∆λ: {:.3f}, amp: {:.3e}".format(target_wave,
-                                                               dlambda,
-                                                               OI_fit_p['amp']))
-
-    if plot:
-        _grid = np.linspace(wave.min(), wave.max(), 512)
-        fit_flux = voigt_polynomial(_grid, **OI_fit_p)
-
-        import matplotlib.pyplot as plt
-        plt.figure(figsize=(14,8))
-        plt.plot(wave, flux, marker='', drawstyle='steps-mid', alpha=0.5)
-        plt.errorbar(wave, flux, 1/np.sqrt(ivar), linestyle='none',
-                     marker='', ecolor='#666666', alpha=0.75, zorder=-10)
-        plt.plot(_grid, fit_flux, marker='', alpha=0.75)
-        plt.show()
-
-    if OI_fit_p['amp'] < 10.:
-        logger.warning("Failed to fit [OI] sky line - won't shift spectrum.")
-        return 0.
-
-    return dlambda
-
-def add_wavelength(filename, wavelength_coef, overwrite=False, pix_range=None):
-    hdulist = fits.open(filename)
-
-    # read both hdu's
-    logger.debug("\tObject: {}".format(hdulist[0].header['OBJECT']))
-
-    # extract just the middle part of the CCD (we only really care about Halpha)
-    tbl = Table(hdulist[1].data)
-
-    if 'wavelength' in tbl.colnames and not overwrite:
-        logger.debug("\tTable already contains wavelength values!")
-        return
-
-    if pix_range is not None:
-        good_idx = (tbl['pix'] > min(pix_range)) & (tbl['pix'] < max(pix_range))
-    else:
-        good_idx = np.ones(len(tbl)).astype(bool)
-
-    print(pix_range, good_idx)
-
-    # compute wavelength array for the pixels
-    tbl['wavelength'] = np.polynomial.polynomial.polyval(tbl['pix'],
-                                                         wavelength_coef)
-    tbl['wavelength'][~good_idx] = np.nan
-
-    # here, need to do sky line adjustment to wavelength values
-    dlambda = sky_line_shift(tbl['wavelength'][good_idx],
-                             tbl['background_flux'][good_idx],
-                             tbl['background_ivar'][good_idx],
-                             plot=True)
-    tbl['wavelength'] = tbl['wavelength'] - dlambda
-
-    new_hdu1 = fits.table_to_hdu(tbl)
-    new_hdulist = fits.HDUList([hdulist[0], new_hdu1])
-
-    logger.debug("\tWriting out file with wavelength array.")
-    new_hdulist.writeto(filename, overwrite=True)
-
-def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
 
     # read 1D comp lamp spectrum
     spec = Table.read(comp_lamp_path)
@@ -203,7 +120,7 @@ def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     x = pix_x0s[idx] - med_x
     y = pix_wav['wavelength'][idx]
 
-    model = GPModel(x=x, y=y, n_bg_coef=n_bg_coef)
+    model = GPModel(x=x, y=y, n_bg_coef=n_bg_coef, x_shift=med_x)
 
     # Fit for the maximum likelihood parameters
     bounds = model.gp.get_parameter_bounds()
@@ -265,7 +182,7 @@ def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     ax.set_ylabel(r'wavelength residual [$\AA$]')
     ax.set_title(path.basename(comp_lamp_path))
 
-    ax.set_ylim(-0.4, 0.4)
+    ax.set_ylim(-1, 1)
     ax.axvline(683., zorder=-10, color='#666666', alpha=0.5)
 
     ax2 = ax.twinx()
@@ -278,6 +195,75 @@ def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     # --------------------------------------------------------------------------
 
     return model
+
+def add_wavelength(filename, model, std_tol, overwrite=False, plot_path=None):
+    """
+    Given an extracted, 1D spectrum FITS file, add wavelength and
+    wavelength_prec columnes to the file.
+
+    Parameters
+    ----------
+    filename : str
+        Path to a 1D extracted spectrum file.
+    model : `comoving_rv.longslit.GPModel`
+    std_tol : quantity_like
+        Set the wavelength grid to NaN when the root-variance of the prediction
+        from the Gaussian process is larger than this tolerance.
+    overwrite : bool (optional)
+        Overwrite any existing wavelength information.
+    plot_path : str (optional)
+    """
+    hdulist = fits.open(filename)
+
+    # read both hdu's
+    logger.debug("\tObject: {}".format(hdulist[0].header['OBJECT']))
+
+    # extract just the middle part of the CCD (we only really care about Halpha)
+    tbl = Table(hdulist[1].data)
+
+    if 'wavelength' in tbl.colnames and not overwrite:
+        logger.debug("\tTable already contains wavelength values!")
+        return
+
+    # compute wavelength array for the pixels
+    wavelength, var = model.gp.predict(model.y, tbl['pix']-model.x_shift,
+                                       return_var=True)
+    bad_idx = np.sqrt(var) > std_tol.to(u.angstrom).value
+    wavelength[bad_idx] = np.nan
+
+    tbl['wavelength'] = wavelength
+    tbl['wavelength_err'] = np.sqrt(var)
+
+    new_hdu1 = fits.table_to_hdu(tbl)
+    new_hdulist = fits.HDUList([hdulist[0], new_hdu1])
+
+    logger.debug("\tWriting out file with wavelength array.")
+    new_hdulist.writeto(filename, overwrite=True)
+
+    if plot_path is not None:
+        # plot the spectrum vs. wavelength
+        fig,axes = plt.subplots(2, 1, figsize=(12,8), sharex=True)
+
+        axes[0].plot(tbl['wavelength'], tbl['source_flux'],
+                     marker='', drawstyle='steps-mid', linewidth=1.)
+        axes[0].errorbar(tbl['wavelength'], tbl['source_flux'], 1/np.sqrt(tbl['source_ivar']),
+                         linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        axes[0].set_ylim(tbl['source_flux'][200]/4, np.nanmax(tbl['source_flux']))
+        axes[0].set_yscale('log')
+
+        axes[1].plot(tbl['wavelength'], tbl['background_flux'],
+                     marker='', drawstyle='steps-mid', linewidth=1.)
+        axes[1].errorbar(tbl['wavelength'], tbl['background_flux'], 1/np.sqrt(tbl['background_ivar']),
+                         linestyle='none', marker='', ecolor='#666666', alpha=1., zorder=-10)
+        axes[1].set_ylim(1e-1, np.nanmax(tbl['background_flux']))
+        axes[1].set_yscale('log')
+
+        fig.tight_layout()
+        _filename_base = path.splitext(path.basename(filename))[0]
+        fig.savefig(path.join(plot_path, '{0}_1d_wvln.png'
+                              .format(_filename_base)))
+
+        plt.close(fig)
 
 def main(night_path, wavelength_gp_path=None, comp_lamp_path=None,
          overwrite=False):
@@ -301,9 +287,9 @@ def main(night_path, wavelength_gp_path=None, comp_lamp_path=None,
 
     plot_path = path.join(night_path, 'plots')
 
-    # ==========================================================================
+    # ===========================
     # GP model does not exist yet
-    #
+    # ===========================
     if wavelength_gp_path is None:
 
         # filename to save the GP model
@@ -342,32 +328,37 @@ def main(night_path, wavelength_gp_path=None, comp_lamp_path=None,
         with open(wavelength_gp_path, 'wb') as f:
             pickle.dump(model, f)
 
-    # ==========================================================================
+    # =======================================
     # GP model already exists -- just load it
-    #
+    # =======================================
     else:
         logger.info('Loading wavelength GP model from {}'
                     .format(wavelength_gp_path))
         with open(wavelength_gp_path, 'rb') as f:
             model = pickle.load(f)
 
-    return
-
     # ========================
     # Compute wavelength grids
     # ========================
 
+    # set the wavelength grid to NaN when the root-variance of the prediction is
+    #   larger than this tolerance
+    std_tol = 1. * u.angstrom
+
     if data_file is not None: # filename passed - only operate on that
-        add_wavelength(data_file, coef, overwrite=overwrite, pix_range=pix_range)
+        add_wavelength(data_file, model, overwrite=overwrite, std_tol=std_tol,
+                       plot_path=plot_path)
 
     else: # a path was passed - operate on all 1D extracted files
-        proc_ic = GlobImageFileCollection(proc_path, glob_include='1d_*')
+        proc_ic = GlobImageFileCollection(night_path, glob_include='1d_*',
+                                          imagetyp='OBJECT')
         logger.info("{} 1D extracted spectra found".format(len(proc_ic.files)))
 
         logger.info("Beginning wavelength calibration...")
         for base_fname in proc_ic.files_filtered(imagetyp='OBJECT'):
             fname = path.join(proc_ic.location, base_fname)
-            add_wavelength(fname, coef, overwrite=overwrite, pix_range=pix_range)
+            add_wavelength(fname, model, overwrite=overwrite, std_tol=std_tol,
+                           plot_path=plot_path)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -377,15 +368,18 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="")
 
     vq_group = parser.add_mutually_exclusive_group()
-    vq_group.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
-    vq_group.add_argument('-q', '--quiet', action='count', default=0, dest='quietness')
+    vq_group.add_argument('-v', '--verbose', action='count', default=0,
+                          dest='verbosity')
+    vq_group.add_argument('-q', '--quiet', action='count', default=0,
+                          dest='quietness')
 
-    parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
-                        default=False, help='Destroy everything.')
+    parser.add_argument('-o', '--overwrite', action='store_true',
+                        dest='overwrite', default=False,
+                        help='Destroy everything.')
 
     parser.add_argument('-p', '--path', dest='night_path', required=True,
-                        help='Path to a PROCESSED night or chunk of data to process. Or, '
-                             'path to a specific comp file.')
+                        help='Path to a PROCESSED night or chunk of data to '
+                             'process. Or, path to a specific comp file.')
 
     comp_gp_group = parser.add_mutually_exclusive_group()
     comp_gp_group.add_argument('--comp', dest='comp_lamp_path', default=None,

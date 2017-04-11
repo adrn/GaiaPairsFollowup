@@ -16,17 +16,11 @@ import astropy.units as u
 from astropy.io import fits
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.polynomial.polynomial import polyval
 from scipy.optimize import minimize
-from celerite.modeling import Model
-from celerite import terms, GP
 
 # Project
 from comoving_rv.log import logger
 from comoving_rv.longslit import GlobImageFileCollection
-# from comoving_rv.longslit.fitting import fit_spec_line_GP, gp_to_fit_pars
-from comoving_rv.longslit.fitting import fit_spec_line
-from comoving_rv.longslit.models import voigt_polynomial
 from comoving_rv.longslit.wavelength import GPModel
 
 # ----------------------------------------------------------------------------

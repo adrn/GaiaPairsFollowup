@@ -3,17 +3,9 @@ TODO:
 -
 """
 
-# Standard library
-from os import path
-
 # Third-party
-from astropy.table import Table
-import astropy.units as u
-from astropy.io import fits
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial.polynomial import polyval
-from scipy.optimize import minimize
 from celerite.modeling import Model
 from celerite import terms, GP
 
@@ -35,7 +27,7 @@ class MeanModel(Model):
 
 class GPModel(object):
 
-    def __init__(self, x, y, n_bg_coef, wave_err=0.04, # MAGIC NUMBER: wavelength error hack
+    def __init__(self, x, y, n_bg_coef, wave_err=0.05, # MAGIC NUMBER: wavelength error hack
                  log_sigma0=0., log_rho0=np.log(10.), # initial params for GP
                  x_shift=None):
 

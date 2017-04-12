@@ -136,10 +136,12 @@ class CCDExtractor(object):
         self.plot_path = plot_path
 
         if zscaler is None:
-            self.zscaler = ZScaleInterval(32768, krej=5., max_iterations=16)
+            zscaler = ZScaleInterval(32768, krej=5., max_iterations=16)
+        self.zscaler = zscaler
 
         if cmap is None:
-            self.cmap = 'Greys_r'
+            cmap = 'Greys_r'
+        self.cmap = cmap
 
     def process_raw_frame(self, master_bias, master_flat, pixel_mask_spec=None):
         """

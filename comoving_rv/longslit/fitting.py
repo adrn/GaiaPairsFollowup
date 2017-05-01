@@ -141,17 +141,20 @@ def fit_spec_line(x, flux, flux_ivar=None,
     leastsq_kw.setdefault('xtol', 1e-10)
     leastsq_kw.setdefault('maxfev', 100000)
 
+    fail_msg = "Fitting spectral line in comp lamp spectrum failed. {msg}"
+
     args = (x, flux, flux_ivar)
     p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, par_dict_to_list(p0),
                                       args=args, full_output=True, **leastsq_kw)
+
+    if p_cov is None:
+        raise RuntimeError(fail_msg.format(msg=mesg))
 
     s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
     p_cov = p_cov * s_sq
 
     fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
     fit_x0 = fit_x0 + _x0
-
-    fail_msg = "Fitting spectral line in comp lamp spectrum failed. {msg}"
 
     if ier < 1 or ier > 4:
         raise RuntimeError(fail_msg.format(msg=mesg))

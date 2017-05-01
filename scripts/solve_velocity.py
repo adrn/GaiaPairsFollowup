@@ -8,7 +8,6 @@ TODO:
 # Standard library
 import os
 from os import path
-from collections import OrderedDict
 
 # Third-party
 import astropy.coordinates as coord

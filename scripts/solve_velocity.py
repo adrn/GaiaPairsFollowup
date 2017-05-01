@@ -11,6 +11,8 @@ from os import path
 from collections import OrderedDict
 
 # Third-party
+import astropy.coordinates as coord
+from astropy.time import Time
 from astropy.constants import c
 import astropy.units as u
 from astropy.io import fits
@@ -27,6 +29,7 @@ from comoving_rv.log import logger
 from comoving_rv.longslit import GlobImageFileCollection
 from comoving_rv.longslit.fitting import fit_spec_line_GP, gp_to_fit_pars
 from comoving_rv.longslit.models import voigt_polynomial
+from comoving_rv.velocity import bary_vel_corr, kitt_peak
 
 def log_probability(params, gp, flux_data):
     gp.set_parameter_vector(params)
@@ -47,48 +50,82 @@ def log_probability(params, gp, flux_data):
 
     return ll + lp
 
-def main(overwrite=False):
-    night = 'n1' # HACK TODO
+def main(night_path, overwrite=False):
 
-    plot_path = path.abspath('../plots/')
-    root_path = path.abspath('../data/mdm-spring-2017/processed/')
-    table_path = path.join(root_path, 'velocity.ecsv')
-    night_path = path.join(root_path, night) # HACK
+    night_path = path.realpath(path.expanduser(night_path))
+    if not path.exists(night_path):
+        raise IOError("Path '{}' doesn't exist".format(night_path))
+
+    if path.isdir(night_path):
+        data_file = None
+        logger.info("Reading data from path: {}".format(night_path))
+
+    elif path.isfile(night_path):
+        data_file = night_path
+        base_path, name = path.split(night_path)
+        night_path = base_path
+        logger.info("Reading file: {}".format(data_file))
+
+    else:
+        raise RuntimeError("how?!")
+
+    plot_path = path.join(night_path, 'plots')
+    root_path = path.abspath(path.join(night_path, '..'))
+    table_path = path.join(root_path, 'velocity.fits')
 
     # air wavelength of Halpha -- wavelength calibration from comp lamp is done
     #   at air wavelengths, so this is where Halpha should be, right?
     Halpha = 6562.8 * u.angstrom
 
+    # [OI] emission lines -- wavelengths from:
+    #   http://physics.nist.gov/PhysRefData/ASD/lines_form.html
+    sky_lines = [5577.3387, 6300.304, 6363.776]
+
     if not path.exists(plot_path):
         os.makedirs(plot_path, exist_ok=True)
 
     if not path.exists(table_path):
-        logger.debug('Creaing table at {}'.format(table_path))
+        logger.debug('Creating table at {}'.format(table_path))
         tbl_init = [Column(name='object_name', dtype='|S30', data=[], length=0),
                     Column(name='group_id', dtype=int, length=0),
+                    Column(name='smoh_index', dtype=int, length=0),
+                    Column(name='ra', dtype=float, unit=u.degree, length=0),
+                    Column(name='dec', dtype=float, unit=u.degree, length=0),
+                    Column(name='secz', dtype=float, length=0),
                     Column(name='filename', dtype='|S128', data=[], length=0),
-                    Column(name='wave0', dtype=float, unit=u.angstrom, length=0),
-                    Column(name='raw_rv', dtype=float, unit=u.km/u.s, length=0),
-                    Column(name='rv_precision', dtype=float, unit=u.km/u.s, length=0),
-                    Column(name='sky_rv_shift', dtype=float, unit=u.km/u.s, length=0),
+                    Column(name='Ha_centroid', dtype=float, unit=u.angstrom, length=0),
+                    Column(name='Ha_centroid_err', dtype=float, unit=u.angstrom, length=0),
+                    Column(name='bary_rv_shift', dtype=float, unit=u.km/u.s, length=0),
                     Column(name='sky_shift_flag', dtype=int, length=0),
-                    Column(name='bary_rv_shift', dtype=float, unit=u.km/u.s, length=0)]
+                    Column(name='sky_wave_shift', dtype=float, unit=u.angstrom, length=0, shape=(len(sky_lines,))),
+                    Column(name='rv', dtype=float, unit=u.km/u.s, length=0),
+                    Column(name='rv_err', dtype=float, unit=u.km/u.s, length=0)]
+
         velocity_tbl = Table(tbl_init)
-        velocity_tbl.write(table_path, format='ascii.ecsv', delimiter=',')
+        velocity_tbl.write(table_path, format='fits')
         logger.debug('Table: {}'.format(velocity_tbl.colnames))
 
     else:
         logger.debug('Table exists, reading ({})'.format(table_path))
-        velocity_tbl = Table.read(table_path, format='ascii.ecsv', delimiter=',')
+        velocity_tbl = Table.read(table_path, format='fits')
 
-    ic = GlobImageFileCollection(night_path, glob_include='1d_*')
-    for filename in ic.files_filtered(imagetyp='OBJECT'):
-        file_path = path.join(ic.location, filename)
+    if data_file is None:
+        ic = GlobImageFileCollection(night_path, glob_include='1d_*')
+        files = ic.files_filtered(imagetyp='OBJECT')
+    else:
+        files = [data_file]
+
+    for filename in files:
+        file_path = path.join(night_path, filename)
         filebase,ext = path.splitext(filename)
 
         # read FITS header
         hdr = fits.getheader(file_path, 0)
         object_name = hdr['OBJECT']
+
+        # HACK: for testing
+        if 'HIP' not in object_name:
+            continue
 
         if object_name in velocity_tbl['object_name']:
             if overwrite:
@@ -252,39 +289,121 @@ def main(overwrite=False):
 
         # object naming stuff
         if '-' in object_name:
-            group_id,*_ = object_name.split('-')
+            group_id,smoh_index,*_ = object_name.split('-')
+            smoh_index = int(smoh_index)
 
         else:
             group_id = 0
+            smoh_index = 0
 
         # Now estimate raw radial velocity and precision:
         x0 = sampler.flatchain[:, 3] * u.angstrom
         MAD = np.median(np.abs(x0 - np.median(x0)))
-        v_precision = 1.48 * MAD / Halpha * c.to(u.km/u.s)
         centroid = np.median(x0)
-        rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s)
+        centroid_err = 1.48 * MAD # convert to stddev
 
-        # TODO: compute shift for sky line RV, uncertainty, quality flag
-        #   - two [OI] lines near 6300 = 0, only 6300 = 1, no shift = 2
+        # compute shifts for sky lines, uncertainty, quality flag
+        width = 100. # window size in angstroms, centered on line
+        absorp_emiss = 1. # all sky lines are emission lines
 
-        # TODO: compute barycenter velocity given coordinates of where the
+        wave_shifts = np.full(len(sky_lines), np.nan) * u.angstrom
+        for j,sky_line in enumerate(sky_lines):
+            mask = (spec['wavelength'] > (sky_line-width/2)) & (spec['wavelength'] < (sky_line+width/2))
+            flux_data = spec['background_flux'][mask]
+            ivar_data = spec['background_ivar'][mask]
+            wave_data = spec['wavelength'][mask]
+
+            _idx = wave_data.argsort()
+            wave_data = wave_data[_idx]
+            flux_data = flux_data[_idx]
+            ivar_data = ivar_data[_idx]
+            err_data = 1/np.sqrt(ivar_data)
+
+            gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
+                                  absorp_emiss=absorp_emiss,
+                                  fwhm_L0=2., std_G0=1., n_bg_coef=2)
+
+            pars = gp.get_parameter_dict()
+            dlam = sky_line - pars['mean:x0']
+
+            if ((pars['mean:ln_fwhm_L'] < -0.5 and pars['mean:ln_std_G'] < (-0.5)) or
+                    pars['mean:ln_amp'] > 10. or pars['mean:ln_amp'] < 3.5):
+                title = 'fucked'
+
+            else:
+                title = '{:.2f}'.format(pars['mean:ln_amp'])
+                wave_shifts[j] = dlam * u.angstrom
+
+            # Make the maximum likelihood prediction
+            wave_grid = np.linspace(wave_data.min(), wave_data.max(), 256)
+            mu, var = gp.predict(flux_data, wave_grid, return_var=True)
+            std = np.sqrt(var)
+
+            # ----------------------------------------------------------------
+            # Plot the fit and data
+            fig,ax = plt.subplots(1,1)
+
+            # data
+            ax.plot(wave_data, flux_data, drawstyle='steps-mid', marker='')
+            ax.errorbar(wave_data, flux_data, err_data,
+                        marker='', ls='none', ecolor='#666666', zorder=-10)
+
+            # full GP model
+            ax.plot(wave_grid, mu, color=gp_color, marker='')
+            ax.fill_between(wave_grid, mu+std, mu-std,
+                            color=gp_color, alpha=0.3, edgecolor="none")
+            ax.set_title(title)
+            fig.tight_layout()
+            fig.savefig(path.join(plot_path, '{}_maxlike_sky_{:.0f}.png'
+                                  .format(filebase, sky_line)), dpi=256)
+            plt.close(fig)
+
+        # some quality checks on sky velocity shifts
+        filter_ = np.isnan(wave_shifts) | (np.abs(wave_shifts) > (5*u.angstrom))
+        wave_shifts[filter_] = np.nan * u.angstrom
+
+        # compute barycenter velocity given coordinates of where the
         #   telescope was pointing
+        t = Time(hdr['JD'], format='jd', scale='utc')
+        sc = coord.SkyCoord(ra=hdr['RA'], dec=hdr['DEC'],
+                            unit=(u.hourangle, u.degree))
+        vbary = bary_vel_corr(t, sc, location=kitt_peak)
 
+        # sky shift flag is:
+        #   - 0 if both lines were fit
+        #   - 1 if only 6300
+        #   - 2 if neither lines are there
+        sky_flag = np.isnan(wave_shifts).sum()
+
+        shift = np.nanmedian(wave_shifts, axis=-1)
+        if np.isnan(shift):
+            shift = 0. * u.angstrom
+
+        centroid = centroid + shift
+        rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s) + vbary
+        rv_err = centroid_err / Halpha * c.to(u.km/u.s)
+        rv_err = np.sqrt(rv_err**2 + (10.*u.km/u.s)**2)
+
+        # convert ra,dec to quantities
+        ra = sc.ra.degree * u.deg
+        dec = sc.dec.degree * u.deg
         velocity_tbl.add_row(dict(object_name=object_name, group_id=group_id,
-                                  filename=file_path, wave0=centroid,
-                                  raw_rv=rv, rv_precision=v_precision,
-                                  sky_rv=XX, sky_rv_precision=WW, # TODO
-                                  sky_shift_flag=ZZ, # TODO
-                                  bary_rv_shift=YY)) # TODO
+                                  smoh_index=smoh_index,
+                                  ra=ra, dec=dec, secz=hdr['AIRMASS'],
+                                  filename=file_path,
+                                  Ha_centroid=centroid,
+                                  Ha_centroid_err=centroid_err,
+                                  bary_rv_shift=vbary,
+                                  sky_shift_flag=sky_flag,
+                                  sky_wave_shift=wave_shifts,
+                                  rv=rv + vbary,
+                                  rv_err=rv_err))
 
         logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'
                     .format(object_name, filebase, x0=centroid,
-                            err=v_precision, rv=rv))
+                            err=centroid_err, rv=rv + vbary))
 
-        velocity_tbl.write(table_path, format='ascii.ecsv',
-                           overwrite=True, delimiter=',')
-
-        return
+        velocity_tbl.write(table_path, format='fits', overwrite=True)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -301,6 +420,10 @@ if __name__ == "__main__":
                         type=int, help='Random number generator seed.')
     parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
                         default=False, help='Destroy everything.')
+
+    parser.add_argument('-p', '--path', dest='night_path', required=True,
+                        help='Path to a PROCESSED night or chunk of data to '
+                             'process. Or, path to a specific comp file.')
 
     args = parser.parse_args()
 
@@ -323,5 +446,5 @@ if __name__ == "__main__":
     if args.seed is not None:
         np.random.seed(args.seed)
 
-    main(overwrite=args.overwrite)
+    main(night_path=args.night_path, overwrite=args.overwrite)
 

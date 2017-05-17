@@ -8,6 +8,7 @@ TODO
 * Propagate uncertainties in arc lamp line centroids
 * IMFIT paper nicely describes a relevant poisson likelihood:
   https://arxiv.org/pdf/1408.1097.pdf
+* Resampling: https://www.github.com/ACCarnall/SpectRes
 
 Running the extraction pipeline
 ===============================

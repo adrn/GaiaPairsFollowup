@@ -53,8 +53,8 @@ def main(overwrite=False):
     table_path = path.join(root_path, 'rough_velocity.ecsv')
 
     # config settings
-    sky_lines = [5577.3387, 6300.3] # [OI]
-    width = 100. # angstroms centered on line
+    sky_lines = [6300.304, 6363.776] # from: http://physics.nist.gov/PhysRefData/ASD/lines_form.html
+    width = 100. # window size in angstroms, centered on line
     absorp_emiss = 1. # all emission lines
     gp_color = "#ff7f0e"
 
@@ -127,7 +127,7 @@ def main(overwrite=False):
             dlam = pars['mean:x0'] - sky_line
             vshift = (dlam/sky_line*c).to(u.km/u.s).value
 
-            if ((pars['mean:ln_fwhm_L'] < 0 and pars['mean:ln_std_G'] < 0) or pars['mean:ln_amp'] > 10.):
+            if ((pars['mean:ln_fwhm_L'] < -0.5 and pars['mean:ln_std_G'] < (-0.5)) or pars['mean:ln_amp'] > 10.):
                 title = 'fucked'
             else:
                 title = '{:.2f}'.format(pars['mean:ln_amp'])

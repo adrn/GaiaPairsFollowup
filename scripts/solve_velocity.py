@@ -127,8 +127,8 @@ def main(night_path, overwrite=False, pool=None):
         object_name = hdr['OBJECT']
 
         # HACK: for testing
-        if 'HIP' not in object_name:
-            continue
+        # if 'HIP' not in object_name:
+        #     continue
 
         if object_name in velocity_tbl['object_name']:
             if overwrite:
@@ -394,8 +394,7 @@ def main(night_path, overwrite=False, pool=None):
             shift = 0. * u.angstrom
 
         rv = (centroid + shift - Halpha) / Halpha * c.to(u.km/u.s) + vbary
-        rv_err = centroid_err / Halpha * c.to(u.km/u.s)
-        rv_err = np.sqrt(rv_err**2 + (10.*u.km/u.s)**2)
+        rv_err = centroid_err / Halpha * c.to(u.km/u.s) # formal precision
 
         # convert ra,dec to quantities
         ra = sc.ra.degree * u.deg

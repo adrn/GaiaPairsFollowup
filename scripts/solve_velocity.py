@@ -22,6 +22,7 @@ plt.style.use('apw-notebook')
 import emcee
 import corner
 import schwimmbad
+from schwimmbad import choose_pool
 
 # Project
 from comoving_rv.log import logger
@@ -49,7 +50,10 @@ def log_probability(params, gp, flux_data):
 
     return ll + lp
 
-def main(night_path, overwrite=False):
+def main(night_path, overwrite=False, pool=None):
+
+    if pool is None:
+        pool = schwimmbad.SerialPool()
 
     night_path = path.realpath(path.expanduser(night_path))
     if not path.exists(night_path):
@@ -128,7 +132,8 @@ def main(night_path, overwrite=False):
 
         if object_name in velocity_tbl['object_name']:
             if overwrite:
-                logger.debug('Object {} already done - overwriting!'.format(object_name))
+                logger.debug('Object {} already done - overwriting!'
+                             .format(object_name))
                 idx, = np.where(velocity_tbl['object_name'] == object_name)
                 for i in idx:
                     velocity_tbl.remove_row(i)
@@ -201,7 +206,8 @@ def main(night_path, overwrite=False):
         ax.set_ylabel('flux')
 
         fig.tight_layout()
-        fig.savefig(path.join(plot_path, '{}_maxlike.png'.format(filebase)), dpi=256)
+        fig.savefig(path.join(plot_path, '{}_maxlike.png'.format(filebase)),
+                    dpi=256)
         plt.close(fig)
         # ------------------------------------------------------------------------
 
@@ -216,33 +222,35 @@ def main(night_path, overwrite=False):
             initial[5] = -8.
         ndim, nwalkers = len(initial), 64
 
-        with schwimmbad.MultiPool() as pool:
-            # with schwimmbad.SerialPool() as pool:
-            sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, pool=pool,
-                                            args=(gp, flux_data))
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
+                                        pool=pool, args=(gp, flux_data))
 
-            logger.debug("Running burn-in...")
-            p0 = initial + 1e-6 * np.random.randn(nwalkers, ndim)
-            p0, lp, _ = sampler.run_mcmc(p0, 256)
+        logger.debug("Running burn-in...")
+        p0 = initial + 1e-6 * np.random.randn(nwalkers, ndim)
+        p0, lp, _ = sampler.run_mcmc(p0, 256)
 
-            logger.debug("Running 2nd burn-in...")
-            sampler.reset()
-            p0 = p0[lp.argmax()] + 1e-3 * np.random.randn(nwalkers, ndim)
-            p0, lp, _ = sampler.run_mcmc(p0, 512)
+        logger.debug("Running 2nd burn-in...")
+        sampler.reset()
+        p0 = p0[lp.argmax()] + 1e-3 * np.random.randn(nwalkers, ndim)
+        p0, lp, _ = sampler.run_mcmc(p0, 512)
 
-            logger.debug("Running production...")
-            sampler.reset()
-            pos, lp, _ = sampler.run_mcmc(p0, 512)
+        logger.debug("Running production...")
+        sampler.reset()
+        pos, lp, _ = sampler.run_mcmc(p0, 512)
+
+        pool.close()
 
         # --------------------------------------------------------------------
         # plot MCMC traces
         fig,axes = plt.subplots(2,4,figsize=(18,6))
         for i in range(sampler.dim):
             for walker in sampler.chain[...,i]:
-                axes.flat[i].plot(walker, marker='', drawstyle='steps-mid', alpha=0.2)
+                axes.flat[i].plot(walker, marker='',
+                                  drawstyle='steps-mid', alpha=0.2)
             axes.flat[i].set_title(gp.get_parameter_names()[i], fontsize=12)
         fig.tight_layout()
-        fig.savefig(path.join(plot_path, '{}_mcmc_trace.png'.format(filebase)), dpi=256)
+        fig.savefig(path.join(plot_path, '{}_mcmc_trace.png'.format(filebase)),
+                    dpi=256)
         plt.close(fig)
         # --------------------------------------------------------------------
 
@@ -260,10 +268,13 @@ def main(night_path, overwrite=False):
                          marker='', alpha=0.25, color='#3182bd', zorder=-10)
 
             mu = gp.predict(flux_data, wave_grid, return_cov=False)
-            axes[1].plot(wave_grid, mu-_mean_model, color=gp_color, alpha=0.25, marker='')
-            axes[2].plot(wave_grid, mu, color='#756bb1', alpha=0.25, marker='')
+            axes[1].plot(wave_grid, mu-_mean_model, color=gp_color,
+                         alpha=0.25, marker='')
+            axes[2].plot(wave_grid, mu, color='#756bb1',
+                         alpha=0.25, marker='')
 
-        axes[2].plot(wave_data, flux_data, drawstyle='steps-mid', marker='', zorder=-6)
+        axes[2].plot(wave_data, flux_data, drawstyle='steps-mid',
+                     marker='', zorder=-6)
         axes[2].errorbar(wave_data, flux_data, err_data,
                          marker='', ls='none', ecolor='#666666', zorder=-10)
 
@@ -274,15 +285,18 @@ def main(night_path, overwrite=False):
         axes[2].set_title('full model')
 
         fig.tight_layout()
-        fig.savefig(path.join(plot_path, '{}_mcmc_fits.png'.format(filebase)), dpi=256)
+        fig.savefig(path.join(plot_path, '{}_mcmc_fits.png'.format(filebase)),
+                    dpi=256)
         plt.close(fig)
         # --------------------------------------------------------------------
 
         # --------------------------------------------------------------------
         # corner plot
         fig = corner.corner(sampler.flatchain[::10, :],
-                            labels=[x.split(':')[1] for x in gp.get_parameter_names()])
-        fig.savefig(path.join(plot_path, '{}_corner.png'.format(filebase)), dpi=256)
+                            labels=[x.split(':')[1]
+                                    for x in gp.get_parameter_names()])
+        fig.savefig(path.join(plot_path, '{}_corner.png'.format(filebase)),
+                    dpi=256)
         plt.close(fig)
         # --------------------------------------------------------------------
 
@@ -307,7 +321,8 @@ def main(night_path, overwrite=False):
 
         wave_shifts = np.full(len(sky_lines), np.nan) * u.angstrom
         for j,sky_line in enumerate(sky_lines):
-            mask = (spec['wavelength'] > (sky_line-width/2)) & (spec['wavelength'] < (sky_line+width/2))
+            mask = ((spec['wavelength'] > (sky_line-width/2)) &
+                    (spec['wavelength'] < (sky_line+width/2)))
             flux_data = spec['background_flux'][mask]
             ivar_data = spec['background_ivar'][mask]
             wave_data = spec['wavelength'][mask]
@@ -411,17 +426,27 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="")
 
     vq_group = parser.add_mutually_exclusive_group()
-    vq_group.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
-    vq_group.add_argument('-q', '--quiet', action='count', default=0, dest='quietness')
+    vq_group.add_argument('-v', '--verbose', action='count',
+                          default=0, dest='verbosity')
+    vq_group.add_argument('-q', '--quiet', action='count',
+                          default=0, dest='quietness')
 
     parser.add_argument('-s', '--seed', dest='seed', default=None,
                         type=int, help='Random number generator seed.')
-    parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
-                        default=False, help='Destroy everything.')
+    parser.add_argument('-o', '--overwrite', action='store_true',
+                        dest='overwrite', default=False,
+                        help='Destroy everything.')
 
     parser.add_argument('-p', '--path', dest='night_path', required=True,
                         help='Path to a PROCESSED night or chunk of data to '
                              'process. Or, path to a specific comp file.')
+
+    # multiprocessing options
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--ncores', dest='n_cores', default=1,
+                       type=int, help='Number of CPU cores to use.')
+    group.add_argument('--mpi', dest='mpi', default=False,
+                       action='store_true', help='Run with MPI.')
 
     args = parser.parse_args()
 
@@ -444,5 +469,7 @@ if __name__ == "__main__":
     if args.seed is not None:
         np.random.seed(args.seed)
 
-    main(night_path=args.night_path, overwrite=args.overwrite)
+    pool = choose_pool(mpi=args.mpi, processes=args.n_cores)
+    logger.info("Using pool: {}".format(pool.__class__))
 
+    main(night_path=args.night_path, overwrite=args.overwrite, pool=pool)

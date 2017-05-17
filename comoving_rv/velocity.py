@@ -4,7 +4,9 @@ import astropy.units as u
 
 __all__ = ['bary_vel_corr']
 
-kitt_peak = coord.EarthLocation.of_site('KPNO')
+# kitt_peak = coord.EarthLocation.of_site('KPNO')
+# TODO: HACK: approximate
+kitt_peak = coord.EarthLocation(lon=-111.6150*u.degree, lat=31.95*u.degree)
 
 def bary_vel_corr(time, skycoord, location=None):
     """

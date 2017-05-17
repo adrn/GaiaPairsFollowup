@@ -21,7 +21,7 @@ from scipy.optimize import minimize
 # Project
 from comoving_rv.log import logger
 from comoving_rv.longslit import GlobImageFileCollection
-from comoving_rv.longslit.wavelength import GPModel
+from comoving_rv.longslit.wavelength import GPModel, fit_all_lines
 
 # ----------------------------------------------------------------------------
 # Settings, or arbitrary choices / magic numbers
@@ -29,57 +29,6 @@ from comoving_rv.longslit.wavelength import GPModel
 n_bg_coef = 2 # linear
 #
 # ----------------------------------------------------------------------------
-
-def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels):
-    """
-    Given a wavelength guess (a list of rough pixel-wavelength correspondences),
-    measure more precise line centroids to then fit for a wavelength
-    calibratrion function.
-
-    Parameters
-    ----------
-    pixels : array_like
-        Pixel array for a 1D comp. lamp spectrum.
-    flux : array_like
-        Flux array for a 1D comp. lamp spectrum.
-    flux_ivar : array_like
-        Inverse-variance array for a 1D comp. lamp spectrum.
-    line_waves : array_like
-        List of wavelength values for emission lines in a comp. lamp spectrum.
-    line_pixels : array_like
-        List of pixel centroids for emission lines in a comp. lamp spectrum.
-    """
-
-    _idx = np.argsort(line_waves)
-    wvln = np.array(line_waves)[_idx]
-    pixl = np.array(line_pixels)[_idx]
-
-    fit_centroids = []
-
-    half_width = 5 # MAGIC NUMBER: number of pixels on either side of line
-    for pix_ctr,wave in zip(pixl, wvln):
-
-        logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
-                     .format(pix_ctr, wave))
-
-        # indices for region around line
-        i1 = int(np.floor(pix_ctr-half_width))
-        i2 = int(np.ceil(pix_ctr+half_width))+1
-
-        # recenter window
-        i0 = i1 + flux[i1:i2].argmax()
-        i1 = int(np.floor(i0-half_width))
-        i2 = int(np.ceil(i0+half_width))+1
-
-        _pixl = pixels[i1:i2]
-        _flux = flux[i1:i2]
-
-        # instead of doing anything fancy (e.g., fitting a profile), just
-        # estimate the mean...
-        x0 = np.sum(_pixl * _flux) / np.sum(_flux)
-        fit_centroids.append(x0)
-
-    return np.array(fit_centroids)
 
 def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     """

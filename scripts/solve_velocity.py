@@ -378,8 +378,7 @@ def main(night_path, overwrite=False):
         if np.isnan(shift):
             shift = 0. * u.angstrom
 
-        centroid = centroid + shift
-        rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s) + vbary
+        rv = (centroid + shift - Halpha) / Halpha * c.to(u.km/u.s) + vbary
         rv_err = centroid_err / Halpha * c.to(u.km/u.s)
         rv_err = np.sqrt(rv_err**2 + (10.*u.km/u.s)**2)
 
@@ -395,12 +394,12 @@ def main(night_path, overwrite=False):
                                   bary_rv_shift=vbary,
                                   sky_shift_flag=sky_flag,
                                   sky_wave_shift=wave_shifts,
-                                  rv=rv + vbary,
+                                  rv=rv,
                                   rv_err=rv_err))
 
         logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'
                     .format(object_name, filebase, x0=centroid,
-                            err=centroid_err, rv=rv + vbary))
+                            err=centroid_err, rv=rv))
 
         velocity_tbl.write(table_path, format='fits', overwrite=True)
 

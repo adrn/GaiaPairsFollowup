@@ -3,8 +3,6 @@
 """
 TODO:
 - n1.0073 Halpha is emission
-- Save results to a database file of some kind...sqlite? yaml file?
-
 """
 
 # Standard library
@@ -15,7 +13,6 @@ import glob
 
 # Third-party
 from astropy.constants import c
-import astropy.coordinates as coord
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table, Column
@@ -28,34 +25,8 @@ import schwimmbad
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit.wavelength import fit_spec_line_GP
+from comoving_rv.longslit.fitting import fit_spec_line_GP
 from comoving_rv.longslit.models import voigt_polynomial
-
-def get_fit_pars(gp):
-    fit_pars = OrderedDict()
-    for k,v in gp.get_parameter_dict().items():
-        if 'mean' not in k:
-            continue
-
-        k = k[5:] # remove 'mean:'
-        if k.startswith('ln'):
-            if 'amp' in k:
-                fit_pars[k[3:]] = -np.exp(v)
-            else:
-                fit_pars[k[3:]] = np.exp(v)
-
-        elif k.startswith('bg'):
-            if 'bg_coef' not in fit_pars:
-                fit_pars['bg_coef'] = []
-            fit_pars['bg_coef'].append(v)
-
-        else:
-            fit_pars[k] = v
-
-    if 'std_G' not in fit_pars:
-        fit_pars['std_G'] = 1E-10
-
-    return fit_pars
 
 def log_probability(params, gp, flux_data):
     gp.set_parameter_vector(params)
@@ -77,11 +48,14 @@ def log_probability(params, gp, flux_data):
     return ll + lp
 
 def main(overwrite=False):
-    night = 'n5'
+    night = 'n1' # HACK TODO
 
     plot_path = path.abspath('../plots/')
     root_path = path.abspath('../data/mdm-spring-2017/processed/')
-    table_path = path.join(root_path, 'rough_velocity.ecsv')
+    table_path = path.join(root_path, 'velocity.ecsv')
+
+    # air wavelength of Halpha -- wavelength calibration from comp lamp is done
+    #   at air wavelengths, so this is where Halpha should be, right?
     Halpha = 6562.8 * u.angstrom
 
     if not path.exists(plot_path):
@@ -103,15 +77,7 @@ def main(overwrite=False):
         logger.debug('Table exists, reading ({})'.format(table_path))
         velocity_tbl = Table.read(table_path, format='ascii.ecsv', delimiter=',')
 
-    # read master_wavelength file
-    pix_wav = np.genfromtxt(path.join(root_path, night, 'master_wavelength.csv'),
-                            delimiter=',', names=True)
 
-    idx = (pix_wav['wavelength'] < 6950) & (pix_wav['wavelength'] > 6000)
-    pix_wav = pix_wav[idx] # HACK
-    pix_range = [min(pix_wav['pixel']), max(pix_wav['pixel'])]
-
-    # '1d_{}.{:04d}.fit'.format(night, frame)
     for file_path in glob.glob(path.join(root_path, night, '1d_*.fit*')):
         filename = path.basename(file_path)
         filebase,ext = path.splitext(filename)
@@ -124,7 +90,8 @@ def main(overwrite=False):
             if overwrite:
                 logger.debug('Object {} already done - overwriting!'.format(object_name))
                 idx, = np.where(velocity_tbl['object_name'] == object_name)
-                velocity_tbl.remove_row(idx[0])
+                for i in idx:
+                    velocity_tbl.remove_row(i)
 
             else:
                 logger.debug('Object {} already done.'.format(object_name))
@@ -132,18 +99,26 @@ def main(overwrite=False):
 
         # read the spectrum data and get wavelength solution
         spec = Table.read(file_path)
-        coef = np.polynomial.polynomial.polyfit(pix_wav['pixel'], pix_wav['wavelength'], deg=9)
 
         # compute wavelength array for the pixels
         wave = np.polynomial.polynomial.polyval(spec['pix'], coef)
         wave[(spec['pix'] > max(pix_range)) | (spec['pix'] < min(pix_range))] = np.nan
+
+        # compute wavelength array for the pixels
+        hdulist = fits.open(file_path)
+        spec['wavelength'] = wave
+        new_hdu1 = fits.table_to_hdu(spec)
+        new_hdulist = fits.HDUList([hdulist[0], new_hdu1])
+        logger.debug("\tWriting out file with wavelength array.")
+        new_hdulist.writeto(file_path, overwrite=True)
+        hdulist.close()
+        new_hdulist.close()
 
         # Define data arrays to be used in fitting below
         near_Ha = (wave > 6510) & (wave < 6615)
         flux_data = spec['source_flux'][near_Ha]
         ivar_data = spec['source_ivar'][near_Ha]
         absorp_emiss = -1.
-        target_x = Halpha.value
 
         wave_data = wave[near_Ha]
 
@@ -158,8 +133,20 @@ def main(overwrite=False):
 
         # start by doing a maximum likelihood GP
         gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
-                              absorp_emiss=absorp_emiss, target_x=target_x,
+                              absorp_emiss=absorp_emiss,
                               fwhm_L0=4., std_G0=1., n_bg_coef=2)
+
+        if gp.get_parameter_dict()['mean:ln_amp'] < 0.5: # MAGIC NUMBER
+            # try again with emission line
+            logger.warning('absorption line has tiny amplitude - trying emission line fit instead')
+            gp2 = fit_spec_line_GP(wave_data, flux_data, ivar_data,
+                                   absorp_emiss=1,
+                                   fwhm_L0=4., std_G0=1., n_bg_coef=2)
+
+            if gp2.log_likelihood(flux_data) > gp.log_likelihood(flux_data):
+                gp = gp2
+            else:
+                logger.error('failed to find a good fit')
 
         fit_pars = get_fit_pars(gp)
 
@@ -296,6 +283,8 @@ def main(overwrite=False):
 
         velocity_tbl.write(table_path, format='ascii.ecsv',
                            overwrite=True, delimiter=',')
+
+        return
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

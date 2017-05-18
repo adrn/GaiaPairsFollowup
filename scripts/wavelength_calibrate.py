@@ -3,7 +3,6 @@
 TODO:
 - Make the functions below part of a class so we can store diagnostic
     plots along the way (easily keep track of paths)
-- Need to do sky-spectrum adjustments here when we can
 """
 
 # Standard library
@@ -51,7 +50,7 @@ def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
                                         '..', 'wavelength_guess.csv'))
     pix_wav = np.genfromtxt(guess_path, delimiter=',', names=True)
 
-    # fit line profiles to each emission line at the guessed positions of the lines
+    # get emission line centroids at the guessed positions of the lines
     pix_x0s = fit_all_lines(spec['pix'], spec['flux'], spec['ivar'],
                             pix_wav['wavelength'], pix_wav['pixel'])
 

@@ -74,13 +74,15 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         raise IOError("Path '{}' doesn't exist".format(night_path))
     logger.info("Reading data from path: {}".format(night_path))
 
-    base_path, name = path.split(night_path)
-    output_path = path.realpath(path.join(base_path, 'processed', name))
+    base_path, night_name = path.split(night_path)
+    data_path, run_name = path.split(base_path)
+    output_path = path.realpath(path.join(data_path, 'processed',
+                                          run_name, night_name))
     os.makedirs(output_path, exist_ok=True)
     logger.info("Saving processed files to path: {}".format(output_path))
 
     if plot: # if we're making plots
-        plot_path = path.realpath(path.join(base_path, 'processed', name, 'plots'))
+        plot_path = path.realpath(path.join(output_path, 'plots'))
         logger.debug("Will make and save plots to: {}".format(plot_path))
         os.makedirs(plot_path, exist_ok=True)
     else:

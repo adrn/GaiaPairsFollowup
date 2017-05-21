@@ -60,8 +60,8 @@ def fit_sky_region(x, flux, ivar, center, width, plot=False):
 
         # full GP model
         gp_color = "#ff7f0e"
-        axes[2].plot(wave_grid, mu, color=gp_color, marker='')
-        axes[2].fill_between(wave_grid, mu+std, mu-std, color=gp_color,
+        axes[2].plot(wave_data, mu, color=gp_color, marker='')
+        axes[2].fill_between(wave_data, mu+std, mu-std, color=gp_color,
                              alpha=0.3, edgecolor="none")
 
         for ax in axes: ax.set_xlabel(r'wavelength [$\AA$]')

@@ -10,7 +10,7 @@ from celerite import terms, GP
 
 # Project
 from ...log import logger
-from ..models import integrated_gaussian_polynomial
+from ..models import binned_gaussian_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
@@ -79,7 +79,7 @@ def get_init_guess(x, flux, ivar,
 
 def errfunc(p, pix, flux, flux_ivar):
     amp, x0, std, *bg_coef = p
-    f = integrated_gaussian_polynomial
+    f = binned_gaussian_polynomial
     return (flux - f(pix, amp, x0, std, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_spec_line(x, flux, flux_ivar=None,
@@ -178,7 +178,7 @@ class MeanModel(Model):
         super(MeanModel, self).__init__(*args, **kwargs)
 
     def get_value(self, x):
-        f = integrated_gaussian_polynomial
+        f = binned_gaussian_polynomial
         return f(x, self._absorp_emiss*np.exp(self.ln_amp),
                  self.x0, np.exp(self.ln_std),
                  [getattr(self, "bg{}".format(i))

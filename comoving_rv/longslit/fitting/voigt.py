@@ -10,7 +10,7 @@ from celerite import terms, GP
 
 # Project
 from ...log import logger
-from ..models import integrated_voigt_polynomial
+from ..models import binned_voigt_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
@@ -83,7 +83,7 @@ def get_init_guess(x, flux, ivar,
 
 def errfunc(p, pix, flux, flux_ivar):
     amp, x0, std_G, hwhm_L, *bg_coef = p
-    return (flux - integrated_voigt_polynomial(pix, amp, x0, std_G, hwhm_L, bg_coef)) * np.sqrt(flux_ivar)
+    return (flux - binned_voigt_polynomial(pix, amp, x0, std_G, hwhm_L, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_spec_line(x, flux, flux_ivar=None,
                   amp0=None, x0=None, std_G0=None, hwhm_L0=None,
@@ -182,7 +182,7 @@ class MeanModel(Model):
         super(MeanModel, self).__init__(*args, **kwargs)
 
     def get_value(self, x):
-        f = integrated_voigt_polynomial
+        f = binned_voigt_polynomial
         return f(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
                  np.exp(self.ln_std_G), np.exp(self.ln_hwhm_L),
                  [getattr(self, "bg{}".format(i))

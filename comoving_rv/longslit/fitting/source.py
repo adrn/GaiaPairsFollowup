@@ -6,6 +6,8 @@ import numpy as np
 from .voigt import fit_spec_line_GP, gp_to_fit_pars
 from ..models import voigt_polynomial, binned_voigt_polynomial
 
+__all__ = ['fit_source_region']
+
 def fit_source_region(x, flux, ivar, center, width, absorp_emiss=-1., plot=False):
     _idx = np.abs(x - center) < width
 
@@ -24,7 +26,8 @@ def fit_source_region(x, flux, ivar, center, width, absorp_emiss=-1., plot=False
     log_sigma0 = np.log(5*y_MAD)
 
     gp = fit_spec_line_GP(wave_data, flux_data, ivar, absorp_emiss=absorp_emiss,
-                          std_G0=2., hwhm_L0=0.1, log_sigma0=log_sigma0, log_rho0=np.log(10.))
+                          std_G0=2., hwhm_L0=0.1, log_sigma0=log_sigma0,
+                          log_rho0=np.log(10.))
 
     wave_grid = np.linspace(wave_data.min(), wave_data.max(), 256)
     mu, var = gp.predict(flux_data, wave_grid, return_var=True)
@@ -61,11 +64,9 @@ def fit_source_region(x, flux, ivar, center, width, absorp_emiss=-1., plot=False
 
         fig.tight_layout()
 
-    print(fit_pars)
-
-    if ((abs(fit_pars['x0']-center) > 8) or (fit_pars['amp'] < 10) or
-            (fit_pars['std'] > 4)):
+    success = True
+    if (abs(fit_pars['x0']-center) > 8) or (np.abs(fit_pars['amp']) < 10):
         # FAILED
-        return None
+        success = False
 
-    return fit_pars
+    return fit_pars, success

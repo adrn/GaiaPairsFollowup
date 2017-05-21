@@ -7,6 +7,8 @@ from scipy.signal import argrelmax
 from .gaussian import fit_spec_line_GP, gp_to_fit_pars
 from ..models import gaussian_polynomial, binned_gaussian_polynomial
 
+__all__ = ['fit_sky_region']
+
 def fit_sky_region(x, flux, ivar, center, width, plot=False):
     _idx = np.abs(x - center) < width # x pixels on either side of center
 
@@ -53,7 +55,7 @@ def fit_sky_region(x, flux, ivar, center, width, plot=False):
         # mean model
         axes[0].plot(wave_grid, gaussian_polynomial(wave_grid, **fit_pars),
                      marker='', alpha=0.5, zorder=100, color='r')
-        axes[1].plot(wave_grid, binned_gaussian_polynomial(wave_grid, **fit_pars),
+        axes[1].plot(wave_data, binned_gaussian_polynomial(wave_data, **fit_pars),
                      marker='', alpha=0.5, zorder=101, drawstyle='steps-mid', color='g')
 
         # full GP model
@@ -67,13 +69,15 @@ def fit_sky_region(x, flux, ivar, center, width, plot=False):
 
         fig.tight_layout()
 
+    success = True
+
     # some validation
     max_ = fit_pars['amp'] / np.sqrt(2*np.pi*fit_pars['std']**2)
     SNR = max_ / np.median(err_data)
 
     if ((abs(fit_pars['x0']-center) > 4) or (fit_pars['amp'] < 10) or
-            (fit_pars['std'] > 4) or (SNR < 3)):
+            (fit_pars['std'] > 4) or (SNR < 2)):
         # FAILED
-        return None
+        success = False
 
-    return fit_pars
+    return fit_pars, success

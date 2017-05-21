@@ -64,12 +64,12 @@ class GUIWavelengthSolver(object):
             # self._map_dict['pixel_err'] = np.zeros_like(init_map['pixel']) # TODO: hack
 
         self._line_std_G = None
-        self._line_fwhm_L = None
+        self._line_hwhm_L = None
         self._done_wavel_idx = []
 
         # HACK: magic numbers, initial line widths
         self._line_std_G = 0.6
-        self._line_fwhm_L = 0.1
+        self._line_hwhm_L = 0.1/2
 
         # for storing UI elements
         self._ui = dict()
@@ -204,7 +204,7 @@ class GUIWavelengthSolver(object):
 
         # store these to help auto-identify
         self._line_std_G = line_props['std_G']
-        self._line_fwhm_L = line_props['fwhm_L']
+        self._line_hwhm_L = line_props['hwhm_L']
 
         # return line_props, gp
         return line_props, None
@@ -261,7 +261,7 @@ class GUIWavelengthSolver(object):
 
         # from Wikipedia: https://en.wikipedia.org/wiki/Voigt_profile
         fG = 2*self._line_std_G*np.sqrt(2*np.log(2))
-        fL = self._line_fwhm_L
+        fL = 2*self._line_hwhm_L
         lw = 0.5346*fL + np.sqrt(0.2166*fL**2 + fG**2)
         for pix_ctr,xmin,xmax,wave_idx,wave in zip(predicted_pixels,
                                                    predicted_pixels-5*lw,
@@ -280,7 +280,7 @@ class GUIWavelengthSolver(object):
             try:
                 lp,gp = self.get_line_props(xmin, xmax,
                                             std_G0=self._line_std_G,
-                                            fwhm_L0=self._line_fwhm_L)
+                                            hwhm_L0=self._line_hwhm_L)
             except Exception as e:
                 logger.error("Failed to auto-fit line at {} ({msg})"
                              .format(wave, msg=str(e)))

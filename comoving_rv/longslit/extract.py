@@ -67,12 +67,12 @@ def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
     # initial guess
     p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
                         amp0=amp0, x0=x0,
-                        std_G0=lsf_pars['std_G'], fwhm_L0=lsf_pars['fwhm_L'],
+                        std_G0=lsf_pars['std_G'], hwhm_L0=lsf_pars['hwhm_L'],
                         bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
                         absorp_emiss=1.)
 
     p0['std_G'] = lsf_pars['std_G']
-    p0['fwhm_L'] = lsf_pars['fwhm_L']
+    p0['hwhm_L'] = lsf_pars['hwhm_L']
 
     # shift x array so that line is approximately at 0
     _x = np.array(x, copy=True)
@@ -106,7 +106,7 @@ def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
         raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
 
     par_dict = OrderedDict(amp=fit_amp, x0=fit_x0,
-                           std_G=lsf_pars['std_G'], fwhm_L=lsf_pars['fwhm_L'],
+                           std_G=lsf_pars['std_G'], hwhm_L=lsf_pars['hwhm_L'],
                            bg_coef=fit_bg)
 
     return par_dict, p_cov
@@ -292,7 +292,7 @@ class SourceCCDExtractor(CCDExtractor):
             row_idxs = np.linspace(750, 850, 16).astype(int)
 
         std_Gs = []
-        fwhm_Ls = []
+        hwhm_Ls = []
         for row_idx in row_idxs:
             flux = self.ccd.data[row_idx]
             flux_err = self.ccd.uncertainty.array[row_idx]
@@ -308,7 +308,7 @@ class SourceCCDExtractor(CCDExtractor):
                                            absorp_emiss=1., return_cov=True, x0=initx0)
 
             std_Gs.append(fit_p['std_G'])
-            fwhm_Ls.append(fit_p['fwhm_L'])
+            hwhm_Ls.append(fit_p['hwhm_L'])
 
         if self.plot_path is not None:
             fig,ax = plt.subplots(1,1,figsize=(8,5))
@@ -331,7 +331,7 @@ class SourceCCDExtractor(CCDExtractor):
 
         lsf_p = dict()
         lsf_p['std_G'] = np.median(std_Gs)
-        lsf_p['fwhm_L'] = np.median(fwhm_Ls)
+        lsf_p['hwhm_L'] = np.median(hwhm_Ls)
 
         return lsf_p
 

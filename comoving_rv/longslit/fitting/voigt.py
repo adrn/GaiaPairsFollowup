@@ -9,16 +9,16 @@ from celerite.modeling import Model
 from celerite import terms, GP
 
 # Project
-from ..log import logger
-from .models import integrated_voigt_polynomial
+from ...log import logger
+from ..models import integrated_voigt_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
 def par_dict_to_list(p):
-    return [p['amp'], p['x0'], p['std_G'], p['fwhm_L']] + p['bg_coef'].tolist()
+    return [p['amp'], p['x0'], p['std_G'], p['hwhm_L']] + p['bg_coef'].tolist()
 
 def get_init_guess(x, flux, ivar,
-                   amp0=None, x0=None, std_G0=None, fwhm_L0=None,
+                   amp0=None, x0=None, std_G0=None, hwhm_L0=None,
                    bg0=None, n_bg_coef=2, target_x=None,
                    absorp_emiss=1.):
 
@@ -60,8 +60,8 @@ def get_init_guess(x, flux, ivar,
     if std_G0 is None:
         std_G0 = 2. # MAGIC NUMBER
 
-    if fwhm_L0 is None:
-        fwhm_L0 = 0.5 # MAGIC NUMBER
+    if hwhm_L0 is None:
+        hwhm_L0 = 0.5 # MAGIC NUMBER
 
     if amp0 is None: # then estimate the initial guess for amplitude
         _i = np.argmin(np.abs(x))
@@ -75,18 +75,18 @@ def get_init_guess(x, flux, ivar,
     p0['amp'] = amp0
     p0['x0'] = x0
     p0['std_G'] = std_G0
-    p0['fwhm_L'] = fwhm_L0
+    p0['hwhm_L'] = hwhm_L0
     p0['bg_coef'] = bg0
     return p0
 
 # ---
 
 def errfunc(p, pix, flux, flux_ivar):
-    amp, x0, std_G, fwhm_L, *bg_coef = p
-    return (flux - integrated_voigt_polynomial(pix, amp, x0, std_G, fwhm_L, bg_coef)) * np.sqrt(flux_ivar)
+    amp, x0, std_G, hwhm_L, *bg_coef = p
+    return (flux - integrated_voigt_polynomial(pix, amp, x0, std_G, hwhm_L, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_spec_line(x, flux, flux_ivar=None,
-                  amp0=None, x0=None, std_G0=None, fwhm_L0=None,
+                  amp0=None, x0=None, std_G0=None, hwhm_L0=None,
                   bg0=None, n_bg_coef=2, target_x=None,
                   absorp_emiss=1., return_cov=False,
                   leastsq_kw=None):
@@ -124,7 +124,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
 
     # initial guess
     p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
-                        amp0=amp0, x0=x0, std_G0=std_G0, fwhm_L0=fwhm_L0,
+                        amp0=amp0, x0=x0, std_G0=std_G0, hwhm_L0=hwhm_L0,
                         bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
                         absorp_emiss=absorp_emiss)
 
@@ -153,7 +153,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
     s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
     p_cov = p_cov * s_sq
 
-    fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
+    fit_amp, fit_x0, fit_std_G, fit_hwhm_L, *fit_bg = p_opt
     fit_x0 = fit_x0 + _x0
 
     if ier < 1 or ier > 4:
@@ -163,7 +163,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
         raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
 
     par_dict = OrderedDict(amp=fit_amp, x0=fit_x0,
-                           std_G=fit_std_G, fwhm_L=fit_fwhm_L,
+                           std_G=fit_std_G, hwhm_L=fit_hwhm_L,
                            bg_coef=fit_bg)
 
     if return_cov:
@@ -177,14 +177,14 @@ class MeanModel(Model):
     def __init__(self, n_bg_coef, absorp_emiss, *args, **kwargs):
         self._n_bg_coef = n_bg_coef
         self._absorp_emiss = absorp_emiss
-        self.parameter_names = (["ln_amp", "x0", "ln_std_G", "ln_fwhm_L"] +
+        self.parameter_names = (["ln_amp", "x0", "ln_std_G", "ln_hwhm_L"] +
                                 ["bg{}".format(i) for i in range(n_bg_coef)])
         super(MeanModel, self).__init__(*args, **kwargs)
 
     def get_value(self, x):
         f = integrated_voigt_polynomial
         return f(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
-                 np.exp(self.ln_std_G), np.exp(self.ln_fwhm_L),
+                 np.exp(self.ln_std_G), np.exp(self.ln_hwhm_L),
                  [getattr(self, "bg{}".format(i))
                   for i in range(self._n_bg_coef)])
 
@@ -219,7 +219,7 @@ def gp_to_fit_pars(gp, absorp_emiss):
     return fit_pars
 
 def fit_spec_line_GP(x, flux, flux_ivar=None,
-                     amp0=None, x0=None, std_G0=None, fwhm_L0=None,
+                     amp0=None, x0=None, std_G0=None, hwhm_L0=None,
                      bg0=None, n_bg_coef=2, target_x=None,
                      log_sigma0=None, log_rho0=None, # GP parameters
                      absorp_emiss=1., minimize_kw=None):
@@ -236,14 +236,14 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
 
     # initial guess for mean model
     p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
-                        amp0=amp0, x0=x0, std_G0=std_G0, fwhm_L0=fwhm_L0,
+                        amp0=amp0, x0=x0, std_G0=std_G0, hwhm_L0=hwhm_L0,
                         bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
                         absorp_emiss=absorp_emiss)
 
     # replace log parameters
     p0['ln_amp'] = np.log(absorp_emiss * p0.pop('amp'))
     p0['ln_std_G'] = np.log(p0.pop('std_G'))
-    p0['ln_fwhm_L'] = np.log(p0.pop('fwhm_L'))
+    p0['ln_hwhm_L'] = np.log(p0.pop('hwhm_L'))
 
     # expand bg parameters
     bgs = p0.pop('bg_coef')

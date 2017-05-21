@@ -9,8 +9,8 @@ from celerite.modeling import Model
 from celerite import terms, GP
 
 # Project
-from ..log import logger
-from .models import integrated_gaussian_polynomial
+from ...log import logger
+from ..models import integrated_gaussian_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
@@ -69,7 +69,7 @@ def get_init_guess(x, flux, ivar,
         amp0 = np.sqrt(2*np.pi) * (flux[_i] - bg)
 
     p0 = OrderedDict()
-    p0['amp'] = amp0
+    p0['amp'] = np.abs(amp0)
     p0['x0'] = x0
     p0['std'] = std0
     p0['bg_coef'] = bg0
@@ -78,9 +78,9 @@ def get_init_guess(x, flux, ivar,
 # ---
 
 def errfunc(p, pix, flux, flux_ivar):
-    amp, x0, std_G, *bg_coef = p
+    amp, x0, std, *bg_coef = p
     f = integrated_gaussian_polynomial
-    return (flux - f(pix, amp, x0, std_G, bg_coef)) * np.sqrt(flux_ivar)
+    return (flux - f(pix, amp, x0, std, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_spec_line(x, flux, flux_ivar=None,
                   amp0=None, x0=None, std0=None,
@@ -150,7 +150,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
     s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
     p_cov = p_cov * s_sq
 
-    fit_amp, fit_x0, fit_std_G, fit_fwhm_L, *fit_bg = p_opt
+    fit_amp, fit_x0, fit_std, *fit_bg = p_opt
     fit_x0 = fit_x0 + _x0
 
     if ier < 1 or ier > 4:
@@ -160,8 +160,7 @@ def fit_spec_line(x, flux, flux_ivar=None,
         raise ValueError(fail_msg.format(msg="Unphysical peak centroid: {:.3f}".format(fit_x0)))
 
     par_dict = OrderedDict(amp=fit_amp, x0=fit_x0,
-                           std_G=fit_std_G, fwhm_L=fit_fwhm_L,
-                           bg_coef=fit_bg)
+                           std=fit_std, bg_coef=fit_bg)
 
     if return_cov:
         return par_dict, p_cov
@@ -235,9 +234,8 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
                         absorp_emiss=absorp_emiss)
 
     # replace log parameters
-    p0['ln_amp'] = np.log(absorp_emiss * p0.pop('amp'))
-    p0['ln_std_G'] = np.log(p0.pop('std_G'))
-    p0['ln_fwhm_L'] = np.log(p0.pop('fwhm_L'))
+    p0['ln_amp'] = np.log(p0.pop('amp'))
+    p0['ln_std'] = np.log(p0.pop('std'))
 
     # expand bg parameters
     bgs = p0.pop('bg_coef')
@@ -274,6 +272,8 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
 
     # Fit for the maximum likelihood parameters
     bounds = gp.get_parameter_bounds()
+    bounds = [(None,None), (np.log(0.5), None), (None,None), (min(x), max(x)),
+              (np.log(0.25), np.log(32.))] + [(None,None)]*n_bg_coef
     soln = minimize(neg_log_like, init_params, method="L-BFGS-B",
                     bounds=bounds, args=(flux, gp))
     gp.set_parameter_vector(soln.x)

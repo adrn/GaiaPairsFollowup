@@ -168,7 +168,7 @@ def main(night_path, overwrite=False, pool=None):
         absorp_emiss = -1.
         gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
                               absorp_emiss=absorp_emiss,
-                              fwhm_L0=4., std_G0=1., n_bg_coef=2)
+                              hwhm_L0=2., std_G0=1., n_bg_coef=2)
 
         if gp.get_parameter_dict()['mean:ln_amp'] < 0.5: # MAGIC NUMBER
             # try again with emission line
@@ -335,12 +335,12 @@ def main(night_path, overwrite=False, pool=None):
 
             gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
                                   absorp_emiss=absorp_emiss,
-                                  fwhm_L0=2., std_G0=1., n_bg_coef=2)
+                                  hwhm_L0=1., std_G0=1., n_bg_coef=2)
 
             pars = gp.get_parameter_dict()
             dlam = sky_line - pars['mean:x0']
 
-            if ((pars['mean:ln_fwhm_L'] < -0.5 and pars['mean:ln_std_G'] < (-0.5)) or
+            if ((pars['mean:ln_hwhm_L'] < -0.5 and pars['mean:ln_std_G'] < (-0.5)) or
                     pars['mean:ln_amp'] > 10. or pars['mean:ln_amp'] < 3.5):
                 title = 'fucked'
 

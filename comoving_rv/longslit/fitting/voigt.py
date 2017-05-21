@@ -10,7 +10,7 @@ from celerite import terms, GP
 
 # Project
 from ..log import logger
-from .models import voigt_polynomial
+from .models import integrated_voigt_polynomial
 
 __all__ = ['fit_spec_line', 'fit_spec_line_GP', 'gp_to_fit_pars']
 
@@ -83,7 +83,7 @@ def get_init_guess(x, flux, ivar,
 
 def errfunc(p, pix, flux, flux_ivar):
     amp, x0, std_G, fwhm_L, *bg_coef = p
-    return (flux - voigt_polynomial(pix, amp, x0, std_G, fwhm_L, bg_coef)) * np.sqrt(flux_ivar)
+    return (flux - integrated_voigt_polynomial(pix, amp, x0, std_G, fwhm_L, bg_coef)) * np.sqrt(flux_ivar)
 
 def fit_spec_line(x, flux, flux_ivar=None,
                   amp0=None, x0=None, std_G0=None, fwhm_L0=None,
@@ -182,10 +182,11 @@ class MeanModel(Model):
         super(MeanModel, self).__init__(*args, **kwargs)
 
     def get_value(self, x):
-        return voigt_polynomial(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
-                                np.exp(self.ln_std_G), np.exp(self.ln_fwhm_L),
-                                [getattr(self, "bg{}".format(i))
-                                 for i in range(self._n_bg_coef)])
+        f = integrated_voigt_polynomial
+        return f(x, self._absorp_emiss*np.exp(self.ln_amp), self.x0,
+                 np.exp(self.ln_std_G), np.exp(self.ln_fwhm_L),
+                 [getattr(self, "bg{}".format(i))
+                  for i in range(self._n_bg_coef)])
 
 def gp_to_fit_pars(gp, absorp_emiss):
     """
@@ -239,12 +240,6 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
                         bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
                         absorp_emiss=absorp_emiss)
 
-    # shift x array so that line is approximately at 0
-    # _x = np.array(x, copy=True)
-    # _x0 = float(p0['x0'])
-    # x = np.array(_x) - _x0
-    # p0['x0'] = 0. # recenter to initial guess
-
     # replace log parameters
     p0['ln_amp'] = np.log(absorp_emiss * p0.pop('amp'))
     p0['ln_std_G'] = np.log(p0.pop('std_G'))
@@ -264,7 +259,7 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
         log_sigma0 = np.log(y_MAD)
 
     if log_rho0 is None:
-        log_rho0 = np.log(10.)
+        log_rho0 = np.log(5.)
 
     # kernel = terms.RealTerm(log_a=np.log(y_MAD), log_c=-np.log(0.1)) # MAGIC NUMBERs
     kernel = terms.Matern32Term(log_sigma=log_sigma0, log_rho=log_rho0) # MAGIC NUMBERs
@@ -274,16 +269,6 @@ def fit_spec_line_GP(x, flux, flux_ivar=None,
     gp.compute(x, flux_err) # need to do this
     init_params = gp.get_parameter_vector()
     logger.debug("Initial log-likelihood: {0}".format(gp.log_likelihood(flux)))
-
-    # TEST:
-    # pars = gp_to_fit_pars(gp, absorp_emiss)
-    # import matplotlib.pyplot as plt
-    # plt.clf()
-    # plt.plot(x, flux)
-    # _grid = np.linspace(x.min(), x.max(), 256)
-    # plt.plot(_grid, voigt_polynomial(_grid, **pars), marker='')
-    # plt.show()
-    # sys.exit(0)
 
     # Define a cost function
     def neg_log_like(params, y, gp):

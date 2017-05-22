@@ -26,9 +26,8 @@ from schwimmbad import choose_pool
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import GlobImageFileCollection
-from comoving_rv.longslit.fitting import fit_spec_line_GP, gp_to_fit_pars
-from comoving_rv.longslit.models import voigt_polynomial
+from comoving_rv.longslit import GlobImageFileCollection, extract_region
+from comoving_rv.longslit.fitting import VoigtLineFitter, GaussianLineFitter
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 
 def log_probability(params, gp, flux_data):
@@ -99,8 +98,7 @@ def main(night_path, overwrite=False, pool=None):
                     Column(name='Ha_centroid', dtype=float, unit=u.angstrom, length=0),
                     Column(name='Ha_centroid_err', dtype=float, unit=u.angstrom, length=0),
                     Column(name='bary_rv_shift', dtype=float, unit=u.km/u.s, length=0),
-                    Column(name='sky_shift_flag', dtype=int, length=0),
-                    Column(name='sky_wave_shift', dtype=float, unit=u.angstrom, length=0, shape=(len(sky_lines,))),
+                    Column(name='sky_centroids', dtype=float, unit=u.angstrom, length=0, shape=(len(sky_lines,))),
                     Column(name='rv', dtype=float, unit=u.km/u.s, length=0),
                     Column(name='rv_err', dtype=float, unit=u.km/u.s, length=0)]
 
@@ -145,77 +143,39 @@ def main(night_path, overwrite=False, pool=None):
         # read the spectrum data and get wavelength solution
         spec = Table.read(file_path)
 
-        # Define data arrays to be used in fitting below
-        near_Ha = (np.isfinite(spec['wavelength']) &
-                   (spec['wavelength'] > 6510) & (spec['wavelength'] < 6615))
-        flux_data = np.array(spec['source_flux'][near_Ha])
-        ivar_data = np.array(spec['source_ivar'][near_Ha])
-        wave_data = np.array(spec['wavelength'][near_Ha])
+        # Extract region around Halpha
+        x, (flux, ivar) = extract_region(spec['wavelength'], center=6563.,
+                                         width=100,
+                                         arrs=[spec['source_flux'],
+                                               spec['source_ivar']])
 
-        _idx = wave_data.argsort()
-        wave_data = wave_data[_idx]
-        flux_data = flux_data[_idx]
-        ivar_data = ivar_data[_idx]
-        err_data = 1/np.sqrt(ivar_data)
-
-        # grid of wavelengths for plotting
-        wave_grid = np.linspace(wave_data.min(), wave_data.max(), 256)
-
-        # start by doing a maximum likelihood GP fit
-
-        # TODO: figure out if it's emission or absorption...for now just assume
-        #   absorption
+        # TODO: need to figure out if it's emission or absorption...for now just
+        #   assume absorption
         absorp_emiss = -1.
-        gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
-                              absorp_emiss=absorp_emiss,
-                              hwhm_L0=2., std_G0=1., n_bg_coef=2)
+        lf = VoigtLineFitter(x, flux, ivar, absorp_emiss=absorp_emiss)
+        lf.fit()
+        fit_pars = lf.get_gp_mean_pars()
 
-        if gp.get_parameter_dict()['mean:ln_amp'] < 0.5: # MAGIC NUMBER
-            # try again with emission line
+        if (not lf.success or
+                abs(fit_pars['x0']-6562.8) > 16. or # 16 Å = ~700 km/s
+                abs(fit_pars['amp']) < 10): # MAGIC NUMBER
+            # TODO: should try again with emission line
             logger.error('absorption line has tiny amplitude! did '
                          'auto-determination of absorption/emission fail?')
             # TODO: what now?
             continue
 
-        fit_pars = gp_to_fit_pars(gp, absorp_emiss)
-
-        # Make the maximum likelihood prediction
-        mu, var = gp.predict(flux_data, wave_grid, return_var=True)
-        std = np.sqrt(var)
-
-        # ------------------------------------------------------------------------
-        # Plot the maximum likelihood model
-        fig,ax = plt.subplots()
-
-        # data
-        ax.plot(wave_data, flux_data, drawstyle='steps-mid', marker='')
-        ax.errorbar(wave_data, flux_data, err_data,
-                    marker='', ls='none', ecolor='#666666', zorder=-10)
-
-        # mean model
-        ax.plot(wave_grid, voigt_polynomial(wave_grid, **fit_pars),
-                marker='', alpha=0.5)
-
-        # full GP model
-        gp_color = "#ff7f0e"
-        ax.plot(wave_grid, mu, color=gp_color, marker='')
-        ax.fill_between(wave_grid, mu+std, mu-std, color=gp_color,
-                        alpha=0.3, edgecolor="none")
-
-        ax.set_xlabel(r'wavelength [$\AA$]')
-        ax.set_ylabel('flux')
-
-        fig.tight_layout()
+        fig = lf.plot_fit()
         fig.savefig(path.join(plot_path, '{}_maxlike.png'.format(filebase)),
                     dpi=256)
         plt.close(fig)
-        # ------------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
         # Run `emcee` instead to sample over GP model parameters:
         if fit_pars['std_G'] < 1E-2:
-            gp.freeze_parameter('mean:ln_std_G')
+            lf.gp.freeze_parameter('mean:ln_std_G')
 
-        initial = np.array(gp.get_parameter_vector())
+        initial = np.array(lf.gp.get_parameter_vector())
         if initial[4] < -10:
             initial[4] = -8.
         if initial[5] < -10:
@@ -223,7 +183,7 @@ def main(night_path, overwrite=False, pool=None):
         ndim, nwalkers = len(initial), 64
 
         sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
-                                        pool=pool, args=(gp, flux_data))
+                                        pool=pool, args=(lf.gp, flux))
 
         logger.debug("Running burn-in...")
         p0 = initial + 1e-6 * np.random.randn(nwalkers, ndim)
@@ -247,7 +207,7 @@ def main(night_path, overwrite=False, pool=None):
             for walker in sampler.chain[...,i]:
                 axes.flat[i].plot(walker, marker='',
                                   drawstyle='steps-mid', alpha=0.2)
-            axes.flat[i].set_title(gp.get_parameter_names()[i], fontsize=12)
+            axes.flat[i].set_title(lf.gp.get_parameter_names()[i], fontsize=12)
         fig.tight_layout()
         fig.savefig(path.join(plot_path, '{}_mcmc_trace.png'.format(filebase)),
                     dpi=256)
@@ -256,33 +216,12 @@ def main(night_path, overwrite=False, pool=None):
 
         # --------------------------------------------------------------------
         # plot samples
-        fig,axes = plt.subplots(3, 1, figsize=(6,9), sharex=True)
+        fig,axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)
 
         samples = sampler.flatchain
         for s in samples[np.random.randint(len(samples), size=32)]:
-            gp.set_parameter_vector(s)
-
-            fit_pars = gp_to_fit_pars(gp, absorp_emiss)
-            _mean_model = voigt_polynomial(wave_grid, **fit_pars)
-            axes[0].plot(wave_grid, _mean_model,
-                         marker='', alpha=0.25, color='#3182bd', zorder=-10)
-
-            mu = gp.predict(flux_data, wave_grid, return_cov=False)
-            axes[1].plot(wave_grid, mu-_mean_model, color=gp_color,
-                         alpha=0.25, marker='')
-            axes[2].plot(wave_grid, mu, color='#756bb1',
-                         alpha=0.25, marker='')
-
-        axes[2].plot(wave_data, flux_data, drawstyle='steps-mid',
-                     marker='', zorder=-6)
-        axes[2].errorbar(wave_data, flux_data, err_data,
-                         marker='', ls='none', ecolor='#666666', zorder=-10)
-
-        axes[2].set_ylabel('flux')
-        axes[2].set_xlabel(r'wavelength [$\AA$]')
-        axes[0].set_title('mean model (voigt + poly.)')
-        axes[1].set_title('noise model (GP)')
-        axes[2].set_title('full model')
+            lf.gp.set_parameter_vector(s)
+            lf.plot_fit(axes=axes, fit_alpha=0.2)
 
         fig.tight_layout()
         fig.savefig(path.join(plot_path, '{}_mcmc_fits.png'.format(filebase)),
@@ -294,7 +233,7 @@ def main(night_path, overwrite=False, pool=None):
         # corner plot
         fig = corner.corner(sampler.flatchain[::10, :],
                             labels=[x.split(':')[1]
-                                    for x in gp.get_parameter_names()])
+                                    for x in lf.gp.get_parameter_names()])
         fig.savefig(path.join(plot_path, '{}_corner.png'.format(filebase)),
                     dpi=256)
         plt.close(fig)
@@ -315,66 +254,42 @@ def main(night_path, overwrite=False, pool=None):
         centroid = np.median(x0)
         centroid_err = 1.48 * MAD # convert to stddev
 
-        # compute shifts for sky lines, uncertainty, quality flag
-        width = 100. # window size in angstroms, centered on line
-        absorp_emiss = 1. # all sky lines are emission lines
-
-        wave_shifts = np.full(len(sky_lines), np.nan) * u.angstrom
+        # compute centroids for sky lines
+        sky_centroids = []
         for j,sky_line in enumerate(sky_lines):
-            mask = ((spec['wavelength'] > (sky_line-width/2)) &
-                    (spec['wavelength'] < (sky_line+width/2)))
-            flux_data = spec['background_flux'][mask]
-            ivar_data = spec['background_ivar'][mask]
-            wave_data = spec['wavelength'][mask]
+            # Extract region around Halpha
+            x, (flux, ivar) = extract_region(spec['wavelength'],
+                                             center=sky_line,
+                                             width=32., # angstroms
+                                             arrs=[spec['background_flux'],
+                                                   spec['background_ivar']])
 
-            _idx = wave_data.argsort()
-            wave_data = wave_data[_idx]
-            flux_data = flux_data[_idx]
-            ivar_data = ivar_data[_idx]
-            err_data = 1/np.sqrt(ivar_data)
+            lf = GaussianLineFitter(x, flux, ivar, absorp_emiss=1.) # all emission
+            lf.fit()
+            fit_pars = lf.get_gp_mean_pars()
 
-            gp = fit_spec_line_GP(wave_data, flux_data, ivar_data,
-                                  absorp_emiss=absorp_emiss,
-                                  hwhm_L0=1., std_G0=1., n_bg_coef=2)
+            # HACK: hackish signal-to-noise
+            max_ = fit_pars['amp'] / np.sqrt(2*np.pi*fit_pars['std']**2)
+            SNR = max_ / np.median(1/np.sqrt(ivar))
 
-            pars = gp.get_parameter_dict()
-            dlam = sky_line - pars['mean:x0']
-
-            if ((pars['mean:ln_hwhm_L'] < -0.5 and pars['mean:ln_std_G'] < (-0.5)) or
-                    pars['mean:ln_amp'] > 10. or pars['mean:ln_amp'] < 3.5):
+            if (not lf.success or abs(fit_pars['x0']-sky_line) > 4 or
+                    fit_pars['amp'] < 10 or fit_pars['std'] > 4 or SNR < 2.5):
+                # failed
+                x0 = np.nan * u.angstrom
                 title = 'fucked'
-
             else:
-                title = '{:.2f}'.format(pars['mean:ln_amp'])
-                wave_shifts[j] = dlam * u.angstrom
+                x0 = fit_pars['x0'] * u.angstrom
+                title = '{:.2f}'.format(fit_pars['amp'])
 
-            # Make the maximum likelihood prediction
-            wave_grid = np.linspace(wave_data.min(), wave_data.max(), 256)
-            mu, var = gp.predict(flux_data, wave_grid, return_var=True)
-            std = np.sqrt(var)
-
-            # ----------------------------------------------------------------
-            # Plot the fit and data
-            fig,ax = plt.subplots(1,1)
-
-            # data
-            ax.plot(wave_data, flux_data, drawstyle='steps-mid', marker='')
-            ax.errorbar(wave_data, flux_data, err_data,
-                        marker='', ls='none', ecolor='#666666', zorder=-10)
-
-            # full GP model
-            ax.plot(wave_grid, mu, color=gp_color, marker='')
-            ax.fill_between(wave_grid, mu+std, mu-std,
-                            color=gp_color, alpha=0.3, edgecolor="none")
-            ax.set_title(title)
-            fig.tight_layout()
+            fig = lf.plot_fit()
+            fig.suptitle(title, y=0.95)
+            fig.subplots_adjust(top=0.8)
             fig.savefig(path.join(plot_path, '{}_maxlike_sky_{:.0f}.png'
                                   .format(filebase, sky_line)), dpi=256)
             plt.close(fig)
 
-        # some quality checks on sky velocity shifts
-        filter_ = np.isnan(wave_shifts) | (np.abs(wave_shifts) > (5*u.angstrom))
-        wave_shifts[filter_] = np.nan * u.angstrom
+            sky_centroids.append(x0)
+        sky_centroids = u.Quantity(sky_centroids)
 
         # compute barycenter velocity given coordinates of where the
         #   telescope was pointing
@@ -383,17 +298,7 @@ def main(night_path, overwrite=False, pool=None):
                             unit=(u.hourangle, u.degree))
         vbary = bary_vel_corr(t, sc, location=kitt_peak)
 
-        # sky shift flag is:
-        #   - 0 if both lines were fit
-        #   - 1 if only 6300
-        #   - 2 if neither lines are there
-        sky_flag = np.isnan(wave_shifts).sum()
-
-        shift = np.nanmedian(wave_shifts, axis=-1)
-        if np.isnan(shift):
-            shift = 0. * u.angstrom
-
-        rv = (centroid + shift - Halpha) / Halpha * c.to(u.km/u.s) + vbary
+        raw_rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s) + vbary
         rv_err = centroid_err / Halpha * c.to(u.km/u.s) # formal precision
 
         # convert ra,dec to quantities
@@ -406,16 +311,18 @@ def main(night_path, overwrite=False, pool=None):
                                   Ha_centroid=centroid,
                                   Ha_centroid_err=centroid_err,
                                   bary_rv_shift=vbary,
-                                  sky_shift_flag=sky_flag,
-                                  sky_wave_shift=wave_shifts,
-                                  rv=rv,
+                                  sky_centroids=sky_centroids,
+                                  rv=raw_rv,
                                   rv_err=rv_err))
 
         logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'
                     .format(object_name, filebase, x0=centroid,
-                            err=centroid_err, rv=rv))
+                            err=centroid_err, rv=raw_rv))
 
         velocity_tbl.write(table_path, format='fits', overwrite=True)
+
+        import sys
+        sys.exit(0)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

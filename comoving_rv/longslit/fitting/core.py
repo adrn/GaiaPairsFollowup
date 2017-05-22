@@ -294,7 +294,7 @@ class LineFitter(object):
 
         return self
 
-    def plot_fit(self):
+    def plot_fit(self, axes=None, fit_alpha=0.5):
         unbinned_color = '#3182bd'
         binned_color = '#2ca25f'
         gp_color = '#ff7f0e'
@@ -305,7 +305,8 @@ class LineFitter(object):
 
         # ----------------------------------------------------------------------
         # Plot the maximum likelihood model
-        fig,axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True)
+        if axes is None:
+            fig,axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True)
 
         # data
         for ax in axes[:2]:
@@ -322,22 +323,22 @@ class LineFitter(object):
         std = np.sqrt(var)
 
         axes[0].plot(wave_grid, self.gp.mean.get_unbinned_value(wave_grid),
-                     marker='', alpha=0.5, zorder=10, color=unbinned_color)
+                     marker='', alpha=fit_alpha, zorder=10, color=unbinned_color)
         axes[0].plot(self.x, self.gp.mean.get_value(self.x),
-                     marker='', alpha=0.5, zorder=10, drawstyle='steps-mid',
+                     marker='', alpha=fit_alpha, zorder=10, drawstyle='steps-mid',
                      color=binned_color)
 
         # full GP model
         axes[1].plot(self.x, mu, color=gp_color, drawstyle='steps-mid',
-                     marker='', alpha=0.75, zorder=10)
+                     marker='', alpha=fit_alpha, zorder=10)
         axes[1].fill_between(self.x, mu+std, mu-std, color=gp_color,
-                             alpha=0.3, edgecolor="none", step='mid')
+                             alpha=fit_alpha/10., edgecolor="none", step='mid')
 
         # just GP noise component
         mean_model = self.gp.mean.get_value(self.x)
         axes[2].plot(self.x, mu - mean_model,
-                     marker='', alpha=0.5, zorder=10, drawstyle='steps-mid',
-                     color=noise_color)
+                     marker='', alpha=fit_alpha, zorder=10,
+                     drawstyle='steps-mid', color=noise_color)
 
         axes[2].plot(self.x, self.flux - mean_model, drawstyle='steps-mid',
                      marker='', color='#777777', zorder=2)
@@ -353,6 +354,6 @@ class LineFitter(object):
         axes[1].set_title('Line + noise model')
         axes[2].set_title('Noise model')
 
+        fig = axes[0].figure
         fig.tight_layout()
-
         return fig

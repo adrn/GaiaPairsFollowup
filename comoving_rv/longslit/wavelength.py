@@ -5,11 +5,13 @@ from celerite.modeling import Model
 from celerite import terms, GP
 
 # Project
-from comoving_rv.log import logger
+from ..log import logger
+from .fitting.source import fit_source_region
 
 __all__ = ['fit_all_lines', 'MeanModel', 'GPModel']
 
-def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels, half_width=5):
+def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
+                  half_width=3):
     """
     Given a wavelength guess (a list of rough pixel-wavelength correspondences),
     measure more precise line centroids to then fit for a wavelength
@@ -42,22 +44,15 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels, half_width=5
         logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
                      .format(pix_ctr, wave))
 
-        # indices for region around line
-        i1 = int(np.floor(pix_ctr-half_width))
-        i2 = int(np.ceil(pix_ctr+half_width)) + 1
+        pars,success = fit_source_region(pixels, flux, flux_ivar,
+                                         center=pix_ctr, width=half_width*2,
+                                         absorp_emiss=1.)
 
-        # recenter window
-        i0 = i1 + flux[i1:i2].argmax()
-        i1 = int(np.floor(i0-half_width))
-        i2 = int(np.ceil(i0+half_width)) + 1
+        if success:
+            x0 = pars['x0']
+        else:
+            x0 = np.nan
 
-        _pixl = pixels[i1:i2]
-        _flux = flux[i1:i2]
-        _ivar = flux_ivar[i1:i2]
-
-        # instead of doing anything fancy (e.g., fitting a profile), just
-        # estimate the mean...
-        x0 = np.sum(_pixl * _flux**2 * _ivar) / np.sum(_flux**2 * _ivar)
         fit_centroids.append(x0)
 
     return np.array(fit_centroids)

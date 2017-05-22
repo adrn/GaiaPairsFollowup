@@ -321,9 +321,6 @@ def main(night_path, overwrite=False, pool=None):
 
         velocity_tbl.write(table_path, format='fits', overwrite=True)
 
-        import sys
-        sys.exit(0)
-
 if __name__ == "__main__":
     from argparse import ArgumentParser
     import logging

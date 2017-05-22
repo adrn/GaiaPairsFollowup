@@ -1,17 +1,19 @@
 # Third-party
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.polynomial.polynomial import polyval
 from celerite.modeling import Model
 from celerite import terms, GP
 
 # Project
+from .fitting.gaussian import GaussianLineFitter
+from .utils import extract_region
 from ..log import logger
-from .fitting.source import fit_source_region
 
 __all__ = ['fit_all_lines', 'MeanModel', 'GPModel']
 
 def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
-                  half_width=3):
+                  half_width=4):
     """
     Given a wavelength guess (a list of rough pixel-wavelength correspondences),
     measure more precise line centroids to then fit for a wavelength
@@ -44,14 +46,28 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
         logger.debug("Fitting line at predicted pix={:.2f}, λ={:.2f}"
                      .format(pix_ctr, wave))
 
-        pars,success = fit_source_region(pixels, flux, flux_ivar,
-                                         center=pix_ctr, width=half_width*2,
-                                         absorp_emiss=1.)
+        x_, (flux_, ivar_) = extract_region(pixels, center=pix_ctr,
+                                            width=2*half_width,
+                                            arrs=[flux, flux_ivar])
 
-        if success:
-            x0 = pars['x0']
+        lf = GaussianLineFitter(x_, flux_, ivar_, absorp_emiss=1.)
+        lf.fit()
+
+        # TODO: need to get plot path into here
+        # fig = lf.plot_fit()
+        # fig.suptitle(r'$\lambda={:.2f}\,\AA$'.format(wave), y=0.95)
+        # fig.subplots_adjust(top=0.9)
+        # fig.savefig()
+        # plt.close(fig)
+
+        fit_pars = lf.get_gp_mean_pars()
+        if (not lf.success or
+                abs(fit_pars['x0']-pix_ctr) > 8 or
+                abs(fit_pars['amp']) < 10):
+            x0 = np.nan # failed
+
         else:
-            x0 = np.nan
+            x0 = fit_pars['x0']
 
         fit_centroids.append(x0)
 

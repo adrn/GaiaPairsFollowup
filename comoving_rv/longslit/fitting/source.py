@@ -3,12 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Project
-from .voigt import fit_spec_line_GP, gp_to_fit_pars
-from ..models import voigt_polynomial, binned_voigt_polynomial
+# from .voigt import fit_spec_line_GP, gp_to_fit_pars
+# from ..models import voigt_polynomial, binned_voigt_polynomial
 
 __all__ = ['fit_source_region']
 
-def fit_source_region(x, flux, ivar, center, width, absorp_emiss=-1., plot=False):
+def fit_source_region(x, flux, ivar, center, width,
+                      absorp_emiss=-1., plot=False):
+    """
+    TODO: pass kwargs to fit_spec_line_GP
+    """
     _idx = np.abs(x - center) < width
 
     x = x[_idx]
@@ -69,4 +73,8 @@ def fit_source_region(x, flux, ivar, center, width, absorp_emiss=-1., plot=False
         # FAILED
         success = False
 
-    return fit_pars, success
+    if plot:
+        return fit_pars, success, fig
+    else:
+        return fit_pars, success
+

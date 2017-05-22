@@ -1,2 +1,2 @@
-from .sky import *
-from .source import *
+from .gaussian import *
+from .voigt import *

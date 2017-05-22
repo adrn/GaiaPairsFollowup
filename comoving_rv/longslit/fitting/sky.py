@@ -4,8 +4,8 @@ import numpy as np
 from scipy.signal import argrelmax
 
 # Project
-from .gaussian import fit_spec_line_GP, gp_to_fit_pars
-from ..models import gaussian_polynomial, binned_gaussian_polynomial
+# from .gaussian import fit_spec_line_GP, gp_to_fit_pars
+# from ..models import gaussian_polynomial, binned_gaussian_polynomial
 
 __all__ = ['fit_sky_region']
 
@@ -80,4 +80,7 @@ def fit_sky_region(x, flux, ivar, center, width, plot=False):
         # FAILED
         success = False
 
-    return fit_pars, success
+    if plot:
+        return fit_pars, success, fig
+    else:
+        return fit_pars, success

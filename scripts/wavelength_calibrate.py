@@ -54,6 +54,13 @@ def generate_wavelength_model(comp_lamp_path, night_path, plot_path):
     pix_x0s = fit_all_lines(spec['pix'], spec['flux'], spec['ivar'],
                             pix_wav['wavelength'], pix_wav['pixel'])
 
+    # only keep successful ones:
+    mask = np.isfinite(pix_x0s)
+    logger.debug("Successfully fit {}/{} comp. lamp lines"
+                 .format(mask.sum(), len(mask)))
+    pix_wav = pix_wav[mask]
+    pix_x0s = pix_x0s[mask]
+
     # --------------------------------------------------------------------------
     # fit a gaussian process to determine the pixel-to-wavelength transformation
     #
@@ -238,7 +245,7 @@ def main(night_path, wavelength_gp_path=None, comp_lamp_path=None,
         wavelength_gp_path = path.join(night_path, 'wavelength_GP_model.pickle')
 
         # see if a wavelength GP model file already exists
-        if path.exists(wavelength_gp_path):
+        if path.exists(wavelength_gp_path) and not overwrite:
             logger.info('Loading wavelength GP model from {}'
                         .format(wavelength_gp_path))
 

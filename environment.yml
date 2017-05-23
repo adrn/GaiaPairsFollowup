@@ -12,6 +12,7 @@ dependencies:
   - scikit-image
   - pillow
   - mpmath
+  - sqlalchemy
   - pip:
     - six
     - ccdproc

@@ -198,8 +198,6 @@ def main(night_path, overwrite=False, pool=None):
         sampler.reset()
         pos, lp, _ = sampler.run_mcmc(p0, 512)
 
-        pool.close()
-
         # --------------------------------------------------------------------
         # plot MCMC traces
         fig,axes = plt.subplots(2,4,figsize=(18,6))
@@ -320,6 +318,8 @@ def main(night_path, overwrite=False, pool=None):
                             err=centroid_err, rv=raw_rv))
 
         velocity_tbl.write(table_path, format='fits', overwrite=True)
+
+    pool.close()
 
 if __name__ == "__main__":
     from argparse import ArgumentParser

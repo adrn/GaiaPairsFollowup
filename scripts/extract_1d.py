@@ -238,7 +238,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         # -------------------------------------------
 
         fname_1d = path.join(output_path, '1d_{0}'.format(fname))
-        if path.exists(fname_1d) and not overwrite:
+        # if path.exists(fname_1d) and not overwrite:
+        if False:
             logger.log(1, "\tAlready extracted! {}".format(fname_1d))
             continue
 
@@ -259,7 +260,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             hdu1 = fits.table_to_hdu(tbl)
             hdulist = fits.HDUList([hdu0, hdu1])
 
-            hdulist.writeto(fname_1d, overwrite=overwrite)
+            # hdulist.writeto(fname_1d, overwrite=overwrite)
 
         del ext
 

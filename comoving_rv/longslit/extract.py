@@ -15,8 +15,8 @@ from scipy.optimize import leastsq
 
 # Project
 from ..log import logger
-from .models import voigt_polynomial
-from .fitting import fit_spec_line, get_init_guess, par_dict_to_list
+from .models import voigt_polynomial, binned_voigt_polynomial
+from .fitting import VoigtLineFitter
 
 __all__ = ['SourceCCDExtractor', 'CompCCDExtractor']
 
@@ -25,19 +25,16 @@ def errfunc(p, pix, flux, flux_ivar, lsf_pars):
     Custom error function for fixing the LSF widths.
     """
     amp, x0, *bg_coef = p
-    model_flux = voigt_polynomial(pix, amp, x0, bg_coef=bg_coef, **lsf_pars)
+    model_flux = binned_voigt_polynomial(pix, amp, x0, bg_coef=bg_coef, **lsf_pars)
     return (flux - model_flux) * np.sqrt(flux_ivar)
 
-def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
-                  amp0=None, x0=None,
-                  bg0=None, n_bg_coef=2, target_x=None,
-                  leastsq_kw=None):
+def fast_trace_fit(x, flux, ivar, lsf_pars,
+                   amp0=None, x0=None,
+                   bg0=None, n_bg_coef=2, target_x=None,
+                   leastsq_kw=None):
     """
     Custom fitting function to fit for the source and background flux at a given
     row in the CCD.
-
-    TODO: could be combined with ``fit_spec_line`` and ``fit_spec_line_GP`` into
-    a class that can handle all types of fitting.
 
     Parameters
     ----------
@@ -55,6 +52,9 @@ def fit_spec_flux(x, flux, flux_ivar, lsf_pars,
     n_bg_coef : int
         Number of terms in the background polynomial fit.
     """
+
+    # TODO: use the VoigtLineFitter class to help with this
+    #   - can use class methods to get params n' shit
 
     sort_idx = np.argsort(x)
     x = np.array(x)[sort_idx]
@@ -304,8 +304,11 @@ class SourceCCDExtractor(CCDExtractor):
 
             # initial guess for optimization
             initx0 = pix[np.argmax(flux*flux_ivar)]
-            fit_p,fit_pcov = fit_spec_line(pix, flux, flux_ivar,
-                                           absorp_emiss=1., return_cov=True, x0=initx0)
+            # fit_p,fit_pcov = fit_spec_line(pix, flux, flux_ivar,
+            #                                absorp_emiss=1., return_cov=True, x0=initx0)
+            lf = VoigtLineFitter(pix, flux, flux_ivar, absorp_emiss=1.)
+            lf.fit(x0=initx0)
+            fit_p = lf.get_gp_mean_pars()
 
             std_Gs.append(fit_p['std_G'])
             hwhm_Ls.append(fit_p['hwhm_L'])

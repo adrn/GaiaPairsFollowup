@@ -102,6 +102,10 @@ class SimbadInfo(Base):
     tyc_id = Column('tyc_id', types.String)
     twomass_id = Column('twomass_id', types.String)
 
+    rv = Column('rv', VelocityType)
+    rv_qual = Column('rv_qual', types.String)
+    rv_bibcode = Column('rv_bibcode', types.String)
+
 class TGASSource(Base):
     __tablename__ = 'tgas_source'
 

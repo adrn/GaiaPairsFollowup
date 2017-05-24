@@ -9,6 +9,7 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
 from astroquery.simbad import Simbad
+Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
 import numpy as np
 
 # Project
@@ -125,22 +126,22 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
                 # query Simbad to get all possible names for this target
                 if tgas_row['hip'] > 0:
-                    name = 'HIP{0}'.format(tgas_row['hip'])
+                    object_name = 'HIP{0}'.format(tgas_row['hip'])
                 else:
-                    name = 'TYC {0}'.format(tgas_row['tycho2_id'])
-                logger.log(1, 'common name: {0}'.format(name))
+                    object_name = 'TYC {0}'.format(tgas_row['tycho2_id'])
+                logger.log(1, 'common name: {0}'.format(object_name))
 
-                all_ids = Simbad.query_objectids(name)['ID'].astype(str)
+                all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
 
                 logger.log(1, 'this is a group object')
 
             else:
-                name = hdr['OBJECT']
-                logger.log(1, 'common name: {0}'.format(name))
+                object_name = hdr['OBJECT']
+                logger.log(1, 'common name: {0}'.format(object_name))
                 logger.log(1, 'this is not a group object')
 
                 # query Simbad to get all possible names for this target
-                all_ids = Simbad.query_objectids(name)['ID'].astype(str)
+                all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
 
                 # get the Tycho 2 ID, if it has one
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
@@ -187,7 +188,6 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
             obs = Observation(night=night_id, **kw)
             obs.run = run
-            obs.simbad_info = simbad_info
 
             # Get the TGAS data if the source is in TGAS
             if tgas_row_idx is not None:
@@ -202,6 +202,13 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
                 obs.tgas_source = tgas_source
 
+            # object_name is never None?
+            result = Simbad.query_object(object_name)
+            simbad_info.rv = float(result['RV_VALUE'][0]) * u.km/u.s
+            simbad_info.rv_qual = result['RVZ_QUAL'].astype(str)[0]
+            simbad_info.rv_bibcode = result['RVZ_BIBCODE'].astype(str)[0]
+
+            obs.simbad_info = simbad_info
             observations.append(obs)
 
             logger.log(1, '-'*68)

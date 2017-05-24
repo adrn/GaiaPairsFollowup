@@ -8,11 +8,12 @@ from astropy.time import Time
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
+from astroquery.simbad import Simbad
 import numpy as np
 
 # Project
 from comoving_rv.db import Session, Base, db_connect
-from comoving_rv.db.model import (Run, Observation, TGASSource,
+from comoving_rv.db.model import (Run, Observation, TGASSource, SimbadInfo,
                                   SpectralLineInfo)
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 from comoving_rv.log import logger
@@ -119,8 +120,63 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 split_name = hdr['OBJECT'].split('-')
                 kw['group_id'] = int(split_name[0])
                 smoh_idx = int(split_name[1])
+                tgas_row_idx = ID_tbl[smoh_idx]['tgas_row']
+                tgas_row = tgas[tgas_row_idx]
+
+                # query Simbad to get all possible names for this target
+                if tgas_row['hip'] > 0:
+                    name = 'HIP{0}'.format(tgas_row['hip'])
+                else:
+                    name = 'TYC {0}'.format(tgas_row['tycho2_id'])
+                logger.log(1, 'common name: {0}'.format(name))
+
+                all_ids = Simbad.query_objectids(name)['ID'].astype(str)
+
+                logger.log(1, 'this is a group object')
+
             else:
-                smoh_idx = None
+                name = hdr['OBJECT']
+                logger.log(1, 'common name: {0}'.format(name))
+                logger.log(1, 'this is not a group object')
+
+                # query Simbad to get all possible names for this target
+                all_ids = Simbad.query_objectids(name)['ID'].astype(str)
+
+                # get the Tycho 2 ID, if it has one
+                tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
+                if tyc_id:
+                    tyc_id = tyc_id[0].replace('TYC', '').strip()
+                    logger.log(1, 'source has tycho 2 id: {0}'.format(tyc_id))
+                    tgas_row_idx = np.where(tgas['tycho2_id'] == tyc_id)[0]
+
+                    if len(tgas_row_idx) == 0:
+                        tgas_row_idx = None
+                    else:
+                        tgas_row = tgas[tgas_row_idx]
+
+                else:
+                    logger.log(1, 'source has no tycho 2 id.')
+                    tgas_row_idx = None
+
+            # store relevant names / IDs
+            simbad_info_kw = dict()
+            for id_ in all_ids:
+                if id_.lower().startswith('hd'):
+                    simbad_info_kw['hd_id'] = id_[2:]
+
+                elif id_.lower().startswith('hip'):
+                    simbad_info_kw['hip_id'] = id_[3:]
+
+                elif id_.lower().startswith('tyc'):
+                    simbad_info_kw['tyc_id'] = id_[3:]
+
+                elif id_.lower().startswith('2mass'):
+                    simbad_info_kw['twomass_id'] = id_[5:]
+
+            for k,v in simbad_info_kw.items():
+                simbad_info_kw[k] = v.strip()
+
+            simbad_info = SimbadInfo(**simbad_info_kw)
 
             # compute barycenter velocity given coordinates of where the
             #   telescope was pointing
@@ -131,18 +187,10 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
             obs = Observation(night=night_id, **kw)
             obs.run = run
+            obs.simbad_info = simbad_info
 
-            # Get the tgas data for this source
-            if smoh_idx is None:
-                # TODO: need to do match by OBJECT name?
-                pass
-
-            else:
-                tgas_row_idx = ID_tbl[smoh_idx]['tgas_row']
-
-            if tgas_row_idx is not None: # if the source is in TGAS
-                tgas_row = tgas[tgas_row_idx]
-
+            # Get the TGAS data if the source is in TGAS
+            if tgas_row_idx is not None:
                 tgas_kw = dict()
                 tgas_kw['row_index'] = tgas_row_idx
                 for name in tgas.colnames:
@@ -154,113 +202,17 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
                 obs.tgas_source = tgas_source
 
-            # TODO: this is where I should query simbad and
-            # simbad_info = SimbadInfo(...)
-
             observations.append(obs)
 
+            logger.log(1, '-'*68)
+
             # TODO HACK: remove this when running for real
-            if len(observations) == 2:
+            if len(observations) == 1:
                 break
 
         session.add_all(observations)
         session.add_all(tgas_sources)
         session.commit()
-
-    session.close()
-
-    return
-
-
-    allstar_colnames = [str(x).split('.')[1].upper()
-                        for x in AllStar.__table__.columns]
-    i = allstar_colnames.index('ID')
-    allstar_colnames.pop(i)
-
-    allvisit_colnames = [str(x).split('.')[1].upper() for x in AllVisit.__table__.columns]
-    i = allvisit_colnames.index('ID')
-    allvisit_colnames.pop(i)
-
-    rc_colnames = [str(x).split('.')[1].upper() for x in RedClump.__table__.columns]
-    for name in ['ID', 'ALLSTAR_ID']:
-        i = rc_colnames.index(name)
-        rc_colnames.pop(i)
-
-    batch_size = 4000
-    stars = []
-    all_visits = dict()
-    with Timer() as t:
-        for i,row in enumerate(allstar_tbl):
-            row_data = dict([(k.lower(), row[k]) for k in allstar_colnames])
-            star = AllStar(**row_data)
-            stars.append(star)
-
-            if star.apogee_id not in all_visits:
-                visits = []
-                for j,visit_row in enumerate(allvisit_tbl[allvisit_tbl['APOGEE_ID'] == row['APOGEE_ID']]):
-                    _data = dict([(k.lower(), visit_row[k]) for k in allvisit_colnames])
-                    visits.append(AllVisit(**_data))
-                all_visits[star.apogee_id] = visits
-
-            else:
-                visits = all_visits[star.apogee_id]
-
-            star.visits = visits
-
-            if i % batch_size == 0 and i > 0:
-                session.add_all(stars)
-                session.add_all([item for sublist in all_visits.values() for item in sublist])
-                session.commit()
-                logger.debug("Loaded batch {} ({:.2f} seconds)".format(i*batch_size, t.elapsed()))
-                t.reset()
-
-                all_visits = dict()
-                stars = []
-
-    if len(stars) > 0:
-        session.add_all(stars)
-        session.add_all([item for sublist in all_visits.values() for item in sublist])
-        session.commit()
-
-    rcstars = []
-    with Timer() as t:
-        for i,row in enumerate(rc_tbl):
-            row_data = dict([(k.lower(), row[k]) for k in rc_colnames])
-
-            rc = RedClump(**row_data)
-            try:
-                rc.star = session.query(AllStar).filter(AllStar.apstar_id == row_data['apstar_id']).one()
-            except:
-                continue
-
-            rcstars.append(rc)
-
-            if i % batch_size == 0 and i > 0:
-                session.add_all(rcstars)
-                session.commit()
-                logger.debug("Loaded rc batch {} ({:.2f} seconds)".format(i*batch_size, t.elapsed()))
-                t.reset()
-                rcstars = []
-
-    if len(rcstars) > 0:
-        session.add_all(rcstars)
-        session.commit()
-
-    logger.debug("tables loaded in {:.2f} seconds".format(t.elapsed()))
-
-    # Load the status table
-    logger.debug("Populating Status table...")
-    statuses = list()
-    statuses.append(Status(id=0, message='untouched'))
-    statuses.append(Status(id=1, message='pending')) # OLD - don't use
-    statuses.append(Status(id=2, message='needs more prior samples'))
-    statuses.append(Status(id=3, message='needs mcmc'))
-    statuses.append(Status(id=4, message='error'))
-    statuses.append(Status(id=5, message='completed'))
-
-    session.add_all(statuses)
-    session.commit()
-    logger.debug("...done")
 
     session.close()
 

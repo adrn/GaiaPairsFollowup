@@ -11,7 +11,8 @@ from astropy.table import Table
 from astroquery.simbad import Simbad
 Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
 import numpy as np
-from tqdm import tqdm
+from astropy.utils.console import ProgressBar
+# from tqdm import tqdm
 
 # Project
 from comoving_rv.db import Session, Base, db_connect
@@ -20,8 +21,16 @@ from comoving_rv.db.model import (Run, Observation, TGASSource, SimbadInfo,
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 from comoving_rv.log import logger
 
-def main(db_path, run_root_path, drop_all=False, **kwargs):
-    drop_all = True # HACK
+def fits_header_to_cols(hdr, colnames):
+    kw = dict()
+    for k,v in hdr.items():
+        k = k.lower().replace('-', '_')
+
+        if k in colnames:
+            kw[k] = v
+    return kw
+
+def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
 
     # Make sure the specified paths actually exist
     db_path = path.abspath(db_path)
@@ -40,6 +49,9 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
     # TGAS table
     logger.debug("Loading TGAS data...")
     tgas = Table.read('../../gaia-comoving-stars/data/stacked_tgas.fits')
+
+    # Catalog of velocities for Bensby's HIP stars:
+    bensby = Table.read('../data/bensbyrv_bestunique.csv')
 
     # --------------------------------------------------------------------------
 
@@ -85,7 +97,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
     # Here's where there's a bit of hard-coded bewitchery - the nights (within
     # each run) have to be labeled 'n1', 'n2', and etc. Sorry.
     glob_pattr_proc = path.join(data_path, 'processed', run_name, 'n?')
-    for proc_night_path in glob.glob(glob_pattr_proc):
+    for proc_night_path in glob.glob(glob_pattr_proc)[:1]: # HACK
         night = path.basename(proc_night_path)
         night_id = int(night[1])
         logger.debug('Loading night {0}...'.format(night_id))
@@ -93,8 +105,9 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
         observations = []
         tgas_sources = []
 
-        glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
-        for path_1d in tqdm(glob.glob(glob_pattr_1d)):
+        # glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
+        glob_pattr_1d = path.join(proc_night_path, '1d_*024.fit') # HACK
+        for path_1d in ProgressBar(glob.glob(glob_pattr_1d)):
             hdr = fits.getheader(path_1d)
 
             # skip all except OBJECT observations
@@ -113,12 +126,23 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
             kw['filename_1d'] = path.join('processed', run_name,
                                           night, '1d_'+basename)
 
-            # read in header of 1d file and store keywords that exist as columns
-            for k,v in hdr.items():
-                k = k.lower().replace('-', '_')
+            # check if this filename is already in the database, if so, drop it
+            base_query = session.query(Observation)\
+                                .filter(Observation.filename_raw == kw['filename_raw'])
+            already_loaded = base_query.count()
 
-                if k in obs_columns:
-                    kw[k] = v
+            if already_loaded and overwrite:
+                base_query.delete()
+                session.commit()
+
+            elif already_loaded:
+                logger.debug('Object {0} [{1}] already loaded'
+                             .format(hdr['OBJECT'],
+                                     path.basename(kw['filename_raw'])))
+                continue
+
+            # read in header of 1d file and store keywords that exist as columns
+            kw.update(fits_header_to_cols(hdr, obs_columns))
 
             # get group id from object name
             if '-' in hdr['OBJECT']:
@@ -149,6 +173,13 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                     all_ids = []
 
                 logger.log(1, 'this is a group object')
+
+                if len(all_ids) > 0:
+                    logger.log(1, 'other names for this object: {0}'
+                               .format(', '.join(all_ids)))
+                else:
+                    logger.log(1, 'simbad names for this object could not be '
+                               'retrieved')
 
             else:
                 object_name = hdr['OBJECT']
@@ -212,6 +243,8 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
             # Get the TGAS data if the source is in TGAS
             if tgas_row_idx is not None:
+                logger.log(1, 'TGAS row: {0}'.format(tgas_row_idx))
+
                 tgas_kw = dict()
                 tgas_kw['row_index'] = tgas_row_idx
                 for name in tgas.colnames:
@@ -222,6 +255,9 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 tgas_sources.append(tgas_source)
 
                 obs.tgas_source = tgas_source
+
+            else:
+                logger.log(1, 'TGAS row could not be found.')
 
             # object_name is never None?
             try:
@@ -243,12 +279,21 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
             logger.log(1, '-'*68)
 
-        # TODO: last thing to do is cross-match with the Bensby catalog to
-        #   replace velocities when they are better
-
         session.add_all(observations)
         session.add_all(tgas_sources)
         session.commit()
+
+    # Last thing to do is cross-match with the Bensby catalog to
+    #   replace velocities when they are better
+    for sim_info in session.query(SimbadInfo)\
+                           .filter(SimbadInfo.hip_id != None).all():
+        hip_id = 'HIP' + str(sim_info.hip_id)
+        row = bensby[bensby['OBJECT'] == hip_id]
+        if len(row) > 0:
+            sim_info.rv = row['velValue']
+            sim_info.rv_qual = row['quality']
+            sim_info.rv_bibcode = row['bibcode']
+            session.flush()
 
     session.close()
 
@@ -262,13 +307,15 @@ if __name__ == "__main__":
     vq_group = parser.add_mutually_exclusive_group()
     vq_group.add_argument('-v', '--verbose', action='count', default=0, dest='verbosity')
     vq_group.add_argument('-q', '--quiet', action='count', default=0, dest='quietness')
-    # parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
-    #                     default=False, help='Destroy everything.')
+    parser.add_argument('-o', '--overwrite', action='store_true', dest='overwrite',
+                        default=False, help='Destroy everything.')
 
-    parser.add_argument("--db", dest="db_path", required=True,
-                        type=str, help="Path to sqllite database file.")
-    parser.add_argument("--run", dest="run_root_path", required=True,
-                        type=str, help="Path to root observing run path.")
+    parser.add_argument('--db', dest='db_path', required=True,
+                        type=str, help='Path to sqllite database file.')
+    parser.add_argument('--run', dest='run_root_path', required=True,
+                        type=str, help='Path to root observing run path.')
+    parser.add_argument('--drop-all', action='store_true', dest='drop_all',
+                        default=False, help='Destroy all tables.')
 
     args = parser.parse_args()
 

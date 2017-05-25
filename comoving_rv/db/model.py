@@ -1,3 +1,9 @@
+"""
+TODO:
+- Cascading deletes. If we delete Observation, it should delete SimbadInfo,
+  TGASSource, SpectralLineMeasurement.
+"""
+
 from __future__ import division, print_function
 
 # Standard library

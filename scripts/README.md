@@ -102,6 +102,15 @@ FITS file. To run this procedure:
 python wavelength_calibrate.py -p ../data/mdm-spring-2017/processed/n1/ -v
 ```
 
+Database generation
+-------------------
+
+```bash
+python injest_db.py --db=/Volumes/ProjectData/gaia-comoving-followup/data/db.sqlite \
+--run=/Volumes/ProjectData/gaia-comoving-followup/data/mdm-spring-2017/ -vv
+```
+
+
 Radial velocity determination
 -----------------------------
 

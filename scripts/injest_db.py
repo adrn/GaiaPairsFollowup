@@ -124,8 +124,12 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
             if '-' in hdr['OBJECT']:
                 split_name = hdr['OBJECT'].split('-')
                 kw['group_id'] = int(split_name[0])
-                smoh_idx = int(split_name[1])
-                tgas_row_idx = ID_tbl[smoh_idx]['tgas_row']
+
+                if kw['group_id'] == 10:
+                    tgas_row_idx = int(split_name[1])
+                else:
+                    smoh_idx = int(split_name[1])
+                    tgas_row_idx = ID_tbl[smoh_idx]['tgas_row']
                 tgas_row = tgas[tgas_row_idx]
 
                 # query Simbad to get all possible names for this target
@@ -135,7 +139,13 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                     object_name = 'TYC {0}'.format(tgas_row['tycho2_id'])
                 logger.log(1, 'common name: {0}'.format(object_name))
 
-                all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
+                try:
+                    all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
+                except Exception as e:
+                    logger.warning('Simbad query_objectids failed for "{0}" '
+                                   'with error: {1}'
+                                   .format(object_name, str(e)))
+                    all_ids = None
 
                 logger.log(1, 'this is a group object')
 
@@ -151,7 +161,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                     logger.warning('Simbad query_objectids failed for "{0}" '
                                    'with error: {1}'
                                    .format(object_name, str(e)))
-                    continue
+                    all_ids = None
 
                 # get the Tycho 2 ID, if it has one
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]

@@ -125,6 +125,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 split_name = hdr['OBJECT'].split('-')
                 kw['group_id'] = int(split_name[0])
 
+                # because: reasons
                 if kw['group_id'] == 10:
                     tgas_row_idx = int(split_name[1])
                 else:
@@ -145,7 +146,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                     logger.warning('Simbad query_objectids failed for "{0}" '
                                    'with error: {1}'
                                    .format(object_name, str(e)))
-                    all_ids = None
+                    all_ids = []
 
                 logger.log(1, 'this is a group object')
 
@@ -158,10 +159,10 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 try:
                     all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
                 except Exception as e:
-                    logger.warning('Simbad query_objectids failed for "{0}" '
-                                   'with error: {1}'
+                    logger.warning('SKIPPING: Simbad query_objectids failed for '
+                                   '"{0}" with error: {1}'
                                    .format(object_name, str(e)))
-                    all_ids = None
+                    continue
 
                 # get the Tycho 2 ID, if it has one
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
@@ -231,7 +232,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                                .format(object_name, str(e)))
                 continue
 
-            if not np.any(result['RV_VALUE'].mask):
+            if result is not None and not np.any(result['RV_VALUE'].mask):
                 k, = np.where(np.logical_not(result['RV_VALUE'].mask))
                 simbad_info.rv = float(result['RV_VALUE'][k]) * u.km/u.s
                 simbad_info.rv_qual = result['RVZ_QUAL'].astype(str)[k]

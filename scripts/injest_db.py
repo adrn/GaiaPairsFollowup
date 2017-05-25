@@ -11,6 +11,7 @@ from astropy.table import Table
 from astroquery.simbad import Simbad
 Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
 import numpy as np
+from tqdm import tqdm
 
 # Project
 from comoving_rv.db import Session, Base, db_connect
@@ -75,6 +76,8 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
     # Now we need to go through each processed night of data and load all of the
     # relevant observations of sources.
+
+    # First we get the column names for the Observation and TGASSource tables
     obs_columns = [str(c).split('.')[1] for c in Observation.__table__.columns]
     tgassource_columns = [str(c).split('.')[1]
                           for c in TGASSource.__table__.columns]
@@ -85,12 +88,13 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
     for proc_night_path in glob.glob(glob_pattr_proc):
         night = path.basename(proc_night_path)
         night_id = int(night[1])
+        logger.debug('Loading night {0}...'.format(night_id))
 
         observations = []
         tgas_sources = []
 
         glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
-        for path_1d in glob.glob(glob_pattr_1d):
+        for path_1d in tqdm(glob.glob(glob_pattr_1d)):
             hdr = fits.getheader(path_1d)
 
             # skip all except OBJECT observations
@@ -116,7 +120,7 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 if k in obs_columns:
                     kw[k] = v
 
-            # get group id from name
+            # get group id from object name
             if '-' in hdr['OBJECT']:
                 split_name = hdr['OBJECT'].split('-')
                 kw['group_id'] = int(split_name[0])
@@ -141,7 +145,13 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 logger.log(1, 'this is not a group object')
 
                 # query Simbad to get all possible names for this target
-                all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
+                try:
+                    all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
+                except Exception as e:
+                    logger.warning('Simbad query_objectids failed for "{0}" '
+                                   'with error: {1}'
+                                   .format(object_name, str(e)))
+                    continue
 
                 # get the Tycho 2 ID, if it has one
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
@@ -179,8 +189,8 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
 
             simbad_info = SimbadInfo(**simbad_info_kw)
 
-            # compute barycenter velocity given coordinates of where the
-            #   telescope was pointing
+            # Compute barycenter velocity given coordinates of where the
+            # telescope was pointing and observation time
             t = Time(hdr['JD'], format='jd', scale='utc')
             sc = coord.SkyCoord(ra=hdr['RA'], dec=hdr['DEC'],
                                 unit=(u.hourangle, u.degree))
@@ -203,19 +213,27 @@ def main(db_path, run_root_path, drop_all=False, **kwargs):
                 obs.tgas_source = tgas_source
 
             # object_name is never None?
-            result = Simbad.query_object(object_name)
-            simbad_info.rv = float(result['RV_VALUE'][0]) * u.km/u.s
-            simbad_info.rv_qual = result['RVZ_QUAL'].astype(str)[0]
-            simbad_info.rv_bibcode = result['RVZ_BIBCODE'].astype(str)[0]
+            try:
+                result = Simbad.query_object(object_name)
+            except Exception as e:
+                logger.warning('Simbad query_object failed for "{0}" '
+                               'with error: {1}'
+                               .format(object_name, str(e)))
+                continue
+
+            if not np.any(result['RV_VALUE'].mask):
+                k, = np.where(np.logical_not(result['RV_VALUE'].mask))
+                simbad_info.rv = float(result['RV_VALUE'][k]) * u.km/u.s
+                simbad_info.rv_qual = result['RVZ_QUAL'].astype(str)[k]
+                simbad_info.rv_bibcode = result['RVZ_BIBCODE'].astype(str)[k]
 
             obs.simbad_info = simbad_info
             observations.append(obs)
 
             logger.log(1, '-'*68)
 
-            # TODO HACK: remove this when running for real
-            if len(observations) == 1:
-                break
+        # TODO: last thing to do is cross-match with the Bensby catalog to
+        #   replace velocities when they are better
 
         session.add_all(observations)
         session.add_all(tgas_sources)

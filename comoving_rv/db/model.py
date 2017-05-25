@@ -86,17 +86,19 @@ class Observation(Base):
     tgas_source = relationship('TGASSource', cascade='all,delete-orphan',
                                backref='observation', single_parent=True)
 
-    def path_night(self, base_path):
-        return path.join(base_path, self.run.name, 'n'.str(self.night))
-
     def path_raw(self, base_path):
-        return path.join(self.path_night(base_path), self.filename_raw)
+        p = path.join(base_path, self.run.name, 'n'.str(self.night))
+        return path.join(p, self.filename_raw)
 
     def path_p(self, base_path):
-        return path.join(self.path_night(base_path), self.filename_p)
+        p = path.join(base_path, 'processed', self.run.name,
+                      'n'.str(self.night))
+        return path.join(p, self.filename_p)
 
     def path_1d(self, base_path):
-        return path.join(self.path_night(base_path), self.filename_1d)
+        p = path.join(base_path, 'processed', self.run.name,
+                      'n'.str(self.night))
+        return path.join(p, self.filename_1d)
 
 
 class SimbadInfo(Base):

@@ -13,7 +13,7 @@ from os import path
 import astropy.units as u
 from sqlalchemy import Column, types
 from sqlalchemy.schema import ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 # Project
 from .connect import Base
@@ -34,7 +34,7 @@ class Run(Base):
     name = Column('name', types.String, nullable=False)
 
     # Relationships
-    observations = relationship('Observation')
+    observations = relationship('Observation', cascade='all, delete-orphan')
 
 class Observation(Base):
     __tablename__ = 'observation'
@@ -78,13 +78,13 @@ class Observation(Base):
 
     simbad_info_id = Column('simbad_info_id', types.Integer,
                             ForeignKey('simbad_info.id'))
-    simbad_info = relationship('SimbadInfo')
+    simbad_info = relationship('SimbadInfo', cascade='all,delete-orphan',
+                               backref='observation', single_parent=True)
 
     tgas_source_id = Column('tgas_source_id', types.Integer,
                             ForeignKey('tgas_source.id'))
-    tgas_source = relationship('TGASSource')
-
-    measurements = relationship('SpectralLineMeasurement')
+    tgas_source = relationship('TGASSource', cascade='all,delete-orphan',
+                               backref='observation', single_parent=True)
 
     def path_night(self, base_path):
         return path.join(base_path, self.run.name, 'n'.str(self.night))
@@ -173,7 +173,9 @@ class SpectralLineMeasurement(Base):
     # Relationships
     observation_id = Column('observation_id', types.Integer,
                             ForeignKey('observation.id'))
-    observation = relationship('Observation')
+    observation = relationship('Observation',
+                               backref=backref('measurements',
+                                               cascade="all,delete"))
 
     line_id = Column('line_id', types.Integer,
                      ForeignKey('spectral_line_info.id'))

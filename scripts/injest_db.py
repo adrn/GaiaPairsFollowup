@@ -69,8 +69,14 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
 
     logger.debug("Loading SpectralLineInfo table")
     lines = []
+
+    # air wavelength of Halpha -- wavelength calibration from comp lamp is done
+    #   at air wavelengths, so this is where Halpha should be, right?
     lines.append(SpectralLineInfo(name='Halpha',
                                   wavelength=6562.8*u.angstrom))
+
+    # [OI] emission lines -- wavelengths from:
+    #   http://physics.nist.gov/PhysRefData/ASD/lines_form.html
     lines.append(SpectralLineInfo(name='[OI] 5577',
                                   wavelength=5577.3387*u.angstrom))
     lines.append(SpectralLineInfo(name='[OI] 6300',

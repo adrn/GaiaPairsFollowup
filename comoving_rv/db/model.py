@@ -197,9 +197,18 @@ class SpectralLineMeasurement(Base):
                      ForeignKey('spectral_line_info.id'))
     info = relationship('SpectralLineInfo')
 
+    def __repr__(self):
+        r = '<SpectralLineMeasurement {0} x0={1:.3f}>'.format(self.info.name,
+                                                              self.x0)
+        return r
+
 class SpectralLineInfo(Base):
     __tablename__ = 'spectral_line_info'
 
     id = Column(types.Integer, primary_key=True)
     name = Column('name', types.String, nullable=False)
     wavelength = Column('wavelength', WavelengthType, nullable=False)
+
+    def __repr__(self):
+        return '<SpectralLineInfo {0} @ {1}>'.format(self.name, self.wavelength)
+

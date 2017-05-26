@@ -86,18 +86,22 @@ class Observation(Base):
     tgas_source = relationship('TGASSource', cascade='all,delete-orphan',
                                backref='observation', single_parent=True)
 
+    def __repr__(self):
+        return ("<Observation {0.object}, {0.filename_raw}, {0.run.name}>"
+                .format(self))
+
     def path_raw(self, base_path):
-        p = path.join(base_path, self.run.name, 'n'.str(self.night))
+        p = path.join(base_path, self.run.name, 'n'+str(self.night))
         return path.join(p, self.filename_raw)
 
     def path_p(self, base_path):
         p = path.join(base_path, 'processed', self.run.name,
-                      'n'.str(self.night))
+                      'n'+str(self.night))
         return path.join(p, self.filename_p)
 
     def path_1d(self, base_path):
         p = path.join(base_path, 'processed', self.run.name,
-                      'n'.str(self.night))
+                      'n'+str(self.night))
         return path.join(p, self.filename_1d)
 
 
@@ -113,6 +117,16 @@ class SimbadInfo(Base):
     rv = Column('rv', VelocityType)
     rv_qual = Column('rv_qual', types.String)
     rv_bibcode = Column('rv_bibcode', types.String)
+
+    def __repr__(self):
+        names = []
+        pres = ['HD', 'HIP', 'TYC', '2MASS']
+        for pre,id_ in zip(pres, ['hd_id', 'hip_id', 'tyc_id', 'twomass_id']):
+            if getattr(self, id_) is not None:
+                names.append('{0} {1}'.format(pre, getattr(self, id_)))
+
+        return ("<SimbadInfo {0}>"
+                .format(', '.join(names)))
 
 class TGASSource(Base):
     __tablename__ = 'tgas_source'
@@ -167,7 +181,7 @@ class SpectralLineMeasurement(Base):
     amp_error = Column('amp_error', types.REAL)
 
     std_G = Column('std_G', types.REAL, nullable=False)
-    std_G_error = Column('std_G_error', types.REAL, nullable=False)
+    std_G_error = Column('std_G_error', types.REAL)
 
     hwhm_L = Column('hwhm_L', types.REAL)
     hwhm_L_error = Column('hwhm_L_error', types.REAL)

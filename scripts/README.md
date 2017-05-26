@@ -36,19 +36,20 @@ at the top and bottom of the CCD as view from a DS9 window (top is larger row
 index values - sorry). To run the processing (from the `scripts/` directory):
 
 ```bash
-python extract_1d.py -p ../data/mdm-spring-2017/n1 \
+python extract_1d.py \
+-p /Volumes/ProjectData/gaia-comoving-followup/mdm-spring-2017/n1 \
 --skiplist=../config/mdm-spring-2017/n1_skip.txt \
 --mask=../config/mdm-spring-2017/n1_masks.yml -v --plot
 ```
 
-The above example will process all files in the path
-``../data/mdm-spring-2017/n1``, skipping any file listed in ``n1_skip.txt``. The
-processed 2D frame files will be output to the path
-``../data/mdm-spring-2017/processed/n1`` starting with the name ``p_*``. The 1D
+The above example will process all files in the specified path (ending in
+``n1``), skipping any file listed in ``n1_skip.txt``. The
+processed 2D frame files will be output to the path (relative to the input)
+``../../processed/mdm-spring-2017/n1`` starting with the name ``p_*``. The 1D
 extracted spectra (not wavelength calibrated) will also be in this directory
 with filenames that start ``1d_*``. By specifying the ``--plot`` flag to the
 extraction script, a bunch of diagnostic plots will be saved to the ``plots``
-subdirectory of the ``processed/n1`` path.
+subdirectory of the ``processed`` path.
 
 Identify lines in a comparison lamp spectrum
 --------------------------------------------
@@ -63,13 +64,14 @@ found. For an HgNe+Ne lamp and for a wavelength range ~3600-7200 Angstroms, this
 file is provided in ``config/mdm-spring-2017/hgne.txt``. To run this script:
 
 ```bash
-python identify_wavelengths.py -p ../data/mdm-spring-2017/processed/n1/ \
+python identify_wavelengths.py \
+-p /Volumes/ProjectData/gaia-comoving-followup/processed/mdm-spring-2017/n1/ \
 --linelist=../config/mdm-spring-2017/hgne.txt -v
 ```
 
 This will output a CSV file that contains a rough wavelength mapping from known
 lines (in ``../config/mdm-spring-2017/hgne.txt``) to predicted pixel centroids.
-This file will be in ``../data/mdm-spring-2017/processed/wavelength_guess.csv``.
+This file will be in ``processed/mdm-spring-2017/wavelength_guess.csv``.
 
 Full wavelength calibration
 ---------------------------
@@ -99,16 +101,18 @@ The wavelength calibration for each source is added in place to the 1D spectrum
 FITS file. To run this procedure:
 
 ```bash
-python wavelength_calibrate.py -p ../data/mdm-spring-2017/processed/n1/ -v
+python wavelength_calibrate.py \
+-p /Volumes/ProjectData/gaia-comoving-followup/processed/mdm-spring-2017/n1/ -v
 ```
 
 Database generation
 -------------------
 
 ```bash
-python injest_db.py --db=/Volumes/ProjectData/gaia-comoving-followup/db.sqlite --run=/Volumes/ProjectData/gaia-comoving-followup/mdm-spring-2017/ -v
+python injest_db.py
+--db=/Volumes/ProjectData/gaia-comoving-followup/db.sqlite
+--run=/Volumes/ProjectData/gaia-comoving-followup/mdm-spring-2017/ -v
 ```
-
 
 Radial velocity determination
 -----------------------------
@@ -118,4 +122,8 @@ with nonlinear least-squares and ignore any nearby absorption lines. In the
 future, we should switch to using a Gaussian process for the background to
 handle the correlated "background" (continuum).
 
-python solve_velocity.py -p ../data/mdm-spring-2017/processed/n1/1d_n1.0123.fit -v
+```bash
+python solve_velocity.py \
+-d /Volumes/ProjectData/gaia-comoving-followup/db.sqlite \
+-r mdm-spring-2017 -vv
+```

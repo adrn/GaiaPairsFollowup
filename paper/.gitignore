@@ -7,5 +7,6 @@
 *.out
 *.synctex.gz
 ms.pdf
-msNotes.bib
+*Notes.bib
 gitstuff.tex
+*.pdf

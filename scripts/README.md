@@ -106,8 +106,7 @@ Database generation
 -------------------
 
 ```bash
-python injest_db.py --db=/Volumes/ProjectData/gaia-comoving-followup/data/db.sqlite \
---run=/Volumes/ProjectData/gaia-comoving-followup/data/mdm-spring-2017/ -vv
+python injest_db.py --db=/Volumes/ProjectData/gaia-comoving-followup/db.sqlite --run=/Volumes/ProjectData/gaia-comoving-followup/mdm-spring-2017/ -v
 ```
 
 

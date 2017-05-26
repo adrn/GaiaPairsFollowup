@@ -1,6 +1,7 @@
 # Standard library
 from os import path
 import glob
+from collections import OrderedDict
 
 # Third-party
 import astropy.coordinates as coord
@@ -68,29 +69,33 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
     session = Session()
 
     logger.debug("Loading SpectralLineInfo table")
-    lines = []
 
+    line_info = OrderedDict()
     # air wavelength of Halpha -- wavelength calibration from comp lamp is done
     #   at air wavelengths, so this is where Halpha should be, right?
-    lines.append(SpectralLineInfo(name='Halpha',
-                                  wavelength=6562.8*u.angstrom))
+    line_info['Halpha'] = 6562.8*u.angstrom
 
     # [OI] emission lines -- wavelengths from:
     #   http://physics.nist.gov/PhysRefData/ASD/lines_form.html
-    lines.append(SpectralLineInfo(name='[OI] 5577',
-                                  wavelength=5577.3387*u.angstrom))
-    lines.append(SpectralLineInfo(name='[OI] 6300',
-                                  wavelength=6300.304*u.angstrom))
-    lines.append(SpectralLineInfo(name='[OI] 6364',
-                                  wavelength=6363.776*u.angstrom))
-    session.add_all(lines)
-    session.commit()
+    line_info['[OI] 5577'] = 5577.3387*u.angstrom
+    line_info['[OI] 6300'] = 6300.304*u.angstrom
+    line_info['[OI] 6364'] = 6363.776*u.angstrom
+
+    for name, wvln in line_info.items():
+        n = session.query(SpectralLineInfo).filter(SpectralLineInfo.name == name).count()
+        if n == 0:
+            logger.debug('Loading line {0} at {1}'.format(name, wvln))
+            line = SpectralLineInfo(name=name, wavelength=wvln)
+            session.add(line)
+            session.commit()
 
     # Create an entry for this observing run
     data_path, run_name = path.split(run_root_path)
-    run = Run(name=run_name)
-    session.add(run)
-    session.commit()
+    n = session.query(Run).filter(Run.name == run_name).count()
+    if n == 0:
+        run = Run(name=run_name)
+        session.add(run)
+        session.commit()
 
     # Now we need to go through each processed night of data and load all of the
     # relevant observations of sources.
@@ -103,7 +108,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
     # Here's where there's a bit of hard-coded bewitchery - the nights (within
     # each run) have to be labeled 'n1', 'n2', and etc. Sorry.
     glob_pattr_proc = path.join(data_path, 'processed', run_name, 'n?')
-    for proc_night_path in glob.glob(glob_pattr_proc)[:1]: # HACK
+    for proc_night_path in glob.glob(glob_pattr_proc):
         night = path.basename(proc_night_path)
         night_id = int(night[1])
         logger.debug('Loading night {0}...'.format(night_id))
@@ -111,8 +116,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
         observations = []
         tgas_sources = []
 
-        # glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
-        glob_pattr_1d = path.join(proc_night_path, '1d_*024.fit') # HACK
+        glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
         for path_1d in ProgressBar(glob.glob(glob_pattr_1d)):
             hdr = fits.getheader(path_1d)
 
@@ -126,16 +130,14 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
             kw = dict()
 
             # construct filenames using hard-coded bullshit
-            kw['filename_raw'] = path.join(run_name, night, basename)
-            kw['filename_p'] = path.join('processed', run_name,
-                                         night, 'p_'+basename)
-            kw['filename_1d'] = path.join('processed', run_name,
-                                          night, '1d_'+basename)
+            kw['filename_raw'] = basename
+            kw['filename_p'] = 'p_' + basename
+            kw['filename_1d'] = '1d_' + basename
 
             # check if this filename is already in the database, if so, drop it
             base_query = session.query(Observation)\
                                 .filter(Observation.filename_raw == kw['filename_raw'])
-            already_loaded = base_query.count()
+            already_loaded = base_query.count() > 0
 
             if already_loaded and overwrite:
                 base_query.delete()

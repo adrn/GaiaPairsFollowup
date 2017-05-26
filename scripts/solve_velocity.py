@@ -3,6 +3,7 @@
 """
 TODO:
 - n1.0073 Halpha is emission
+- Modify script so it writes to the database instead of a FITS file
 """
 
 # Standard library
@@ -26,9 +27,11 @@ from schwimmbad import choose_pool
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.longslit import GlobImageFileCollection, extract_region
+from comoving_rv.db import Session, Base, db_connect
+from comoving_rv.longslit import extract_region
 from comoving_rv.longslit.fitting import VoigtLineFitter, GaussianLineFitter
-from comoving_rv.velocity import bary_vel_corr, kitt_peak
+from comoving_rv.db.model import (Run, Observation, TGASSource, SimbadInfo,
+                                  SpectralLineMeasurement, SpectralLineInfo)
 
 def log_probability(params, gp, flux_data):
     gp.set_parameter_vector(params)
@@ -49,106 +52,66 @@ def log_probability(params, gp, flux_data):
 
     return ll + lp
 
-def main(night_path, overwrite=False, pool=None):
+def main(db_path, run_name, filename=None, overwrite=False, pool=None):
 
     if pool is None:
         pool = schwimmbad.SerialPool()
 
-    night_path = path.realpath(path.expanduser(night_path))
-    if not path.exists(night_path):
-        raise IOError("Path '{}' doesn't exist".format(night_path))
+    # connect to the database
+    engine = db_connect(db_path)
+    # engine.echo = True
+    logger.debug("Connected to database at '{}'".format(db_path))
 
-    if path.isdir(night_path):
-        data_file = None
-        logger.info("Reading data from path: {}".format(night_path))
+    # create a new session for interacting with the database
+    session = Session()
 
-    elif path.isfile(night_path):
-        data_file = night_path
-        base_path, name = path.split(night_path)
-        night_path = base_path
-        logger.info("Reading file: {}".format(data_file))
-
-    else:
-        raise RuntimeError("how?!")
-
-    plot_path = path.join(night_path, 'plots')
-    root_path = path.abspath(path.join(night_path, '..'))
-    table_path = path.join(root_path, 'velocity.fits')
-
-    # air wavelength of Halpha -- wavelength calibration from comp lamp is done
-    #   at air wavelengths, so this is where Halpha should be, right?
-    Halpha = 6562.8 * u.angstrom
-
-    # [OI] emission lines -- wavelengths from:
-    #   http://physics.nist.gov/PhysRefData/ASD/lines_form.html
-    sky_lines = [5577.3387, 6300.304, 6363.776]
-
+    root_path, _ = path.split(db_path)
+    plot_path = path.join(root_path, 'plots', run_name)
     if not path.exists(plot_path):
         os.makedirs(plot_path, exist_ok=True)
 
-    if not path.exists(table_path):
-        logger.debug('Creating table at {}'.format(table_path))
-        tbl_init = [Column(name='object_name', dtype='|S30', data=[], length=0),
-                    Column(name='group_id', dtype=int, length=0),
-                    Column(name='smoh_index', dtype=int, length=0),
-                    Column(name='ra', dtype=float, unit=u.degree, length=0),
-                    Column(name='dec', dtype=float, unit=u.degree, length=0),
-                    Column(name='secz', dtype=float, length=0),
-                    Column(name='filename', dtype='|S128', data=[], length=0),
-                    Column(name='Ha_centroid', dtype=float, unit=u.angstrom, length=0),
-                    Column(name='Ha_centroid_err', dtype=float, unit=u.angstrom, length=0),
-                    Column(name='bary_rv_shift', dtype=float, unit=u.km/u.s, length=0),
-                    Column(name='sky_centroids', dtype=float, unit=u.angstrom, length=0, shape=(len(sky_lines,))),
-                    Column(name='rv', dtype=float, unit=u.km/u.s, length=0),
-                    Column(name='rv_err', dtype=float, unit=u.km/u.s, length=0)]
+    # TODO: there might be some bugs here...
+    n_lines = session.query(SpectralLineInfo).count()
+    Halpha = session.query(SpectralLineInfo)\
+                    .filter(SpectralLineInfo.name == 'Halpha').one()
+    OI_lines = session.query(SpectralLineInfo)\
+                      .filter(SpectralLineInfo.name.contains('[OI]')).all()
 
-        velocity_tbl = Table(tbl_init)
-        velocity_tbl.write(table_path, format='fits')
-        logger.debug('Table: {}'.format(velocity_tbl.colnames))
+    if filename is None: # grab all unfinished sources
+        observations = session.query(Observation).join(Run)\
+                              .filter(Run.name == run_name).all()
 
-    else:
-        logger.debug('Table exists, reading ({})'.format(table_path))
-        velocity_tbl = Table.read(table_path, format='fits')
+    else: # only process the observation corresponding to this filename
+        observations = session.query(Observation).join(Run)\
+                              .filter(Run.name == run_name)\
+                              .filter(Observation.filename_raw == filename).all()
 
-    if data_file is None:
-        ic = GlobImageFileCollection(night_path, glob_include='1d_*')
-        files = ic.files_filtered(imagetyp='OBJECT')
-    else:
-        files = [data_file]
+    for obs in observations:
+        measurements = session.query(SpectralLineMeasurement)\
+                              .join(Observation)\
+                              .filter(Observation.id == obs.id).all()
 
-    for filename in files:
-        file_path = path.join(night_path, filename)
-        filebase,ext = path.splitext(filename)
+        if len(measurements) == n_lines and not overwrite:
+            logger.debug('All line measurements already complete for object '
+                         '{0} in file {1}'.format(obs.object, obs.filename_raw))
+            continue
 
-        # read FITS header
-        hdr = fits.getheader(file_path, 0)
-        object_name = hdr['OBJECT']
-
-        # HACK: for testing
-        # if 'HIP' not in object_name:
-        #     continue
-
-        if object_name in velocity_tbl['object_name']:
-            if overwrite:
-                logger.debug('Object {} already done - overwriting!'
-                             .format(object_name))
-                idx, = np.where(velocity_tbl['object_name'] == object_name)
-                for i in idx:
-                    velocity_tbl.remove_row(i)
-
-            else:
-                logger.debug('Object {} already done.'.format(object_name))
-                continue
-
-        # read the spectrum data and get wavelength solution
-        spec = Table.read(file_path)
+        # Read the spectrum data and get wavelength solution
+        filebase, _ = path.splitext(obs.filename_1d)
+        filename_1d = obs.path_1d(root_path)
+        spec = Table.read(filename_1d)
+        logger.debug('Loaded 1D spectrum for object {0} from file {1}'
+                     .format(obs.object, filename_1d))
 
         # Extract region around Halpha
-        x, (flux, ivar) = extract_region(spec['wavelength'], center=6563.,
+        x, (flux, ivar) = extract_region(spec['wavelength'],
+                                         center=Halpha.wavelength.value,
                                          width=100,
                                          arrs=[spec['source_flux'],
                                                spec['source_ivar']])
 
+        # We start by doing maximum likelihood estimation to fit the line, then
+        # use the best-fit parameters to initialize an MCMC run.
         # TODO: need to figure out if it's emission or absorption...for now just
         #   assume absorption
         absorp_emiss = -1.
@@ -157,8 +120,8 @@ def main(night_path, overwrite=False, pool=None):
         fit_pars = lf.get_gp_mean_pars()
 
         if (not lf.success or
-                abs(fit_pars['x0']-6562.8) > 16. or # 16 Å = ~700 km/s
-                abs(fit_pars['amp']) < 10): # MAGIC NUMBER
+                abs(fit_pars['x0'] - Halpha.wavelength.value) > 16. or # 16 Å = ~700 km/s
+                abs(fit_pars['amp']) < 10): # minimum amplitude - MAGIC NUMBER
             # TODO: should try again with emission line
             logger.error('absorption line has tiny amplitude! did '
                          'auto-determination of absorption/emission fail?')
@@ -169,6 +132,7 @@ def main(night_path, overwrite=False, pool=None):
         fig.savefig(path.join(plot_path, '{}_maxlike.png'.format(filebase)),
                     dpi=256)
         plt.close(fig)
+
         # ----------------------------------------------------------------------
 
         # Run `emcee` instead to sample over GP model parameters:
@@ -176,9 +140,9 @@ def main(night_path, overwrite=False, pool=None):
             lf.gp.freeze_parameter('mean:ln_std_G')
 
         initial = np.array(lf.gp.get_parameter_vector())
-        if initial[4] < -10:
+        if initial[4] < -10: # TODO: ???
             initial[4] = -8.
-        if initial[5] < -10:
+        if initial[5] < -10: # TODO: ???
             initial[5] = -8.
         ndim, nwalkers = len(initial), 64
 
@@ -187,16 +151,50 @@ def main(night_path, overwrite=False, pool=None):
 
         logger.debug("Running burn-in...")
         p0 = initial + 1e-6 * np.random.randn(nwalkers, ndim)
-        p0, lp, _ = sampler.run_mcmc(p0, 256)
+        p0, lp, _ = sampler.run_mcmc(p0, 128)
 
         logger.debug("Running 2nd burn-in...")
         sampler.reset()
         p0 = p0[lp.argmax()] + 1e-3 * np.random.randn(nwalkers, ndim)
-        p0, lp, _ = sampler.run_mcmc(p0, 512)
+        p0, lp, _ = sampler.run_mcmc(p0, 256)
 
         logger.debug("Running production...")
         sampler.reset()
         pos, lp, _ = sampler.run_mcmc(p0, 512)
+
+        fit_kw = dict()
+        for i,par_name in enumerate(lf.gp.get_parameter_names()):
+            if 'kernel' in par_name: continue
+
+            # remove 'mean:'
+            par_name = par_name[5:]
+
+            # skip bg
+            if par_name.startswith('bg'): continue
+
+            samples = sampler.flatchain[:,i]
+
+            if par_name.startswith('ln_'):
+                par_name = par_name[3:]
+                samples = np.exp(samples)
+
+            MAD = np.median(np.abs(samples - np.median(samples)))
+            fit_kw[par_name] = np.median(samples)
+            fit_kw[par_name+'_error'] = 1.5 * MAD # convert to ~stddev
+
+        # remove all previous line measurements
+        q = session.query(SpectralLineMeasurement).join(Observation)\
+                   .filter(Observation.id == obs.id)
+        if q.count() > 0:
+            for meas in q.all():
+                session.delete(meas)
+            session.commit()
+
+        slm = SpectralLineMeasurement(**fit_kw)
+        slm.info = Halpha
+        slm.observation = obs
+        session.add(slm)
+        session.commit()
 
         # --------------------------------------------------------------------
         # plot MCMC traces
@@ -237,32 +235,17 @@ def main(night_path, overwrite=False, pool=None):
         plt.close(fig)
         # --------------------------------------------------------------------
 
-        # object naming stuff
-        if '-' in object_name:
-            group_id,smoh_index,*_ = object_name.split('-')
-            smoh_index = int(smoh_index)
-
-        else:
-            group_id = 0
-            smoh_index = 0
-
-        # Now estimate raw radial velocity and precision:
-        x0 = sampler.flatchain[:, 3] * u.angstrom
-        MAD = np.median(np.abs(x0 - np.median(x0)))
-        centroid = np.median(x0)
-        centroid_err = 1.48 * MAD # convert to stddev
-
         # compute centroids for sky lines
         sky_centroids = []
-        for j,sky_line in enumerate(sky_lines):
-            # Extract region around Halpha
+        for j,sky_line in enumerate(OI_lines):
+            wvln = sky_line.wavelength.value
             x, (flux, ivar) = extract_region(spec['wavelength'],
-                                             center=sky_line,
+                                             center=wvln,
                                              width=32., # angstroms
                                              arrs=[spec['background_flux'],
                                                    spec['background_ivar']])
 
-            lf = GaussianLineFitter(x, flux, ivar, absorp_emiss=1.) # all emission
+            lf = GaussianLineFitter(x, flux, ivar, absorp_emiss=1.) # all emission lines
             lf.fit()
             fit_pars = lf.get_gp_mean_pars()
 
@@ -270,7 +253,7 @@ def main(night_path, overwrite=False, pool=None):
             max_ = fit_pars['amp'] / np.sqrt(2*np.pi*fit_pars['std']**2)
             SNR = max_ / np.median(1/np.sqrt(ivar))
 
-            if (not lf.success or abs(fit_pars['x0']-sky_line) > 4 or
+            if (not lf.success or abs(fit_pars['x0']-wvln) > 4 or
                     fit_pars['amp'] < 10 or fit_pars['std'] > 4 or SNR < 2.5):
                 # failed
                 x0 = np.nan * u.angstrom
@@ -283,41 +266,27 @@ def main(night_path, overwrite=False, pool=None):
             fig.suptitle(title, y=0.95)
             fig.subplots_adjust(top=0.8)
             fig.savefig(path.join(plot_path, '{}_maxlike_sky_{:.0f}.png'
-                                  .format(filebase, sky_line)), dpi=256)
+                                  .format(filebase, wvln)), dpi=256)
             plt.close(fig)
+
+            # store the sky line measurements
+            fit_pars['std_G'] = fit_pars.pop('std') # HACK
+            fit_pars.pop('bg_coef') # HACK
+            slm = SpectralLineMeasurement(**fit_pars)
+            slm.info = sky_line
+            slm.observation = obs
+            session.add(slm)
+            session.commit()
 
             sky_centroids.append(x0)
         sky_centroids = u.Quantity(sky_centroids)
 
-        # compute barycenter velocity given coordinates of where the
-        #   telescope was pointing
-        t = Time(hdr['JD'], format='jd', scale='utc')
-        sc = coord.SkyCoord(ra=hdr['RA'], dec=hdr['DEC'],
-                            unit=(u.hourangle, u.degree))
-        vbary = bary_vel_corr(t, sc, location=kitt_peak)
+        logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f}\n--------'
+                    .format(obs.object, filebase,
+                            x0=fit_kw['x0'],
+                            err=fit_kw['x0_error']))
 
-        raw_rv = (centroid - Halpha) / Halpha * c.to(u.km/u.s) + vbary
-        rv_err = centroid_err / Halpha * c.to(u.km/u.s) # formal precision
-
-        # convert ra,dec to quantities
-        ra = sc.ra.degree * u.deg
-        dec = sc.dec.degree * u.deg
-        velocity_tbl.add_row(dict(object_name=object_name, group_id=group_id,
-                                  smoh_index=smoh_index,
-                                  ra=ra, dec=dec, secz=hdr['AIRMASS'],
-                                  filename=file_path,
-                                  Ha_centroid=centroid,
-                                  Ha_centroid_err=centroid_err,
-                                  bary_rv_shift=vbary,
-                                  sky_centroids=sky_centroids,
-                                  rv=raw_rv,
-                                  rv_err=rv_err))
-
-        logger.info('{} [{}]: x0={x0:.3f} σ={err:.3f} rv={rv:.3f}'
-                    .format(object_name, filebase, x0=centroid,
-                            err=centroid_err, rv=raw_rv))
-
-        velocity_tbl.write(table_path, format='fits', overwrite=True)
+        session.commit()
 
     pool.close()
 
@@ -340,9 +309,12 @@ if __name__ == "__main__":
                         dest='overwrite', default=False,
                         help='Destroy everything.')
 
-    parser.add_argument('-p', '--path', dest='night_path', required=True,
-                        help='Path to a PROCESSED night or chunk of data to '
-                             'process. Or, path to a specific comp file.')
+    parser.add_argument('-d', '--db', dest='db_path', required=True,
+                        help='Path to sqlite database file')
+    parser.add_argument('-r', '--run', dest='run_name', required=True,
+                        help='Name of the observing run')
+    parser.add_argument('-f', '--file', dest='filename', default=None,
+                        help='Only run on one particular file.')
 
     # multiprocessing options
     group = parser.add_mutually_exclusive_group()
@@ -375,4 +347,5 @@ if __name__ == "__main__":
     pool = choose_pool(mpi=args.mpi, processes=args.n_cores)
     logger.info("Using pool: {}".format(pool.__class__))
 
-    main(night_path=args.night_path, overwrite=args.overwrite, pool=pool)
+    main(db_path=args.db_path, run_name=args.run_name, filename=args.filename,
+         overwrite=args.overwrite, pool=pool)

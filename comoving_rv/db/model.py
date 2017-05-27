@@ -10,6 +10,7 @@ from __future__ import division, print_function
 from os import path
 
 # Third-party
+import astropy.coordinates as coord
 import astropy.units as u
 from sqlalchemy import Column, types
 from sqlalchemy.schema import ForeignKey
@@ -168,6 +169,11 @@ class TGASSource(Base):
     b = Column('b', SexDegAngleType, nullable=False)
     ecl_lon = Column('ecl_lon', SexDegAngleType, nullable=False)
     ecl_lat = Column('ecl_lat', SexDegAngleType, nullable=False)
+
+    @property
+    def skycoord(self):
+        return coord.SkyCoord(ra=self.ra, dec=self.dec,
+                              distance=1000./self.parallax*u.pc)
 
 class SpectralLineMeasurement(Base):
     __tablename__ = 'spectral_line_measurement'

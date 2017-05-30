@@ -22,7 +22,7 @@
 \begin{document}
 
 \title{Co-moving stars in \textsl{Gaia DR1}:
-       a catalog of genuine co-moving star pairs from low-resolution
+       a catalog of genuine comoving star pairs from low-resolution
        spectroscopic follow-up}
 
 \author{Adrian~M.~Price-Whelan}
@@ -50,8 +50,24 @@
 % \affiliation{todo}
 
 \begin{abstract}
-TODO:
-
+% Context
+Widely-separated, co-eval stars are [...] for studying the chemical homogeneity
+of birth, calibrating stellar atmosphere models across a range of [..], and for
+modeling the Galactic tidal field.
+Previous work using Hipparcos + literature RVs -> a few hundred genuine pairs
+out to 8 pc.
+% Aims
+Identified candidate pairs using the Tycho-Gaia Astrometric Solution catalog,
+Gaia DR1.
+Want to identify genuinely dynamically associated pairs for future
+high-resolution followup
+% Methods
+Low-resolution spectrograph to measure relative radial velocities to identify
+genuine pairs.
+% Results
+Of the XX pairs observed, we find YY ...
+% Conclusions
+Gaia DR2 -> how many do we expect?
 \end{abstract}
 
 \keywords{
@@ -91,13 +107,15 @@ Most stars form in clusters with small dispersions in position, velocity, and
 Once a given cluster is visibly dispersing or fully dispersed, the former member
 stars retain chemical and kinematic signatures of their birth cluster
 
+comoving not wide binary (don't know if they are bound)
+
 , though
 the kinematic mapping is non-trivial because of phase-mixing.
 
 become
 useful
 
-Widely-separated co-moving stars are expected to form from the dissolution of
+Widely-separated comoving stars are expected to form from the dissolution of
 birth star clusters
 
 
@@ -105,14 +123,32 @@ birth star clusters
 
 \subsection{Sample selection}\label{sec:sample}
 
-The wide-separation co-moving stars presented later in this work were originally
-identified as candidate co-moving stars in a search of the \tgas\ catalog.
+In previous work, we have identified a sample of high-confidence, candidate
+comoving star pairs (\citealt{Oh:2017}) using only astrometric information from
+the \tgas\ catalog (\citealt{tgas}).
+These comoving pairs were selected using a cut on a marginalized likelihood
+ratio computed for all nearly co-spatial pairs of stars.
+For a full description of the selection method, see \citealt{Oh:2017}.
+Briefly, likelihood 1, $L_1$, considers a model in which the full-space
+velocities of each star in the pair are identical and sampled from a disk-like,
+Sun-relative velocity distribution, and likelihood 2, $L_2$, considers a model
+in which the full-space velocities of each star were drawn independently from
+the same velocity distribution used above; the likelihood ratio was taken as
+$L_1/L_2$.
+After a parallax signal-to-noise cut ($\pi/\sigma_\pi > 8$), we compute the
+likelihood ratio for all stars within $10~\pc$ of each target star from the
+\tgas\ catalog.
+The likelihoods appropriately take into account the reported covariances and
+uncertainties between the astrometric measurements in the \tgas\ catalog and
+naturally handle geometric or projection effects in comparing spherical velocity
+components for star pairs separated by large angles on the sky.
+After applying a conservative cut on the likelihood ratio motivated by computing
+the same likelihood ratio for random pairings of stars, we find 13,058
+comoving star pairs with physical separations between $1000~\au$ and $10~\pc$.
+Of these pairs, there are 10,606 unique sources, implying that a significant
+fraction of the identified pairs are members of larger groups.
 
-Target sample taken from ... Oh et al.
-
-Briefly, ...
-
-TGAS roughly XX\% complete to 200 pc with parallax SNR cut.
+TGAS $\approx$90\% complete to 200 pc with parallax SNR cut (\citealt{Bovy:2017}).
 
 Oh catalog have a high likelihood-ratio cut, but that should be unbiased (right?)
 
@@ -135,7 +171,7 @@ TODO:
 
 \subsection{Catalog ...}\label{sec:}
 
-\subsection{Physical properties of genuine co-moving pairs}\label{sec:}
+\subsection{Physical properties of genuine comoving pairs}\label{sec:}
 
 \subsection{Galactic orbits of the co-moving pairs}\label{sec:}
 

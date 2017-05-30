@@ -35,9 +35,6 @@
 \affiliation{Department of Astrophysical Sciences,
              Princeton University, Princeton, NJ 08544, USA}
 
-\author{Melissa~Ness}
-\affiliation{todo}
-
 \author{David~N.~Spergel}
 \affiliation{Flatiron Institute,
              Simons Foundation,
@@ -45,6 +42,9 @@
              New York, NY 10010, USA}
 \affiliation{Department of Astrophysical Sciences,
              Princeton University, Princeton, NJ 08544, USA}
+
+% \author{Melissa~Ness}
+% \affiliation{todo}
 
 % \author{David~W.~Hogg}
 % \affiliation{todo}
@@ -160,6 +160,71 @@ From this source target list, we randomly observed targets with airmass $\sec z
 
 \subsection{Observations and Data reduction}\label{sec:reduction}
 
+Spectra were obtained using the \project{Modspec} spectrograph mounted on the
+$2.4~{\rm m}$ Hiltner telescope at MDM
+observatory\footnote{\url{http://mdm.kpno.noao.edu}} on Kitt Peak (Arizona).
+\project{Modspec} was set up in long-slit mode with a 1'' slit, a $600~{\rm
+line}~{\rm mm}^{-1}$ grating, and a $2048\times2048~{\rm pixel}$ SITe CCD
+detector (``Echelle'').
+Only the central 300 pixel columns were read out from the CCD, and pixel rows
+$>1600$ (at the blue end) were later trimmed because of the poor quantum
+efficiency of the CCD at wavelengths $\lesssim 3600~{\rm \AA}$.
+The resolution and wavelength range were $\approx2~{\rm \AA}~{\rm pixel}^{-1}$
+from $\approx 3600$--$7200~{\rm \AA}$.
+At this resolution, to obtain high signal-to-noise spectra, most exposures were
+between $30$--$120~{\rm s}$ (15th and 85th percentiles).
+To maximize the number of observed pairs, we therefore chose to not take
+comparison lamp spectra at each pointing, which adds an overhead of $\approx
+90~{\rm s}$ per observation.
+To determine rough nightly wavelength solutions, spectra were obtained using
+Hg-Ne and Ne comparison lamps at the beginning and end of each night, and
+atmospheric emission lines were used to correct the wavelength solution on a
+per-object basis.
+
+We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
+2017-03-15, corresponding to 321 unique star pairs and $\approx 120$ calibration
+targets.
+The calibration targets have previously measured radial velocities and chemical
+abundances, which will be used for validation of our reduction pipeline and in
+future work to measure metallicities and stellar parameters for each observed
+source using \project{The Cannon} (\citealt{Ness:TODO}).
+The spectra were reduced and calibrated using a custom, publicly-available
+pipeline written in \python,\footnote{Released along with the code used to
+generate the figures in this document at
+\url{https://github.com/adrn/GaiaPairsFollowup}.} summarized below.
+
+For each source or comparison lamp observation, the two-dimensional image is
+bias corrected, flat-field corrected, and trimmed using standard routines
+implemented in \package{ccdproc} (\citealt{Craig:2015}).
+For comparison lamp observations, the central 100 pixel columns are extracted
+and summed along the spatial axis, weighted by the inverse-variances of each
+pixel.
+Source spectral traces were always placed in this region during observations,
+and the curvature of the wavelength solution over this region is negligible.
+For source observations, the 2D spectra are extracted to 1D using an
+empirically-estimated line spread function (LSF): at each of 16 pixel rows
+between indices 750 and 850 (i.e. around the effective center of the dispersion
+axis), a model for the LSF is fit to the 1D trace.
+The LSF is assumed to be a Voigt profile with parameters $A$, amplitude; $x_0$,
+profile centroid; $\sigma_G$, Gaussian root-variance; $\gamma_L$, Lorentzian
+half-width at half maximum, and the background is modeled using a linear
+polynomial with parameters $\alpha_1$ and $\alpha_2$, the slope and intercept at
+the profile centroid, respectively.
+The maximum-likelihood LSF + background model parameters are estimated from each
+pixel row using \texttt{L-BFGS-B} optimization (\citealt{Zhu:1994}), implemented
+in the \package{scipy} package.
+From the 16 fits, the median profile width parameters, $\sigma_G$ and
+$\gamma_L$, are then taken to be the LSF width parameters.
+At each of 1600 rows in each source image, the LSF amplitude and centroid, and
+background slope and intercept at line centroid are then fit using the same
+procedure as above but with the width parameters fixed.
+The LSF amplitudes are stored as the source fluxes, and the background model
+intercepts are stored as the background (sky) fluxes.
+Occasionally, nearby sources fall in the slit; these are masked by hand in the
+2D images and do not bias the LSF extraction fits.
+
+\package{celerite} (\citealt{Foreman-Mackey:2017})
+
 See: http://iopscience.iop.org/article/10.1088/0004-6256/146/6/161/pdf for an example
 
 TODO:
@@ -183,10 +248,39 @@ TODO:
 
 \section{Conclusions }
 
-
-
 \acknowledgements
-David W. Hogg (NYU)
+John Brewer (Yale),
+Jason Curtis (Columbia),
+James Davenport (WWU) for PyDIS,
+David W. Hogg (NYU),
+Melissa Ness (MPIA)
+
+This work is based on observations obtained at the MDM Observatory, operated by
+Dartmouth College, Columbia University, Ohio State University, Ohio University,
+and the University of Michigan.
+% The authors are pleased to acknowledge that the work reported on in this paper
+% was substantially performed at the TIGRESS high performance computer center at
+% Princeton University which is jointly supported by the Princeton Institute for
+% Computational Science and Engineering and the Princeton University Office of
+% Information Technology's Research Computing department.
+
+\software{
+The code used in this project is available from
+\url{https://github.com/adrn/GaiaPairsFollowup} under the MIT open-source
+software license.
+This research utilized the following open-source \python\ packages:
+    \package{Astropy} (\citealt{Astropy-Collaboration:2013}),
+    \package{astroquery} (\citealt{Ginsburg:2016}),
+    \package{ccdproc} (\citealt{Craig:2015}),
+    \package{celerite} (\citealt{Foreman-Mackey:2017}),
+    \package{IPython} (\citealt{Perez:2007}),
+    \package{matplotlib} (\citealt{Hunter:2007}),
+    \package{numpy} (\citealt{Van-der-Walt:2011}),
+    \package{scipy} (\url{https://www.scipy.org/}),
+    \package{sqlalchemy} (\url{https://www.sqlalchemy.org/})
+}
+
+\facility{MDM: Hiltner (Modspec)}
 
 \bibliographystyle{aasjournal}
 \bibliography{refs}

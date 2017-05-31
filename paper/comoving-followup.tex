@@ -20,6 +20,7 @@
 \newcommand{\gaia}{\project{Gaia}}
 \newcommand{\DR}[1]{\acronym{DR}1}
 \newcommand{\tgas}{\acronym{TGAS}}
+\newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 
 \begin{document}
 
@@ -160,6 +161,9 @@ catalog itself, \tgas\ is $\approx$90\% complete to $200~\pc$
 From this source target list, we randomly observed targets with airmass $\sec z
 < 1.5$.
 
+\todo{color-magnitude diagram of all stars observed, color our targets different
+from the calibration targets}
+
 \subsection{Observations and data reduction}\label{sec:reduction}
 
 Spectra were obtained using the \project{Modspec} spectrograph mounted on the
@@ -213,7 +217,7 @@ half-width at half maximum, and the background is modeled using a linear
 polynomial with parameters $\alpha_1$ and $\alpha_2$, the slope and intercept at
 the profile centroid, respectively.
 The maximum-likelihood LSF + background model parameters are estimated from each
-pixel row using \texttt{L-BFGS-B} optimization (\citealt{Zhu:1994}), implemented
+pixel row using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented
 in the \package{scipy} package.
 From the 16 fits, the median profile width parameters, $\sigma_G$ and
 $\gamma_L$, are then taken to be the LSF width parameters.
@@ -225,7 +229,65 @@ intercepts are stored as the background (sky) fluxes.
 Occasionally, nearby sources fall in the slit; these are masked by hand in the
 2D images and do not bias the LSF extraction fits.
 
-TODO: wavelength calibration, not flux calibrated. A sample
+We start the wavelength calibration by interactively identifying the 12
+strongest, least blended emission lines in one of the extracted 1D comparison
+lamp spectra by comparing to \todo{NIST??}.
+Once a rough mapping from pixel to wavelength is determined, we then fit for the
+individual line centroids in each comparison lamp spectrum by extracting small,
+8 pixel-wide segments of spectrum around each identified emission line and
+fitting a model for the line profile and background to each individually.
+We use a Gaussian profile for each emission line with parameters: amplitude,
+$A$; centroid, $x_0$; and root-variance, $\sigma_G$.
+We found that nearby blended or low-amplitude lines (i.e. part of the
+``background'') sometimes bias the line centroid determination when using a
+simple background model.
+We therefore model the background flux around each comparison lamp emission line
+using a constant offset + Gaussian process (GP) with a Mat\'ern 3/2 kernel
+parametrized by amplitude parameter $\sigma_{3/2}$ and correlation scale
+$\rho_{3/2}$.
+We use \package{celerite} (\citealt{Foreman-Mackey:2017}) to evaluate the full
+likelihood, and maximize the (log-)likelihood again using \lbfgsb\ optimization.
+We optimize over the logarithm of any scale parameters (i.e. $A$, $\sigma_G$,
+$\sigma_{3/2}$, and $\rho_{3/2}$).
+Once we determine the pixel centroids for all identified emission lines for a
+given night's comparison lamp spectrum, we then fit an interpolating function to the pixel-centroid, wavelength values for each emission line.
+
+Typically, high-order standard polynomials or Chebyshev polynomials are used to
+fit for the wavelength dispersion function.
+We found that using such functions can lead to vastly incorrect wavelength
+values near either end of the pixel grid where the polynomial function is
+un- or weakly-constrained.
+We instead use a combined linear polynomial + GP to model the wavelength
+dispersion.
+We again use a Mat\'ern 3/2 kernel, use \lbfgsb\ optimization, and convert any
+scale parameter to log-space before maximizing the log-likelihood.
+\figurename~\ref{fig:wavelength-GP} shows an example of one such fit with the
+best-fit linear polynomial subtracted from the (pixel-centroid, wavelength)
+pairs (black points) and fit curve (darker line).
+The envelope around the best-fit curve (shaded region) shows the \todo{1$\sigma$
+blah blah GP...}
+When the GP variance is large, the pixel-to-wavelength mapping is uncertain; we
+store this variance and later use it to mask regions of the spectra with
+uncertain wavelength values.
+This wavelength calibration procedure produces a nightly model for the nonlinear
+dispersion of wavelength as a function of pixel value for each extracted 1D
+spectrum.
+\figurename~\ref{fig:sample-spectra} shows a random sample of 10 source spectra
+of comoving star pair members normalized to 1 at $\lambda = 5500~{\rm \AA}$ and
+shifted by index for visualization.
+From the appearances of these 10 alone, it seems there is a mix of metallicities
+and spectral types.
+Note that the spectra are not flux-calibrated, as we only care about measuring
+radial velocities from this sample.
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.9\linewidth]{wavelength_gp.pdf}
+  \end{center}
+  \caption{%
+    \todo{Stuff}
+    \label{fig:wavelength-GP}}
+\end{figure}
 
 \begin{figure}[htbp]
   \begin{center}
@@ -236,9 +298,16 @@ TODO: wavelength calibration, not flux calibrated. A sample
     \label{fig:sample-spectra}}
 \end{figure}
 
+
+TODO: sky-line corrections to the spectra
+However, because of flexure in the spectrograph, each observation will have an
+additional, unknown constant offset of, typically, $\approx 0.5$--$2~{\rm \AA}$,
+corresponding to a significant velocity offset at ${\rm H}\alpha$ of
+$\approx 20$--$100~\kms$.
+
+
 TODO: line measurements, model, gaussian process
 
-\package{celerite} (\citealt{Foreman-Mackey:2017})
 
 See: http://iopscience.iop.org/article/10.1088/0004-6256/146/6/161/pdf for an example
 

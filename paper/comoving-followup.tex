@@ -1,4 +1,5 @@
 \documentclass[modern, letterpaper]{aastex61}
+% \documentclass[twocolumn]{aastex61}
 
 % TODO:
 % -
@@ -13,6 +14,7 @@
 
 \include{gitstuff}
 \include{preamble}
+\graphicspath{{figures/}}
 
 % Project-specific
 \newcommand{\gaia}{\project{Gaia}}
@@ -158,7 +160,7 @@ catalog itself, \tgas\ is $\approx$90\% complete to $200~\pc$
 From this source target list, we randomly observed targets with airmass $\sec z
 < 1.5$.
 
-\subsection{Observations and Data reduction}\label{sec:reduction}
+\subsection{Observations and data reduction}\label{sec:reduction}
 
 Spectra were obtained using the \project{Modspec} spectrograph mounted on the
 $2.4~{\rm m}$ Hiltner telescope at MDM
@@ -222,6 +224,19 @@ The LSF amplitudes are stored as the source fluxes, and the background model
 intercepts are stored as the background (sky) fluxes.
 Occasionally, nearby sources fall in the slit; these are masked by hand in the
 2D images and do not bias the LSF extraction fits.
+
+TODO: wavelength calibration, not flux calibrated. A sample
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.9\linewidth]{sample_spectra.pdf}
+  \end{center}
+  \caption{%
+    \todo{Stuff}
+    \label{fig:sample-spectra}}
+\end{figure}
+
+TODO: line measurements, model, gaussian process
 
 \package{celerite} (\citealt{Foreman-Mackey:2017})
 

@@ -273,9 +273,7 @@ We instead use a combined linear polynomial + GP to model the wavelength
 dispersion.
 We again use a Mat\'ern 3/2 kernel, use \lbfgsb\ optimization, and convert any
 scale parameter to log-space before maximizing the log-likelihood.
-\figurename~\ref{fig:wavelength-GP} shows an example of one such fit with the
-best-fit linear polynomial subtracted from the (pixel-centroid, wavelength)
-pairs (black points) and fit curve (darker line).
+\figurename~\ref{fig:wavelength-GP} shows an example of the residuals from one such fit; black points show the (pixel-centroid, wavelength) pairs with the best-fit model subtracted, and  and fit curve (darker line).
 The envelope around the best-fit curve (shaded region) shows the \todo{1$\sigma$
 blah blah GP...}
 When the GP variance is large, the pixel-to-wavelength mapping is uncertain; we

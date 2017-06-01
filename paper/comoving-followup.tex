@@ -105,6 +105,8 @@ Outline:
       via kinematics
 - Some bullshit about Gaia, TGAS, etc., released as a part of \gaia\ \DR{1}\
 
+\cite{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}
+
 Most stars form in clusters with small dispersions in position, velocity, and
 (likely) small initial spreads in chemical abundances.
 Once a given cluster is visibly dispersing or fully dispersed, the former member
@@ -172,7 +174,15 @@ stars within $200~\pc$.
     \includegraphics[width=0.9\linewidth]{sample_cmd.pdf}
   \end{center}
   \caption{%
-    \todo{Stuff}
+    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (blue
+    histogram) and all comoving star pair members observed in this follow-up
+    effort (black points); lines (orange) connect comoving pairs of stars.
+    2MASS $J$-band magnitudes are obtained from the Gaia science
+    archive.
+    Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
+    absolute magnitude, $M_G$, using a Lutz-Kelker-corrected
+    (\citealt{Lutz:1973}) distance estimate (see also \eqname~1 in
+    \citealt{Oh:2017}).
     \label{fig:sample-cmd}}
 \end{figure}
 
@@ -356,6 +366,12 @@ Melissa Ness (MPIA)
 This work is based on observations obtained at the MDM Observatory, operated by
 Dartmouth College, Columbia University, Ohio State University, Ohio University,
 and the University of Michigan.
+This work has made use of data from the European Space Agency (ESA)
+mission {\it Gaia} (\url{https://www.cosmos.esa.int/gaia}), processed by
+the {\it Gaia} Data Processing and Analysis Consortium (DPAC,
+\url{https://www.cosmos.esa.int/web/gaia/dpac/consortium}). Funding
+for the DPAC has been provided by national institutions, in particular
+the institutions participating in the {\it Gaia} Multilateral Agreement.
 % The authors are pleased to acknowledge that the work reported on in this paper
 % was substantially performed at the TIGRESS high performance computer center at
 % Princeton University which is jointly supported by the Princeton Institute for
@@ -377,6 +393,8 @@ This research utilized the following open-source \python\ packages:
     \package{scipy} (\url{https://www.scipy.org/}),
     \package{sqlalchemy} (\url{https://www.sqlalchemy.org/})
 }
+This work additionally used the Gaia science archive
+(\url{https://gea.esac.esa.int/archive/}).
 
 \facility{MDM: Hiltner (Modspec)}
 

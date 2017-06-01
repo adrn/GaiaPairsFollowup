@@ -170,6 +170,13 @@ class TGASSource(Base):
     ecl_lon = Column('ecl_lon', SexDegAngleType, nullable=False)
     ecl_lat = Column('ecl_lat', SexDegAngleType, nullable=False)
 
+    J = Column('J', types.REAL)
+    J_err = Column('J_err', types.REAL)
+    H = Column('H', types.REAL)
+    H_err = Column('H_err', types.REAL)
+    Ks = Column('Ks', types.REAL)
+    Ks_err = Column('Ks_err', types.REAL)
+
     @property
     def skycoord(self):
         return coord.SkyCoord(ra=self.ra, dec=self.dec,

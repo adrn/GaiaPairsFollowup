@@ -1,19 +1,27 @@
+"""
+TODO:
+- Get 2MASS magnitudes and load into tgas_source (see notebook
+  "Fill in 2MASS magnitudes") - see below
+"""
+
 # Standard library
 from os import path
 import glob
 from collections import OrderedDict
 
 # Third-party
+import numpy as np
+
 import astropy.coordinates as coord
 from astropy.time import Time
 import astropy.units as u
 from astropy.io import fits
 from astropy.table import Table
-from astroquery.simbad import Simbad
-Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
-import numpy as np
 from astropy.utils.console import ProgressBar
-# from tqdm import tqdm
+
+from astroquery.simbad import Simbad
+from astroquery.gaia import Gaia
+Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
 
 # Project
 from comoving_rv.db import Session, Base, db_connect
@@ -258,6 +266,29 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                 for name in tgas.colnames:
                     if name in tgassource_columns:
                         tgas_kw[name] = tgas_row[name]
+
+                # TODO:
+                # query = """
+                # SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
+                # FROM gaiadr1.tmass_original_valid
+                # JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
+                # JOIN gaiadr1.tgas_source USING (source_id)
+                # WHERE source_id = {0.source_id}
+                # """
+
+                # job = Gaia.launch_job(query.format(src), dump_to_file=False)
+                # res = job.get_results()
+
+                # if len(res) == 0:
+                #     print("No 2MASS data found for: {0}".format(src.source_id))
+
+                # elif len(res) == 1:
+                #     src.J = res['j_m'][0]
+                #     src.J_err = res['j_msigcom'][0]
+                #     src.H = res['h_m'][0]
+                #     src.H_err = res['h_msigcom'][0]
+                #     src.Ks = res['ks_m'][0]
+                #     src.Ks_err = res['ks_msigcom'][0]
 
                 tgas_source = TGASSource(**tgas_kw)
                 tgas_sources.append(tgas_source)

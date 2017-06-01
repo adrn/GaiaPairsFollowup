@@ -276,14 +276,20 @@ scale parameter to log-space before maximizing the log-likelihood.
 \figurename~\ref{fig:wavelength-GP} shows an example of the residuals from one
 such fit; black points show the (pixel-centroid, wavelength) pairs with the
 best-fit model subtracted.
-The envelope around zero (shaded region) shows the \todo{1$\sigma$ blah blah
-GP...}
-When the GP variance is large, the pixel-to-wavelength mapping is uncertain; we
-store this variance and later use it to mask regions of the spectra with
-uncertain wavelength values.
+The envelope around zero (shaded region, orange) shows the \todo{1$\sigma$ blah
+blah GP...}
+When the GP variance is large, the pixel-to-wavelength mapping is uncertain.
+We therefore only use the pixel range from 250--1210, corresponding to a
+wavelength range of $\approx 5500$--$7400~{\rm \AA}$; grey shaded region shows
+the excluded pixel/wavelength ranges.
+
 This wavelength calibration procedure produces a nightly model for the nonlinear
 dispersion of wavelength as a function of pixel value for each extracted 1D
 spectrum.
+However, because of flexure in the spectrograph, each observation will have an
+additional, unknown constant offset of, typically, $\approx 0.5$--$2~{\rm \AA}$,
+corresponding to a significant velocity offset at ${\rm H}\alpha$ of
+$\approx 20$--$100~\kms$.
 \figurename~\ref{fig:sample-spectra} shows a random sample of 10 source spectra
 of comoving star pair members normalized to 1 at $\lambda = 5500~{\rm \AA}$ and
 shifted by index for visualization.
@@ -312,10 +318,6 @@ radial velocities from this sample.
 
 
 TODO: sky-line corrections to the spectra
-However, because of flexure in the spectrograph, each observation will have an
-additional, unknown constant offset of, typically, $\approx 0.5$--$2~{\rm \AA}$,
-corresponding to a significant velocity offset at ${\rm H}\alpha$ of
-$\approx 20$--$100~\kms$.
 
 
 TODO: line measurements, model, gaussian process

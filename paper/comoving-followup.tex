@@ -145,11 +145,12 @@ compute the likelihood ratio for all stars within $10~\pc$ of each target star
 from the \tgas\ catalog.
 The likelihoods appropriately take into account the reported covariances and
 uncertainties between the astrometric measurements in the \tgas\ catalog and
-naturally handle geometric or projection effects in comparing spherical velocity
-components for star pairs separated by large angles on the sky.
-After applying a conservative cut on the likelihood ratio motivated by computing
-the same likelihood ratio for random pairings of stars, we find 13,058
-comoving star pairs with physical separations between $10^3~\au$ and $10~\pc$.
+naturally handle geometric or projection effects in comparing spherical
+velocity components for star pairs separated by large angles on the sky.
+After applying a conservative cut on the likelihood ratio motivated by
+computing the same likelihood ratio for random pairings of stars, we find
+13,058 comoving star pairs with physical separations between $10^3~\au$ and
+$10~\pc$.
 Of these pairs, there are 10,606 unique sources, implying that a significant
 fraction of the identified pairs are members of larger groups.
 $\approx$4,000 of the pairs are mutually exclusive, i.e. neither member is
@@ -163,8 +164,8 @@ catalog itself, \tgas\ is $\approx$90\% complete to $200~\pc$
 From this source target list, we randomly observed targets with airmass $\sec z
 < 1.5$.
 
-\todo{color-magnitude diagram of all stars observed, color our targets different
-from the calibration targets}
+\todo{color-magnitude diagram of all stars observed, color our targets
+different from the calibration targets}
 \figurename~\ref{fig:sample-cmd} shows a color-magnitude diagram of all targets
 observed in this observing run (markers) plotted over the density of all \tgas\
 stars within $200~\pc$.
@@ -210,8 +211,8 @@ atmospheric emission lines were used to correct the wavelength solution on a
 per-object basis.
 
 We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
-2017-03-15, corresponding to 321 unique star pairs and $\approx 120$ calibration
-targets.
+2017-03-15, corresponding to 321 unique star pairs and $\approx 120$
+calibration targets.
 The calibration targets have previously measured radial velocities and chemical
 abundances, which will be used for validation of our reduction pipeline and in
 future work to measure metallicities and stellar parameters for each observed
@@ -236,11 +237,11 @@ axis), a model for the LSF is fit to the 1D trace.
 The LSF is assumed to be a Voigt profile with parameters $A$, amplitude; $x_0$,
 profile centroid; $\sigma_G$, Gaussian root-variance; $\gamma_L$, Lorentzian
 half-width at half maximum, and the background is modeled using a linear
-polynomial with parameters $\alpha_1$ and $\alpha_2$, the slope and intercept at
-the profile centroid, respectively.
-The maximum-likelihood LSF + background model parameters are estimated from each
-pixel row using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented
-in the \package{scipy} package.
+polynomial with parameters $\alpha_1$ and $\alpha_2$, the slope and intercept
+at the profile centroid, respectively.
+The maximum-likelihood LSF + background model parameters are estimated from
+each pixel row using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented in
+the \package{scipy} package.
 From the 16 fits, the median profile width parameters, $\sigma_G$ and
 $\gamma_L$, are then taken to be the LSF width parameters.
 At each of 1600 rows in each source image, the LSF amplitude and centroid, and
@@ -254,25 +255,27 @@ Occasionally, nearby sources fall in the slit; these are masked by hand in the
 We start the wavelength calibration by interactively identifying the 12
 strongest, least blended emission lines in one of the extracted 1D comparison
 lamp spectra by comparing to \todo{NIST??}.
-Once a rough mapping from pixel to wavelength is determined, we then fit for the
-individual line centroids in each comparison lamp spectrum by extracting small,
-8 pixel-wide segments of spectrum around each identified emission line and
-fitting a model for the line profile and background to each individually.
+Once a rough mapping from pixel to wavelength is determined, we then fit for
+the individual line centroids in each comparison lamp spectrum by extracting
+small, 8 pixel-wide segments of spectrum around each identified emission line
+and fitting a model for the line profile and background to each individually.
 We use a Gaussian profile for each emission line with parameters: amplitude,
 $A$; centroid, $x_0$; and root-variance, $\sigma_G$.
 We found that nearby blended or low-amplitude lines (i.e. part of the
 ``background'') sometimes bias the line centroid determination when using a
 simple background model.
-We therefore model the background flux around each comparison lamp emission line
-using a constant offset + Gaussian process (GP) with a Mat\'ern 3/2 kernel
+We therefore model the background flux around each comparison lamp emission
+line using a constant offset + Gaussian process (GP) with a Mat\'ern 3/2 kernel
 parametrized by amplitude parameter $\sigma_{3/2}$ and correlation scale
 $\rho_{3/2}$.
 We use \package{celerite} (\citealt{Foreman-Mackey:2017}) to evaluate the full
-likelihood, and maximize the (log-)likelihood again using \lbfgsb\ optimization.
+likelihood, and maximize the (log-)likelihood again using \lbfgsb\
+optimization.
 We optimize over the logarithm of any scale parameters (i.e. $A$, $\sigma_G$,
 $\sigma_{3/2}$, and $\rho_{3/2}$).
 Once we determine the pixel centroids for all identified emission lines for a
-given night's comparison lamp spectrum, we then fit an interpolating function to the pixel-centroid, wavelength values for each emission line.
+given night's comparison lamp spectrum, we then fit an interpolating function
+to the pixel-centroid, wavelength values for each emission line.
 
 Typically, high-order standard polynomials or Chebyshev polynomials are used to
 fit for the wavelength dispersion function.
@@ -293,12 +296,12 @@ We therefore only use the pixel range from 250--1210, corresponding to a
 wavelength range of $\approx 5500$--$7400~{\rm \AA}$; grey shaded region shows
 the excluded pixel/wavelength ranges.
 
-This wavelength calibration procedure produces a nightly model for the nonlinear
-dispersion of wavelength as a function of pixel value for each extracted 1D
-spectrum.
+This wavelength calibration procedure produces a nightly model for the
+nonlinear dispersion of wavelength as a function of pixel value for each
+extracted 1D spectrum.
 However, because of flexure in the spectrograph, each observation will have an
-additional, unknown constant offset of, typically, $\approx 0.5$--$2~{\rm \AA}$,
-corresponding to a significant velocity offset at ${\rm H}\alpha$ of
+additional, unknown constant offset of, typically, $\approx 0.5$--$2~{\rm
+\AA}$, corresponding to a significant velocity offset at ${\rm H}\alpha$ of
 $\approx 20$--$100~\kms$.
 \figurename~\ref{fig:sample-spectra} shows a random sample of 10 source spectra
 of comoving star pair members normalized to 1 at $\lambda = 5500~{\rm \AA}$ and
@@ -372,11 +375,11 @@ the {\it Gaia} Data Processing and Analysis Consortium (DPAC,
 \url{https://www.cosmos.esa.int/web/gaia/dpac/consortium}). Funding
 for the DPAC has been provided by national institutions, in particular
 the institutions participating in the {\it Gaia} Multilateral Agreement.
-% The authors are pleased to acknowledge that the work reported on in this paper
-% was substantially performed at the TIGRESS high performance computer center at
-% Princeton University which is jointly supported by the Princeton Institute for
-% Computational Science and Engineering and the Princeton University Office of
-% Information Technology's Research Computing department.
+% The authors are pleased to acknowledge that the work reported on in this
+% paper was substantially performed at the TIGRESS high performance computer
+% center at Princeton University which is jointly supported by the Princeton
+% Institute for Computational Science and Engineering and the Princeton
+% University Office of Information Technology's Research Computing department.
 
 \software{
 The code used in this project is available from

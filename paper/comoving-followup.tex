@@ -317,7 +317,17 @@ radial velocities from this sample.
     \includegraphics[width=0.9\linewidth]{wavelength_gp.pdf}
   \end{center}
   \caption{%
-    \todo{Stuff}
+    A visualization of the pixel-to-wavelength model determined from a single
+    wavelength comparison lamp spectrum.
+    Black markers show the fit pixel centroids for known Hg or Ne emission
+    lines and the residual wavelength value between the linear + GP model and
+    the true emission line centroid.
+    The non-shaded region shows the section of spectrum where the comparison
+    lamp spectrum has sufficient line density to determine the wavelength
+    solution; shaded regions are masked from the resulting spectra.
+    Organge envelope shows the root-variance of the Gaussian process component
+    of the model, which can be interpreted as inherent uncertainties on the
+    wavelength calibration as a result of the model flexibility.
     \label{fig:wavelength-GP}}
 \end{figure}
 
@@ -326,7 +336,11 @@ radial velocities from this sample.
     \includegraphics[width=0.9\linewidth]{sample_spectra.pdf}
   \end{center}
   \caption{%
-    \todo{Stuff}
+    A section of 10 randomly selected target spectra from this work.
+    Spectral fluxes are normalized to 1 at $\lambda = 5500~{\rm \AA}$ and the
+    offsets are chosen to separate the spectra for visualization.
+    The spectra are smoothed with a Gaussian filter with root-variance $\sigma
+    = 2~{\rm \AA}$.
     \label{fig:sample-spectra}}
 \end{figure}
 

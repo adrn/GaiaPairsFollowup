@@ -3,7 +3,6 @@
 """
 TODO:
 - n1.0073 Halpha is emission
-- Modify script so it writes to the database instead of a FITS file
 """
 
 # Standard library
@@ -11,12 +10,8 @@ import os
 from os import path
 
 # Third-party
-import astropy.coordinates as coord
-from astropy.time import Time
-from astropy.constants import c
 import astropy.units as u
-from astropy.io import fits
-from astropy.table import Table, Column
+from astropy.table import Table
 import numpy as np
 import matplotlib.pyplot as plt
 plt.style.use('apw-notebook')
@@ -27,11 +22,11 @@ from schwimmbad import choose_pool
 
 # Project
 from comoving_rv.log import logger
-from comoving_rv.db import Session, Base, db_connect
+from comoving_rv.db import Session, db_connect
 from comoving_rv.longslit import extract_region
 from comoving_rv.longslit.fitting import VoigtLineFitter, GaussianLineFitter
-from comoving_rv.db.model import (Run, Observation, TGASSource, SimbadInfo,
-                                  SpectralLineMeasurement, SpectralLineInfo)
+from comoving_rv.db.model import (SpectralLineMeasurement, SpectralLineInfo,
+                                  Run, Observation)
 
 def log_probability(params, gp, flux_data):
     gp.set_parameter_vector(params)

@@ -175,9 +175,10 @@ stars within $200~\pc$.
     \includegraphics[width=0.9\linewidth]{sample_cmd.pdf}
   \end{center}
   \caption{%
-    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (blue
-    histogram) and all comoving star pair members observed in this follow-up
-    effort (black points); lines (orange) connect comoving pairs of stars.
+    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
+    blue histogram) and all comoving star pair members observed in this
+    follow-up effort (black points); colored lines connect candidate comoving
+    star pairs.
     2MASS $J$-band magnitudes are obtained from the Gaia science
     archive.
     Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
@@ -261,16 +262,17 @@ small, 8 pixel-wide segments of spectrum around each identified emission line
 and fitting a model for the line profile and background to each individually.
 We use a Gaussian profile for each emission line with parameters: amplitude,
 $A$; centroid, $x_0$; and root-variance, $\sigma_G$.
-We found that nearby blended or low-amplitude lines (i.e. part of the
+We find that nearby blended or low-amplitude lines (i.e. part of the
 ``background'') sometimes bias the line centroid determination when using a
 simple background model.
 We therefore model the background flux around each comparison lamp emission
-line using a constant offset + Gaussian process (GP) with a Mat\'ern 3/2 kernel
-parametrized by amplitude parameter $\sigma_{3/2}$ and correlation scale
-$\rho_{3/2}$.
+line using a constant offset + Gaussian process (GP).
+For the GP model, we use a Mat\'ern 3/2 kernel function
+(\citealt{Matern:1986,Rasmussen:2005}) parametrized by amplitude parameter
+$\sigma_{3/2}$ and correlation scale $\rho_{3/2}$.
 We use \package{celerite} (\citealt{Foreman-Mackey:2017}) to evaluate the full
-likelihood, and maximize the (log-)likelihood again using \lbfgsb\
-optimization.
+likelihood for this model, and maximize the (log-)likelihood again using
+\lbfgsb\ optimization.
 We optimize over the logarithm of any scale parameters (i.e. $A$, $\sigma_G$,
 $\sigma_{3/2}$, and $\rho_{3/2}$).
 Once we determine the pixel centroids for all identified emission lines for a

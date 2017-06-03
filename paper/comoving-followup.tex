@@ -172,7 +172,7 @@ stars within $200~\pc$.
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=0.9\linewidth]{sample_cmd.pdf}
+    \includegraphics[width=\linewidth]{sample_cmd.pdf}
   \end{center}
   \caption{%
     Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
@@ -231,10 +231,10 @@ and summed along the spatial axis, weighted by the inverse-variances of each
 pixel.
 Source spectral traces were always placed in this region during observations,
 and the curvature of the wavelength solution over this region is negligible.
-For source observations, the 2D spectra are extracted to 1D using an
-empirically-estimated line spread function (LSF): at each of 16 pixel rows
-between indices 750 and 850 (i.e. around the effective center of the dispersion
-axis), a model for the LSF is fit to the 1D trace.
+For source observations, the 2D spectra are extracted to 1D using an empirical
+estimate of the pixel-convolved line spread function (LSF): at each of 16 pixel
+rows between indices 750 and 850 (i.e. around the effective center of the
+dispersion axis), a model for the LSF is fit to the 1D trace.
 The LSF is assumed to be a Voigt profile with parameters $A$, amplitude; $x_0$,
 profile centroid; $\sigma_G$, Gaussian root-variance; $\gamma_L$, Lorentzian
 half-width at half maximum, and the background is modeled using a linear
@@ -314,7 +314,7 @@ radial velocities from this sample.
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=0.9\linewidth]{wavelength_gp.pdf}
+    \includegraphics[width=\linewidth]{wavelength_gp.pdf}
   \end{center}
   \caption{%
     A visualization of the pixel-to-wavelength model determined from a single
@@ -344,23 +344,39 @@ radial velocities from this sample.
     \label{fig:sample-spectra}}
 \end{figure}
 
-As mentioned previously, comparison lamp spectra were not obtained at each
-telescope pointing.
-Depending primarily on the hour angle of the observation (because of the orientation of the spectrograph and CCD), there
-
-TODO: sky-line corrections to the spectra
+As mentioned, comparison lamp spectra were not obtained at each telescope
+pointing.
+The absolute wavelength solution at each pointing can therefore be shifted
+(in pixels) relative to the nightly comparison lamp spectrum because of flexure
+in the instrument.
+We have found that this offset depends primarily on the hour angle of the
+observation because of the physical orientation of the spectrograph and CCD as
+mounted on the telescope.
+To correct each sourcce spectrum for this offset, we measure the centroids of
+the two prominent [OI] (sky) emission lines near $5577~{\rm \AA}$ and $6300~{\rm
+\AA}$ in the corresponding background spectrum derived from the spectral
+extraction (described above).
+We use a pixel-convolved Voigt profile as the emission line model (same
+parameters as above) and a Gaussian process with a Mat\'ern 3/2 kernel function
+for the background spectrum (same parameters as above).
+We again use \lbfgsb\ optimization and convert any scale parameter to log-space
+before maximizing the log-likelihood of this model to derive the line centroid
+in wavelength units.
+We compute wavelength offsets from true (air) values of the line centroids,
+$5577.XXX~{\rm \AA}$ and $6300.XXX~{\rm \AA}$ respectively, then convert these
+wavelength offsets to pixel offsets.
+We take the mean of the pixel offsets
+When one or both of the two sky lines is not present or the centroid fit fails,
+the spectrum \todo{flagged in some way, can have large absolute velocity
+systematic error.}
 
 
 TODO: line measurements, model, gaussian process
+  - per-spectrum precisions ~5-10 km/s
 
+TODO: Comparing repeat visits on subsequent nights, absolute errors ~20 km/s
 
-See: http://iopscience.iop.org/article/10.1088/0004-6256/146/6/161/pdf for an example
-
-TODO:
-- Describe pipeline...
-
-- Comparing repeat visits on subsequent nights, systematic ~20 km/s
-    - see notebook "Compare RVs with previous measurements"
+% See: http://iopscience.iop.org/article/10.1088/0004-6256/146/6/161/pdf for an example
 
 \section{Results}
 

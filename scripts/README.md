@@ -114,8 +114,10 @@ python injest_db.py
 --run=/Volumes/ProjectData/gaia-comoving-followup/mdm-spring-2017/ -v
 ```
 
-Radial velocity determination
------------------------------
+Absorption and sky line fitting
+-------------------------------
+
+TODO:
 
 As a first pass, we fit a voigt profile to Halpha in each spectrum. We do this
 with nonlinear least-squares and ignore any nearby absorption lines. In the
@@ -123,7 +125,12 @@ future, we should switch to using a Gaussian process for the background to
 handle the correlated "background" (continuum).
 
 ```bash
-python solve_velocity.py \
+python fit_line_centroids.py \
 -d /Volumes/ProjectData/gaia-comoving-followup/db.sqlite \
 -r mdm-spring-2017 -vv
 ```
+
+Radial velocity determination
+-----------------------------
+
+TODO:

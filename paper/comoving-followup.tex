@@ -21,6 +21,7 @@
 \newcommand{\DR}[1]{\acronym{DR}1}
 \newcommand{\tgas}{\acronym{TGAS}}
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
+\newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
 
 \begin{document}
 
@@ -63,7 +64,7 @@ out to 8 pc.
 Identified candidate pairs using the Tycho-Gaia Astrometric Solution catalog,
 Gaia DR1.
 Want to identify genuinely dynamically associated pairs for future
-high-resolution followup
+high-resolution follow-up
 % Methods
 Low-resolution spectrograph to measure relative radial velocities to identify
 genuine pairs.
@@ -245,9 +246,9 @@ each pixel row using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented in
 the \package{scipy} package.
 From the 16 fits, the median profile width parameters, $\sigma_G$ and
 $\gamma_L$, are then taken to be the LSF width parameters.
-At each of 1600 rows in each source image, the LSF amplitude and centroid, and
-background slope and intercept at line centroid are then fit using the same
-procedure as above but with the width parameters fixed.
+At each of 1600 rows in each source spectrum image, the LSF amplitude and
+centroid, and background slope and intercept at line centroid are then fit using
+the same procedure as above but with the width parameters fixed.
 The LSF amplitudes are stored as the source fluxes, and the background model
 intercepts are stored as the background (sky) fluxes.
 Occasionally, nearby sources fall in the slit; these are masked by hand in the
@@ -260,8 +261,8 @@ Once a rough mapping from pixel to wavelength is determined, we then fit for
 the individual line centroids in each comparison lamp spectrum by extracting
 small, 8 pixel-wide segments of spectrum around each identified emission line
 and fitting a model for the line profile and background to each individually.
-We use a Gaussian profile for each emission line with parameters: amplitude,
-$A$; centroid, $x_0$; and root-variance, $\sigma_G$.
+We use a pixel-convolved Gaussian profile for each emission line with
+parameters: amplitude, $A$; centroid, $x_0$; and root-variance, $\sigma_G$.
 We find that nearby blended or low-amplitude lines (i.e. part of the
 ``background'') sometimes bias the line centroid determination when using a
 simple background model.
@@ -295,7 +296,7 @@ The envelope around zero (shaded region, orange) shows the \todo{1$\sigma$ blah
 blah GP...}
 When the GP variance is large, the pixel-to-wavelength mapping is uncertain.
 We therefore only use the pixel range from 250--1210, corresponding to a
-wavelength range of $\approx 5500$--$7400~{\rm \AA}$; grey shaded region shows
+wavelength range of $\approx 5500$--$7400~{\rm \AA}$; gray shaded region shows
 the excluded pixel/wavelength ranges.
 
 This wavelength calibration procedure produces a nightly model for the
@@ -303,7 +304,7 @@ nonlinear dispersion of wavelength as a function of pixel value for each
 extracted 1D spectrum.
 However, because of flexure in the spectrograph, each observation will have an
 additional offset of, typically, $\approx 0.5$--$2~{\rm \AA}$, corresponding to
-a significant velocity offset at ${\rm H}\alpha$ of $\approx 25$--$100~\kms$.
+a significant velocity offset at \Ha\ of $\approx 25$--$100~\kms$.
 \figurename~\ref{fig:sample-spectra} shows a random sample of 10
 wavelength-calibrated source spectra of comoving star pair members normalized
 to 1 at $\lambda = 5500~{\rm \AA}$ and shifted by index for visualization.
@@ -325,7 +326,7 @@ radial velocities from this sample.
     The non-shaded region shows the section of spectrum where the comparison
     lamp spectrum has sufficient line density to determine the wavelength
     solution; shaded regions are masked from the resulting spectra.
-    Organge envelope shows the root-variance of the Gaussian process component
+    Orange envelope shows the root-variance of the Gaussian process component
     of the model, which can be interpreted as inherent uncertainties on the
     wavelength calibration as a result of the model flexibility.
     \label{fig:wavelength-GP}}
@@ -350,10 +351,10 @@ The absolute wavelength solution at each pointing can therefore be shifted
 (in pixels) relative to the nightly comparison lamp spectrum because of flexure
 in the instrument.
 We have found that this offset depends primarily on the hour angle of the
-observation because of the physical orientation of the spectrograph and CCD as
-mounted on the telescope.
-To correct each sourcce spectrum for this offset, we measure the centroids of
-the two prominent [OI] (sky) emission lines near $5577~{\rm \AA}$ and $6300~{\rm
+observation, likely because of the physical orientation of the spectrograph and
+CCD as mounted on the telescope.
+To correct each source spectrum for this offset, we measure the centroids of
+the two prominent [OI] sky emission lines near $5577~{\rm \AA}$ and $6300~{\rm
 \AA}$ in the corresponding background spectrum derived from the spectral
 extraction (described above).
 We use a pixel-convolved Voigt profile as the emission line model (same
@@ -363,15 +364,60 @@ We again use \lbfgsb\ optimization and convert any scale parameter to log-space
 before maximizing the log-likelihood of this model to derive the line centroid
 in wavelength units.
 We compute wavelength offsets from true (air) values of the line centroids,
-$5577.XXX~{\rm \AA}$ and $6300.XXX~{\rm \AA}$ respectively, then convert these
+$5577.3387~{\rm \AA}$ and $6300.304~{\rm \AA}$ respectively,\footnote{\url{http:
+//physics.nist.gov/PhysRefData/ASD/lines_form.html}} then convert these
 wavelength offsets to pixel offsets.
-We take the mean of the pixel offsets
+We take the mean of the pixel offsets and apply the derived shift to the source
+spectrum before re-computing the wavelength grid using the nightly wavelength
+solution \todo{is this sensible?}.
 When one or both of the two sky lines is not present or the centroid fit fails,
 the spectrum \todo{flagged in some way, can have large absolute velocity
 systematic error.}
 
-TODO: line measurements, model, gaussian process
-  - per-spectrum precisions ~5-10 km/s
+To derive radial velocities for each source, we then measure the (wavelength)
+line centroid of \Ha\ in each corrected spectrum.
+We model the absorption line using a pixel-convolved Voigt profile and again use
+a Gaussian process for the background model (with the same parameterizations as
+described above).
+We now use \lbfgsb\ optimization and the resulting maximum-likelihood parameters
+to initialize a Markov Chain Monte Carlo (MCMC) sampling of the posterior
+probability distribution over the 6 parameters: $\ln |A|$, $x_0$, $\ln\sigma_G$,
+$\ln\gamma_L$, $\ln\sigma_{3/2}$, and $\ln\rho_{3/2}$.
+The linear amplitude, $A$, is assumed to be negative (i.e. \Ha\ is assumed to be
+an absorption feature) and is computed from the corresponding parameter as $A =
+-\exp(\ln |A|)$.
+We use uniform priors on all parameters except $\ln\rho_{3/2}$, for which we use
+a Gaussian; prior parameters are specified in \tablename~\ref{tbl:prior-bounds}.
+\figurename~\ref{fig:Halpha-mcmc} shows \todo{mcmc shite}.
+With the resulting posterior samples, we compute the median and median absolute
+deviation (MAD) of the marginal distribution over line centroid, $x_0$.
+We use the MAD to estimate the standard deviation ($\sigma \approx 1.5~{\rm
+MAD}$, assuming the samples are Gaussian distributed) of the samples and find
+that the typical velocity \emph{precision} from measuring the centroid of \Ha\ is between $2$--$10~\kms$ \todo{double check numbers}.
+
+\begin{table}[ht]
+  \begin{center}
+    \begin{tabular}{ c | c }
+      \toprule
+        Parameter & Prior \\\toprule
+        $\ln A$ & $\mathcal{U}(2, 16)$\\
+        $x_0$ & $\mathcal{U}(\lambda_{\Ha}-16, \lambda_{\Ha}+16)$ [${\rm \AA}$]\\
+        $\ln\sigma_G$ & $\mathcal{U}(-8, 2)$ [${\rm \AA}$]\\
+        $\ln\gamma_L$ & $\mathcal{U}(-8, 2)$ [${\rm \AA}$]\\
+        $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
+        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$ [${\rm \AA}$]\\
+      \bottomrule
+    \end{tabular}
+    \caption{
+      Priors used for \Ha\ line profile model parameters.
+      $\mathcal{U}(a, b)$ indicates a uniform prior between $a$ and $b$ and
+      $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
+      $\mu$ and variance $\sigma^2$.
+      $\lambda_{\Ha}$ is the true \Ha\ line centroid in angstroms.
+      \label{tbl:prior-bounds}
+    }
+  \end{center}
+\end{table}
 
 % \begin{figure}[htbp]
 %   \begin{center}
@@ -381,6 +427,14 @@ TODO: line measurements, model, gaussian process
 %     \todo{Some summary plots about the MCMC fits...}
 %     \label{fig:Halpha-mcmc}}
 % \end{figure}
+
+Several of our targets and all of our calibration targets have previously
+measured radial velocities.
+We can therefore estimate our absolute velocity accuracy by comparing our
+derived radial velocities with previous measurements.
+\todo{Explain how we get previous measurements - Simbad or explicit catalogs?}
+\figurename~\ref{fig:compare-previous} shows the distribution of differences
+between our measurements and literature values \todo{uncertainties??}.
 
 TODO: Comparing repeat visits on subsequent nights, absolute errors ~20 km/s
 - How many of our targets already have measurements in Simbad?

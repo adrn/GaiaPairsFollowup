@@ -38,7 +38,7 @@ def log_probability(params, gp, flux_data):
     var = 1.
     lp += -0.5*(params[1]-1)**2/var - 0.5*np.log(2*np.pi*var)
 
-    if params[4] < -10. or params[5] < -10.:
+    if (params[4] < -8. or params[4] > 2 or params[5] < -8. or params[5] > 2):
         return -np.inf
 
     ll = gp.log_likelihood(flux_data)
@@ -151,11 +151,11 @@ def main(db_path, run_name, filename=None, overwrite=False, pool=None):
         logger.debug("Running 2nd burn-in...")
         sampler.reset()
         p0 = p0[lp.argmax()] + 1e-3 * np.random.randn(nwalkers, ndim)
-        p0, lp, _ = sampler.run_mcmc(p0, 256)
+        p0, lp, _ = sampler.run_mcmc(p0, 512)
 
         logger.debug("Running production...")
         sampler.reset()
-        pos, lp, _ = sampler.run_mcmc(p0, 512)
+        pos, lp, _ = sampler.run_mcmc(p0, 1024)
 
         fit_kw = dict()
         for i,par_name in enumerate(lf.gp.get_parameter_names()):

@@ -376,20 +376,30 @@ systematic error.}
 
 To derive radial velocities for each source, we then measure the (wavelength)
 line centroid of \Ha\ in each corrected spectrum.
-We model the absorption line using a pixel-convolved Voigt profile and again use
-a Gaussian process for the background model (with the same parameterizations as
-described above).
+We model the absorption line using a pixel-convolved Voigt profile and use a
+linear model + a Gaussian process for the background model.
 We now use \lbfgsb\ optimization and the resulting maximum-likelihood parameters
 to initialize a Markov Chain Monte Carlo (MCMC) sampling of the posterior
-probability distribution over the 6 parameters: $\ln |A|$, $x_0$, $\ln\sigma_G$,
-$\ln\gamma_L$, $\ln\sigma_{3/2}$, and $\ln\rho_{3/2}$.
+probability distribution (pdf) over the 8 parameters: $\ln |A|$, $x_0$,
+$\ln\sigma_G$, $\ln\gamma_L$, $\alpha_1$, $\alpha_2$, $\ln\sigma_{3/2}$, and
+$\ln\rho_{3/2}$ where the linear background model is defined as $f(\lambda) =
+\alpha_1 + \alpha_2\,\lambda$.
 The linear amplitude, $A$, is assumed to be negative (i.e. \Ha\ is assumed to be
 an absorption feature) and is computed from the corresponding parameter as $A =
 -\exp(\ln |A|)$.
 We use uniform priors on all parameters except $\ln\rho_{3/2}$, for which we use
 a Gaussian; prior parameters are specified in \tablename~\ref{tbl:prior-bounds}.
-\todo{Explain MCMC, emcee, steps, etc.}
-\figurename~\ref{fig:Halpha-mcmc} shows \todo{mcmc shite}.
+We use \package{emcee} (\citealt{Foreman-Mackey:2013}) with 64 walkers to
+generate samples from the posterior pdf.
+We initially run the sampler for 128 steps from the maximum likelihood parameter
+values, then resample walker positions in a small ball around the median final
+walker positions and run again for 512 steps; together, these two steps
+constitute our burn-in phase.
+From the final walker positions after burn-in, we run again for 1024 steps and
+store these as our primary posterior samples.
+\figurename~\ref{fig:Halpha-mcmc} shows
+
+
 With the resulting posterior samples, we compute the median and median absolute
 deviation (MAD) of the marginal distribution over line centroid, $x_0$.
 We use the MAD to estimate the standard deviation ($\sigma \approx 1.5\times{\rm
@@ -403,8 +413,10 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\ i
         Parameter & Prior \\\toprule
         $\ln A$ & $\mathcal{U}(2, 16)$\\
         $x_0$ & $\mathcal{U}(6547, 6579)$\\
-        $\ln\sigma_G$ & $\mathcal{U}(-8, 2)$\\
-        $\ln\gamma_L$ & $\mathcal{U}(-8, 2)$\\
+        $\ln\sigma_G$ & $\mathcal{U}(-4, 2)$\\
+        $\ln\gamma_L$ & $\mathcal{U}(-4, 2)$\\
+        $\alpha_1$ & $\mathcal{U}(0, 10^{16})$\\
+        $\alpha_2$ & $\mathcal{U}(-10^8, 10^8)$\\
         $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
         $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$\\
       \bottomrule
@@ -420,14 +432,23 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\ i
   \end{center}
 \end{table}
 
-% \begin{figure}[htbp]
-%   \begin{center}
-%     \includegraphics[width=\linewidth]{placeholder.pdf}
-%   \end{center}
-%   \caption{%
-%     \todo{Some summary plots about the MCMC fits...}
-%     \label{fig:Halpha-mcmc}}
-% \end{figure}
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{mcmc_trace.pdf}
+  \end{center}
+  \caption{%
+    \todo{Some summary plots about the MCMC fits...}
+    \label{fig:Halpha-mcmc}}
+\end{figure}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{example_fit.pdf}
+  \end{center}
+  \caption{%
+    \todo{More MCMC bullshit.}
+    \label{fig:compare-previous}}
+\end{figure}
 
 Several of our targets and all of our calibration targets have previously
 measured radial velocities.
@@ -442,7 +463,7 @@ TODO: Comparing repeat visits on subsequent nights, absolute errors ~20 km/s
 
 % \begin{figure}[htbp]
 %   \begin{center}
-%     \includegraphics[width=\linewidth]{placeholder.pdf}
+%     \includegraphics[width=\linewidth]{example_fit.pdf}
 %   \end{center}
 %   \caption{%
 %     \todo{Plot showing my RV's vs. previously measured.}
@@ -508,6 +529,7 @@ This research utilized the following open-source \python\ packages:
     \package{astroquery} (\citealt{Ginsburg:2016}),
     \package{ccdproc} (\citealt{Craig:2015}),
     \package{celerite} (\citealt{Foreman-Mackey:2017}),
+    \package{emcee} (\citealt{Foreman-Mackey:2013ascl}),
     \package{IPython} (\citealt{Perez:2007}),
     \package{matplotlib} (\citealt{Hunter:2007}),
     \package{numpy} (\citealt{Van-der-Walt:2011}),

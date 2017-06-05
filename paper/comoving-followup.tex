@@ -392,7 +392,7 @@ a Gaussian; prior parameters are specified in \tablename~\ref{tbl:prior-bounds}.
 \figurename~\ref{fig:Halpha-mcmc} shows \todo{mcmc shite}.
 With the resulting posterior samples, we compute the median and median absolute
 deviation (MAD) of the marginal distribution over line centroid, $x_0$.
-We use the MAD to estimate the standard deviation ($\sigma \approx 1.5~{\rm
+We use the MAD to estimate the standard deviation ($\sigma \approx 1.5\times{\rm
 MAD}$, assuming the samples are Gaussian distributed) of the samples and find
 that the typical velocity \emph{precision} from measuring the centroid of \Ha\ is between $2$--$10~\kms$ \todo{double check numbers}.
 
@@ -402,11 +402,11 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\ i
       \toprule
         Parameter & Prior \\\toprule
         $\ln A$ & $\mathcal{U}(2, 16)$\\
-        $x_0$ & $\mathcal{U}(\lambda_{\Ha}-16, \lambda_{\Ha}+16)$ [${\rm \AA}$]\\
-        $\ln\sigma_G$ & $\mathcal{U}(-8, 2)$ [${\rm \AA}$]\\
-        $\ln\gamma_L$ & $\mathcal{U}(-8, 2)$ [${\rm \AA}$]\\
+        $x_0$ & $\mathcal{U}(6547, 6579)$\\
+        $\ln\sigma_G$ & $\mathcal{U}(-8, 2)$\\
+        $\ln\gamma_L$ & $\mathcal{U}(-8, 2)$\\
         $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
-        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$ [${\rm \AA}$]\\
+        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$\\
       \bottomrule
     \end{tabular}
     \caption{
@@ -414,7 +414,7 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\ i
       $\mathcal{U}(a, b)$ indicates a uniform prior between $a$ and $b$ and
       $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
       $\mu$ and variance $\sigma^2$.
-      $\lambda_{\Ha}$ is the true \Ha\ line centroid in angstroms.
+      Wavelength units are all angstroms.
       \label{tbl:prior-bounds}
     }
   \end{center}

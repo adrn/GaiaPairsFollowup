@@ -377,7 +377,7 @@ We model the absorption line using a pixel-convolved Voigt profile and use a
 linear model + a Gaussian process for the background model.
 We now use \lbfgsb\ optimization and the resulting maximum-likelihood parameters
 to initialize a Markov Chain Monte Carlo (MCMC) sampling of the posterior
-probability distribution (pdf) over the 8 parameters: $\ln |A|$, $x_0$,
+probability distribution (PDF) over the 8 parameters: $\ln |A|$, $x_0$,
 $\ln\sigma_G$, $\ln\gamma_L$, $\alpha_1$, $\alpha_2$, $\ln\sigma_{3/2}$, and
 $\ln\rho_{3/2}$ where the linear background model is defined as $f(\lambda) =
 \alpha_1 + \alpha_2\,\lambda$.
@@ -387,21 +387,39 @@ an absorption feature) and is computed from the corresponding parameter as $A =
 We use uniform priors on all parameters except $\ln\rho_{3/2}$, for which we use
 a Gaussian; prior parameters are specified in \tablename~\ref{tbl:prior-bounds}.
 We use \package{emcee} (\citealt{Foreman-Mackey:2013}) with 64 walkers to
-generate samples from the posterior pdf.
+generate samples from the posterior PDF.
 We initially run the sampler for 128 steps from the maximum likelihood parameter
 values, then resample walker positions in a small ball around the median final
 walker positions and run again for 512 steps; together, these two steps
 constitute our burn-in phase.
 From the final walker positions after burn-in, we run again for 1024 steps and
-store these as our primary posterior samples.
-\figurename~\ref{fig:Halpha-mcmc} shows
+store these as our posterior samples.
+\figurename~\ref{fig:Halpha-mcmc-corner} shows a \package{corner} plot
+(\citealt{Foreman-Mackey:2017a}) of all projections of these posterior PDF
+samples for a randomly-chosen source (HD\todo{XXXX}, in this case).
+The marginal posterior distribution over $x_0$ can be converted to a
+distribution over radial velocities; in this case, the estimated (Gaussian
+standard deviation) precision is $\approx 2.5~\kms$.
+\figurename~\ref{fig:Halpha-mcmc-fit} shows the segment of the source spectrum
+around \Ha\ used in the line modeling (black line) with uncertainties (grey
+bars).
+Top panel shows the linear polynomial + absorption line model computed for the
+median sample (dark green line); shaded region shows the 15th to 85th
+percentiles computed from all posterior samples.
+Bottom panel shows the residuals of the data from the median linear polynomial +
+absorption line model (black line) along with the Gaussian process computed from
+the median parameters (orange curve) used to model other structure in the
+vicinity of \Ha (which can be interpreted as correlated noise).
+These figures are produced for all source spectrum fits and visually inspected
+to ensure that the MCMC sampling appears to have converged for all cases.
 
-
-With the resulting posterior samples, we compute the median and median absolute
-deviation (MAD) of the marginal distribution over line centroid, $x_0$.
+For each source spectrum, with the resulting posterior samples, we compute the
+median and median absolute deviation (MAD) of the marginal distribution over
+line centroid, $x_0$.
 We use the MAD to estimate the standard deviation ($\sigma \approx 1.5\times{\rm
 MAD}$, assuming the samples are Gaussian distributed) of the samples and find
-that the typical velocity \emph{precision} from measuring the centroid of \Ha\ is between $2$--$10~\kms$ \todo{double check numbers}.
+that the typical velocity \emph{precision} from measuring the centroid of \Ha\
+is between $2$--$8~\kms$ \todo{double check numbers}.
 
 \begin{table}[ht]
   \begin{center}
@@ -424,51 +442,70 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\ i
       $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
       $\mu$ and variance $\sigma^2$.
       Wavelength units are all angstroms.
+      \todo{what are the flux units?}
       \label{tbl:prior-bounds}
     }
   \end{center}
 \end{table}
 
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=\linewidth]{mcmc_corner.pdf}
-  \end{center}
-  \caption{%
-    \todo{Some summary plots about the MCMC fits...}
-    Small uncertainty in centroid = 2 km/s velocity precision here.
-    \label{fig:Halpha-mcmc}}
-\end{figure}
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=\linewidth]{mcmc_example_fit.pdf}
-  \end{center}
-  \caption{%
-    Top shows background linear model + Voigt line model.
-    \label{fig:compare-previous}}
-\end{figure}
-
-Several of our targets and all of our calibration targets have previously
-measured radial velocities.
-We can therefore estimate our absolute velocity accuracy by comparing our
-derived radial velocities with previous measurements.
-\todo{Explain how we get previous measurements - Simbad or explicit catalogs?}
-\figurename~\ref{fig:compare-previous} shows the distribution of differences
-between our measurements and literature values \todo{uncertainties??}.
-
-TODO: Comparing repeat visits on subsequent nights, absolute errors ~20 km/s
-- How many of our targets already have measurements in Simbad?
+% \begin{figure}[htbp]
+%   \begin{center}
+%     \includegraphics[width=\linewidth]{mcmc_corner.pdf}
+%   \end{center}
+%   \caption{%
+%     \todo{Some summary plots about the MCMC fits...}
+%     Small uncertainty in centroid = 2 km/s velocity precision here.
+%     \label{fig:Halpha-mcmc-corner}}
+% \end{figure}
 
 % \begin{figure}[htbp]
 %   \begin{center}
-%     \includegraphics[width=\linewidth]{example_fit.pdf}
+%     \includegraphics[width=\linewidth]{mcmc_example_fit.pdf}
+%   \end{center}
+%   \caption{%
+%     Top shows background linear model + Voigt line model.
+%     \label{fig:Halpha-mcmc-fit}}
+% \end{figure}
+
+\subsection{Validation}
+
+Several of our targets and all of our calibration targets have previously
+measured radial velocities (RVs).
+We can therefore estimate the absolute velocity uncertainties by comparing our
+derived radial velocities with high-quality prior measurements.
+Following previous work (\citealt{Shaya:2011}), we search for previous RV
+measurements (in decreasing order of priority) with:
+\begin{enumerate}
+  \item The Geneva-Copenhagen Survey of the Solar Neighborhood
+  (\citealt{Nordstrom:2004}).
+  \item The Catalogue of Radial Velocities of Galactic Stars with Astrometric
+  Data, the Second Version (\citealt{Kharchenko:2007}).
+  \item The General Catalogue of Mean Radial Velocities
+  (\citealt{Barbier-Brossat:2000}).
+  \item The SIMBAD database (\citealt{Wenger:2000}). We use \package{astroquery}
+  to retrieve records from the database, which do not contain uncertainties but
+  do contain a quality flag. We only retain RVs that have a quality flag set to
+  `A' and adopt a $5~\kms$ uncertainty for all such values.
+  \item
+\end{enumerate}
+We find that \todo{XXX} of our target stars have reliable prior measurements,
+along with the \todo{YYY} calibration targets.
+\figurename~\ref{fig:compare-previous} shows the distribution of velocity
+differences between our measurements and literature values.
+From this distribution, we compute the MAD and estimate the standard deviation
+to be $\approx 20~\kms$, which we adopt as our global systematic error for all
+absolute radial velocities.
+We note, however, that for computing \emph{relative} velocities for pairs of
+nearby stars, it is the RV precision that matters most.
+
+% \begin{figure}[htbp]
+%   \begin{center}
+%     \includegraphics[width=\linewidth]{compare_previous.pdf}
 %   \end{center}
 %   \caption{%
 %     \todo{Plot showing my RV's vs. previously measured.}
 %     \label{fig:compare-previous}}
 % \end{figure}
-
-% See: http://iopscience.iop.org/article/10.1088/0004-6256/146/6/161/pdf for an example
 
 \section{Results}
 
@@ -512,6 +549,8 @@ the {\it Gaia} Data Processing and Analysis Consortium (DPAC,
 \url{https://www.cosmos.esa.int/web/gaia/dpac/consortium}). Funding
 for the DPAC has been provided by national institutions, in particular
 the institutions participating in the {\it Gaia} Multilateral Agreement.
+This research has made use of the SIMBAD database, operated at CDS, Strasbourg,
+France.
 % The authors are pleased to acknowledge that the work reported on in this
 % paper was substantially performed at the TIGRESS high performance computer
 % center at Princeton University which is jointly supported by the Princeton
@@ -534,7 +573,8 @@ This research utilized the following open-source \python\ packages:
     \package{scipy} (\url{https://www.scipy.org/}),
     \package{sqlalchemy} (\url{https://www.sqlalchemy.org/}).
 This work additionally used the Gaia science archive
-(\url{https://gea.esac.esa.int/archive/}).
+(\url{https://gea.esac.esa.int/archive/}), and the SIMBAD database
+(\citealt{Wenger:2000}).
 }
 
 \facility{MDM: Hiltner (Modspec)}

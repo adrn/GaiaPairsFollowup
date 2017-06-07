@@ -22,6 +22,13 @@ from astropy.utils.console import ProgressBar
 from astroquery.simbad import Simbad
 from astroquery.gaia import Gaia
 Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
+gaia_query = """
+SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
+FROM gaiadr1.tmass_original_valid
+JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
+JOIN gaiadr1.tgas_source USING (source_id)
+WHERE source_id = {0}
+"""
 
 # Project
 from comoving_rv.db import Session, Base, db_connect
@@ -267,28 +274,21 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     if name in tgassource_columns:
                         tgas_kw[name] = tgas_row[name]
 
-                # TODO:
-                # query = """
-                # SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
-                # FROM gaiadr1.tmass_original_valid
-                # JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
-                # JOIN gaiadr1.tgas_source USING (source_id)
-                # WHERE source_id = {0.source_id}
-                # """
+                job = Gaia.launch_job(gaia_query.format(tgas_kw['source_id']),
+                                      dump_to_file=False)
+                res = job.get_results()
 
-                # job = Gaia.launch_job(query.format(src), dump_to_file=False)
-                # res = job.get_results()
+                if len(res) == 0:
+                    logger.warning("No 2MASS data found for: {0}"
+                                   .format(tgas_kw['source_id']))
 
-                # if len(res) == 0:
-                #     print("No 2MASS data found for: {0}".format(src.source_id))
-
-                # elif len(res) == 1:
-                #     src.J = res['j_m'][0]
-                #     src.J_err = res['j_msigcom'][0]
-                #     src.H = res['h_m'][0]
-                #     src.H_err = res['h_msigcom'][0]
-                #     src.Ks = res['ks_m'][0]
-                #     src.Ks_err = res['ks_msigcom'][0]
+                elif len(res) == 1:
+                    tgas_kw['J'] = res['j_m'][0]
+                    tgas_kw['J_err'] = res['j_msigcom'][0]
+                    tgas_kw['H'] = res['h_m'][0]
+                    tgas_kw['H_err'] = res['h_msigcom'][0]
+                    tgas_kw['Ks'] = res['ks_m'][0]
+                    tgas_kw['Ks_err'] = res['ks_msigcom'][0]
 
                 tgas_source = TGASSource(**tgas_kw)
                 tgas_sources.append(tgas_source)

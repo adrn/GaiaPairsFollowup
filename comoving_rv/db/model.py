@@ -82,14 +82,19 @@ class Observation(Base):
     simbad_info = relationship('SimbadInfo', cascade='all,delete-orphan',
                                backref='observation', single_parent=True)
 
+    prior_rv_id = Column('prior_rv_id', types.Integer,
+                         ForeignKey('prior_rv.id'))
+    prior_rv = relationship('PriorRV', cascade='all,delete-orphan',
+                            backref='observation', single_parent=True)
+
     tgas_source_id = Column('tgas_source_id', types.Integer,
                             ForeignKey('tgas_source.id'))
     tgas_source = relationship('TGASSource', cascade='all,delete-orphan',
                                backref='observation', single_parent=True)
 
     def __repr__(self):
-        return ("<Observation {0.object}, {0.filename_raw}, {0.run.name}>"
-                .format(self))
+        return ("<Observation {0.object} [{0.simbad_info.preferred_name}], "
+                "{0.filename_raw}, {0.run.name}>".format(self))
 
     def path_raw(self, base_path):
         p = path.join(base_path, self.run.name, 'n'+str(self.night))
@@ -115,10 +120,6 @@ class SimbadInfo(Base):
     tyc_id = Column('tyc_id', types.String)
     twomass_id = Column('twomass_id', types.String)
 
-    rv = Column('rv', VelocityType)
-    rv_qual = Column('rv_qual', types.String)
-    rv_bibcode = Column('rv_bibcode', types.String)
-
     def __repr__(self):
         names = []
         pres = ['HD', 'HIP', 'TYC', '2MASS']
@@ -126,8 +127,30 @@ class SimbadInfo(Base):
             if getattr(self, id_) is not None:
                 names.append('{0} {1}'.format(pre, getattr(self, id_)))
 
-        return ("<SimbadInfo {0}>"
-                .format(', '.join(names)))
+        return ("<SimbadInfo {0} [{1}]>"
+                .format(self.preferred_name, ', '.join(names)))
+
+    @property
+    def preferred_name(self):
+        pres = ['HD', 'HIP', 'TYC', '2MASS']
+        attrs = ['hd_id', 'hip_id', 'tyc_id', 'twomass_id']
+
+        for pre,id_ in zip(pres, attrs):
+            the_id = getattr(self, id_)
+            if the_id is not None:
+                return '{0} {1}'.format(pre, the_id)
+
+        return '{0} {1}'.format('SMOH', self.observation.object_name)
+
+class PriorRV(Base):
+    __tablename__ = 'prior_rv'
+
+    id = Column(types.Integer, primary_key=True)
+    rv = Column('rv', VelocityType, nullable=False)
+    err = Column('err', VelocityType, default=10.*u.km/u.s)
+    qual = Column('qual', types.String)
+    bibcode = Column('bibcode', types.String)
+    source = Column('source', types.String, nullable=False)
 
 class TGASSource(Base):
     __tablename__ = 'tgas_source'

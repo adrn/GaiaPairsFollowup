@@ -305,10 +305,11 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
             # retrieve a previous measurement from the literature
             result = get_best_rv(obs)
             if result is not None:
-                rv, rv_err, rv_qual, rv_bibcode = result
+                rv, rv_err, rv_qual, rv_bibcode, rv_source = result
 
                 prv = PriorRV(rv=rv*u.km/u.s, err=rv_err*u.km/u.s,
-                              qual=rv_qual, bibcode=rv_bibcode)
+                              qual=rv_qual, bibcode=rv_bibcode,
+                              source=rv_source)
                 obs.prior_rv = prv
                 prior_rvs.append(prv)
 

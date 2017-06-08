@@ -99,9 +99,13 @@ def get_CRVAD_rv(obs):
             return None
 
         err = float(row['e_RV'])
+        qual = str(row['q_RV'].astype(str)).lower()
+
         if np.isnan(err):
-            err = float(row['meRVel'])
-        return float(row['RV']), err, str(row['q_RV'].astype(str)), bibcode
+            if qual in ['a', 'b']:
+                err = 10.
+
+        return float(row['RV']), err, qual, bibcode
 
     return None
 
@@ -215,24 +219,26 @@ def get_best_rv(obs):
 
     """
 
+    sources = ['GCS', 'CRVAD', 'GCRV', 'SIMBAD']
+
     results = list()
-    for func in [get_GCS_rv, get_CRVAD_rv, get_GCRV_rv, get_simbad_rv]:
+    for i,func in enumerate([get_GCS_rv, get_CRVAD_rv, get_GCRV_rv, get_simbad_rv]):
         res = func(obs)
         if res is not None:
             err = res[1]
             if err is not None and not np.isnan(err) and err > 0 and err < 10: # it's a good measurement!
-                return res
+                return tuple(res) + (sources[i],)
 
             if res[1] is None and res[2] is None: # no error or quality flag
                 continue
 
-            results.append(res)
+            results.append(tuple(res) + (sources[i],))
 
     if len(results) == 0:
         return None
 
     for res in results:
-        if res[1] < 10 or res[2].lower() == 'a':
+        if (res[1] is not None and res[1] < 10) or (res[2] is not None and res[2].lower() == 'a'):
             return res
 
     return None

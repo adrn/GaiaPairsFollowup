@@ -80,17 +80,20 @@ class Observation(Base):
     simbad_info_id = Column('simbad_info_id', types.Integer,
                             ForeignKey('simbad_info.id'))
     simbad_info = relationship('SimbadInfo', cascade='all,delete-orphan',
-                               backref='observation', single_parent=True)
+                               backref=backref('observation', uselist=False),
+                               single_parent=True)
 
     prior_rv_id = Column('prior_rv_id', types.Integer,
                          ForeignKey('prior_rv.id'))
     prior_rv = relationship('PriorRV', cascade='all,delete-orphan',
-                            backref='observation', single_parent=True)
+                            backref=backref('observation', uselist=False),
+                            single_parent=True)
 
     tgas_source_id = Column('tgas_source_id', types.Integer,
                             ForeignKey('tgas_source.id'))
     tgas_source = relationship('TGASSource', cascade='all,delete-orphan',
-                               backref='observation', single_parent=True)
+                               backref=backref('observation', uselist=False),
+                               single_parent=True)
 
     def __repr__(self):
         return ("<Observation {0.object} [{0.simbad_info.preferred_name}], "
@@ -140,7 +143,7 @@ class SimbadInfo(Base):
             if the_id is not None:
                 return '{0} {1}'.format(pre, the_id)
 
-        return '{0} {1}'.format('SMOH', self.observation.object_name)
+        return '{0} {1}'.format('SMOH', self.observation.object)
 
 class PriorRV(Base):
     __tablename__ = 'prior_rv'

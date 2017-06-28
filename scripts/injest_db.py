@@ -22,11 +22,18 @@ from astropy.utils.console import ProgressBar
 from astroquery.simbad import Simbad
 from astroquery.gaia import Gaia
 Simbad.add_votable_fields('rv_value', 'rvz_qual', 'rvz_bibcode')
+gaia_query = """
+SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
+FROM gaiadr1.tmass_original_valid
+JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
+JOIN gaiadr1.tgas_source USING (source_id)
+WHERE source_id = {0}
+"""
 
 # Project
-from comoving_rv.db import Session, Base, db_connect
+from comoving_rv.db import Session, Base, db_connect, get_best_rv
 from comoving_rv.db.model import (Run, Observation, TGASSource, SimbadInfo,
-                                  SpectralLineInfo)
+                                  SpectralLineInfo, PriorRV)
 from comoving_rv.velocity import bary_vel_corr, kitt_peak
 from comoving_rv.log import logger
 
@@ -123,6 +130,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
 
         observations = []
         tgas_sources = []
+        prior_rvs = []
 
         glob_pattr_1d = path.join(proc_night_path, '1d_*.fit')
         for path_1d in ProgressBar(glob.glob(glob_pattr_1d)):
@@ -267,28 +275,21 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     if name in tgassource_columns:
                         tgas_kw[name] = tgas_row[name]
 
-                # TODO:
-                # query = """
-                # SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
-                # FROM gaiadr1.tmass_original_valid
-                # JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
-                # JOIN gaiadr1.tgas_source USING (source_id)
-                # WHERE source_id = {0.source_id}
-                # """
+                job = Gaia.launch_job(gaia_query.format(tgas_kw['source_id']),
+                                      dump_to_file=False)
+                res = job.get_results()
 
-                # job = Gaia.launch_job(query.format(src), dump_to_file=False)
-                # res = job.get_results()
+                if len(res) == 0:
+                    logger.warning("No 2MASS data found for: {0}"
+                                   .format(tgas_kw['source_id']))
 
-                # if len(res) == 0:
-                #     print("No 2MASS data found for: {0}".format(src.source_id))
-
-                # elif len(res) == 1:
-                #     src.J = res['j_m'][0]
-                #     src.J_err = res['j_msigcom'][0]
-                #     src.H = res['h_m'][0]
-                #     src.H_err = res['h_msigcom'][0]
-                #     src.Ks = res['ks_m'][0]
-                #     src.Ks_err = res['ks_msigcom'][0]
+                elif len(res) == 1:
+                    tgas_kw['J'] = res['j_m'][0]
+                    tgas_kw['J_err'] = res['j_msigcom'][0]
+                    tgas_kw['H'] = res['h_m'][0]
+                    tgas_kw['H_err'] = res['h_msigcom'][0]
+                    tgas_kw['Ks'] = res['ks_m'][0]
+                    tgas_kw['Ks_err'] = res['ks_msigcom'][0]
 
                 tgas_source = TGASSource(**tgas_kw)
                 tgas_sources.append(tgas_source)
@@ -298,28 +299,25 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
             else:
                 logger.log(1, 'TGAS row could not be found.')
 
-            # object_name is never None?
-            try:
-                result = Simbad.query_object(object_name)
-            except Exception as e:
-                logger.warning('Simbad query_object failed for "{0}" '
-                               'with error: {1}'
-                               .format(object_name, str(e)))
-                continue
-
-            if result is not None and not np.any(result['RV_VALUE'].mask):
-                k, = np.where(np.logical_not(result['RV_VALUE'].mask))
-                simbad_info.rv = float(result['RV_VALUE'][k]) * u.km/u.s
-                simbad_info.rv_qual = result['RVZ_QUAL'].astype(str)[k]
-                simbad_info.rv_bibcode = result['RVZ_BIBCODE'].astype(str)[k]
-
             obs.simbad_info = simbad_info
             observations.append(obs)
+
+            # retrieve a previous measurement from the literature
+            result = get_best_rv(obs)
+            if result is not None:
+                rv, rv_err, rv_qual, rv_bibcode, rv_source = result
+
+                prv = PriorRV(rv=rv*u.km/u.s, err=rv_err*u.km/u.s,
+                              qual=rv_qual, bibcode=rv_bibcode,
+                              source=rv_source)
+                obs.prior_rv = prv
+                prior_rvs.append(prv)
 
             logger.log(1, '-'*68)
 
         session.add_all(observations)
         session.add_all(tgas_sources)
+        session.add_all(prior_rvs)
         session.commit()
 
     # Last thing to do is cross-match with the Bensby catalog to

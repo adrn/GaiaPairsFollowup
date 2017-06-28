@@ -262,7 +262,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             hdu1 = fits.table_to_hdu(tbl)
             hdulist = fits.HDUList([hdu0, hdu1])
 
-            # hdulist.writeto(fname_1d, overwrite=overwrite)
+            hdulist.writeto(fname_1d, overwrite=overwrite)
 
         del ext
 

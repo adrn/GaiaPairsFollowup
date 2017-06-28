@@ -50,7 +50,7 @@ class LineFitter(object):
             self._err = None
 
         if absorp_emiss is None:
-            raise NotImplementedError("Sorry, can't do that yet...")
+            raise NotImplementedError("You must supply an absorp_emiss for now")
         self.absorp_emiss = float(absorp_emiss)
         self.target_x = target_x
 

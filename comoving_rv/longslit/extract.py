@@ -53,26 +53,21 @@ def fast_trace_fit(x, flux, ivar, lsf_pars,
         Number of terms in the background polynomial fit.
     """
 
-    # TODO: use the VoigtLineFitter class to help with this
-    #   - can use class methods to get params n' shit
-
     sort_idx = np.argsort(x)
     x = np.array(x)[sort_idx]
     flux = np.array(flux)[sort_idx]
-    if flux_ivar is not None:
-        flux_ivar = np.array(flux_ivar)[sort_idx]
+
+    if ivar is not None:
+        ivar = np.array(ivar)[sort_idx]
     else:
-        flux_ivar = np.ones_like(flux)
+        ivar = np.ones_like(flux)
 
-    # initial guess
-    p0 = get_init_guess(x=x, flux=flux, ivar=flux_ivar,
-                        amp0=amp0, x0=x0,
-                        std_G0=lsf_pars['std_G'], hwhm_L0=lsf_pars['hwhm_L'],
-                        bg0=bg0, n_bg_coef=n_bg_coef, target_x=target_x,
-                        absorp_emiss=1.)
+    lf = VoigtLineFitter(x, flux, ivar, absorp_emiss=1.)
+    init_params = lf.init_gp()
+    p0 = init_params[[2,3,6,7]]
+    p0[0] = np.exp(p0[0])
 
-    p0['std_G'] = lsf_pars['std_G']
-    p0['hwhm_L'] = lsf_pars['hwhm_L']
+    p0 = OrderedDict([(x,y) for x,y in zip(['amp', 'x0', 'bg0', 'bg1'], p0)])
 
     # shift x array so that line is approximately at 0
     _x = np.array(x, copy=True)
@@ -87,8 +82,8 @@ def fast_trace_fit(x, flux, ivar, lsf_pars,
     leastsq_kw.setdefault('xtol', 1e-10)
     leastsq_kw.setdefault('maxfev', 100000)
 
-    args = (x, flux, flux_ivar, lsf_pars)
-    p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, par_dict_to_list(p0),
+    args = (x, flux, ivar, lsf_pars)
+    p_opt,p_cov,*_,mesg,ier = leastsq(errfunc, list(p0.values()),
                                       args=args, full_output=True, **leastsq_kw)
 
     s_sq = (errfunc(p_opt, *args)**2).sum() / (len(flux)-len(p0))
@@ -361,7 +356,7 @@ class SourceCCDExtractor(CCDExtractor):
             flux_ivar[~np.isfinite(flux_ivar)] = 0.
 
             try:
-                p_fit, p_cov = fit_spec_flux(pix, flux, flux_ivar, lsf_p)
+                p_fit, p_cov = fast_trace_fit(pix, flux, flux_ivar, lsf_p)
             except (RuntimeError, ValueError):
                 flux_1d[i] = np.nan
                 sky_flux_1d[i] = np.nan

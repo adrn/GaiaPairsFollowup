@@ -26,9 +26,8 @@
 
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
-\title{Co-moving stars in \textsl{Gaia DR1}:
-       a catalog of genuine comoving star pairs from low-resolution
-       spectroscopic follow-up}
+\title{A catalog of wide binaries and comoving star pairs from \textsl{Gaia DR1}
+       and low-resolution spectroscopy}
 
 \author{Adrian~M.~Price-Whelan}
 \affiliation{Department of Astrophysical Sciences,
@@ -57,21 +56,28 @@
 
 \begin{abstract}
 % Context
-Widely-separated, co-eval stars are [...] for studying the chemical homogeneity
-of birth, calibrating stellar atmosphere models across a range of [..], and for
-modeling the Galactic tidal field.
-Previous work using Hipparcos + literature RVs -> a few hundred genuine pairs
-out to 8 pc.
+Widely-separated, coeval stars are powerful tools for testing star-formation
+model predictions, improving stellar atmosphere models, and measuring the
+mass distribution of the Milky Way.
+They vastly outnumber the Galactic open clusters, but are still expected to
+share a common origin and chemistry.
+The kinematic properties of bound wide binaries and their unbound complements
+serve as potentiometers for the smooth tidal field and perturbation spectrum in
+the Milky Way.
+Thus far, a few hundred genuine comoving star pairs with separations as large
+as $8~\pc$ have been discovered in the solar neighborhood.
 % Aims
-Identified candidate pairs using the Tycho-Gaia Astrometric Solution catalog,
-Gaia DR1.
-Want to identify genuinely dynamically associated pairs for future
-high-resolution follow-up
+In previous work, we have identified $\sim 10,000$ candidate comoving star pairs
+using only astrometric data from the Tycho-Gaia Astrometric Solution (TGAS)
+catalog, a part of \gaia\ \DR{1}.
+However, without radial velocity measurements for the vast majority of the
+pairs, the contamination rate at large separations is expected to be
+considerable.
 % Methods
-Low-resolution spectrograph to measure relative radial velocities to identify
-genuine pairs.
+Here, we present results from our own radial-velocity survey of a sample of the
+candidate pairs to validate wide-separation comoving star pairs.
 % Results
-Of the XX pairs observed, we find YY ...
+Of the XX comoving pairs observed, we find YY ...
 % Conclusions
 Gaia DR2 -> how many do we expect?
 \end{abstract}
@@ -227,9 +233,7 @@ abundances, which will be used for validation of our reduction pipeline and in
 future work to measure metallicities and stellar parameters for each observed
 source using \project{The Cannon} (\citealt{Ness:TODO}).
 The spectra were reduced and calibrated using a custom, publicly-available
-pipeline written in \python,\footnote{Released along with the code used to
-generate the figures in this document at
-\url{https://github.com/adrn/GaiaPairsFollowup}.} described below.
+pipeline written in \python, described below.
 
 For each source or comparison lamp observation, the two-dimensional image is
 bias corrected, flat-field corrected, and trimmed using standard routines
@@ -541,6 +545,9 @@ nearby stars, it is the RV precision that matters.
 \section{Discussion}
 
 Abundances!
+
+- Stellar rotation of evolved-main sequence
+- Full catalog should contain Shaya and Olling, cross-match to RV surveys
 
 \section{Conclusions }
 

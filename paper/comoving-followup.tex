@@ -23,6 +23,7 @@
 \newcommand{\tgas}{\acronym{TGAS}}
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 \newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
+\newcommand{\dex}{\ensuremath{{\rm dex}}}
 
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
@@ -57,7 +58,7 @@
 \begin{abstract}
 % Context
 Widely-separated, coeval stars are powerful tools for testing star-formation
-model predictions, improving stellar atmosphere models, and measuring the
+model predictions, improving stellar atmosphere models, and inferring the
 mass distribution of the Milky Way.
 They vastly outnumber the Galactic open clusters, but are still expected to
 share a common origin and chemistry.
@@ -96,6 +97,71 @@ Gaia DR2 -> how many do we expect?
 
 \section{Introduction}\label{sec:introduction}
 
+The majority of stars are thought to form in dynamically cold, chemically
+homogeneous clusters, at least relative to the kinematic and chemical
+dispersions observed amongst typical stars in the Galactic disk.
+Because star formation proceeds rapidly (e.g., \citealt{Bovy:2016}) and the
+progenitor gas cloud disperses quickly (cite), it is typically assumed that
+stars formed in the same birth cluster have the same age and initial chemistry
+(e.g., cite).
+These birth clusters are typically born un- or loosely-bound and therefore
+quickly succumb to the tidal field of the Milky Way; obvious dynamical
+associations between stars from the same cluster are then erased as the
+constituent stars mix into the general population of disk stars.
+However, the stars do preserve their initial associations in age, chemical
+abundance patterns, and dynamical invariants (e.g., orbital actions).
+It has therefore been long presumed that ``chemical tagging'' and chemodynamical
+models of the Galactic disk will allow for inferences about the formation and
+evolution of the Milky Way.
+That is, the chemical environment of a birth cluster is likely imprinted on its
+stellar children so that they may be re-associated with precisely measured
+abundance patterns (of $\gtrsim 10$ species).
+
+The feasibility of chemical tagging depends on the intrinsic chemical
+dispersions of stars formed from the same birth clusters, the precision of the
+abundance measurements, and the ability to tell that the chemical abundances of
+two stars are more similar than two randomly-paired Galactic disk stars.
+Recent work suggests that, at least for red giant stars, the abundance
+distributions of 20 elements in a handful of open clusters included in the
+\acronym{APOGEE} survey (\citealt{Majewski:2016,Nidever:2015}) are consistent
+with having intrinsic dispersions smaller than the abundance measurement
+precisions ($\approx 0.03~\dex$; \citealt{Bovy:2016,Ness:2017}).
+In effect, for most elements, the intrinsic dispersions are unconstrained
+because of measurement noise, so the true intrinsic dispersions are not known.
+It was also recently shown that $\approx 0.3\%$ of random pairings of Galactic
+field red giant stars have abundance patterns that are indistinguishable at the
+same level (``doppelgangers''), even with 20 chemical species
+(\citealt{Ness:2017}).
+
+Are these properties of open clusters universal, or limited to the few clusters
+presently studied? And do the chemical properties of open clusters depend on the
+star formation rate or efficiency, which may evolve with time?
+Ideal tests of the chemical homogeneity assumptions would use many more open
+clusters with varied cluster masses, and member stars that span a large range in
+masses and evolutionary stages.
+However, because they disrupt quickly, the present-day open cluster population
+is biased towards younger or more massive clusters.
+
+An alternate tracer of the chemical properties mentioned above are
+widely-separated, coeval pairs or multiplets of stars.
+Summary of wide binary literature
+
+- Also useful for stellar models: should have same age, chemistry, but need to
+  test this
+    - Chemical homogeneity tested with few open clusters - wide binaries another
+      test
+    - Need sample of confirmed widely-separated binaries, follow-up to get
+      detailed abundances
+    - Need way to verify that widely separated stars are physically associated,
+      via kinematics
+- Tests of chemical enrichment due to planetary systems
+
+In this work, we present a catalog of genuine comoving pairs.
+We expect high-resolution follow-up to study chemistry...
+
+% Caution that prior results are for red giants, MS stars may have planetary
+% imprints that get erased as dredge-up and convective layer erases...
+
 Outline:
 - Stars form in clusters, chemically homogeneous at some level
 - Clusters generally disrupt slowly through a process that preserves initial
@@ -112,30 +178,12 @@ Outline:
   function of age and Galactic orbit distribution (disk vs. halo)
     - Is there a separation truncation?
     - Can that be described just from Galactic tides, or need perturbers?
-- Also useful for stellar models: should have same age, chemistry, but need to
-  test this
-    - Chemical homogeneity tested with few open clusters - wide binaries another
-      test
-    - Need sample of confirmed widely-separated binaries, follow-up to get
-      detailed abundances
-    - Need way to verify that widely separated stars are physically associated,
-      via kinematics
+
 - Some bullshit about Gaia, TGAS, etc., released as a part of \gaia\ \DR{1}\
 
 \cite{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}
 
-Most stars form in clusters with small dispersions in position, velocity, and
-(likely) small initial spreads in chemical abundances.
-Once a given cluster is visibly dispersing or fully dispersed, the former member
-stars retain chemical and kinematic signatures of their birth cluster
-
 comoving not wide binary (don't know if they are bound)
-
-, though
-the kinematic mapping is non-trivial because of phase-mixing.
-
-become
-useful
 
 Widely-separated comoving stars are expected to form from the dissolution of
 birth star clusters
@@ -150,7 +198,6 @@ comoving star pairs (\citealt{Oh:2017}) using only astrometric information from
 the \tgas\ catalog (\citealt{tgas}).
 These comoving pairs were selected using a cut on a marginalized likelihood
 ratio computed for all nearly co-spatial pairs of stars.
-For a full description of the selection method, see \citealt{Oh:2017}.
 Briefly, likelihood 1, $L_1$, considers a model in which the full-space
 velocities of each star in the pair are identical and sampled from a disk-like,
 Sun-relative velocity distribution, and likelihood 2, $L_2$, considers a model
@@ -172,6 +219,7 @@ Of these pairs, there are 10,606 unique sources, implying that a significant
 fraction of the identified pairs are members of larger groups.
 $\approx$4,000 of the pairs are mutually exclusive, i.e. neither member is
 paired with other stars.
+For a full description of the selection method, see \citealt{Oh:2017}.
 
 To select candidate pairs for follow-up spectroscopic observations, we only
 consider mutually exclusive star pairs within $200~\pc$ in Heliocentric

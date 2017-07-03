@@ -555,8 +555,9 @@ measurements (in decreasing order of priority) with:
   do contain a quality flag. We only retain RVs that have a quality flag set to
   `A' and adopt a $5~\kms$ uncertainty for all such values.
 \end{enumerate}
-We find that \todo{XXX} of our target stars have reliable prior measurements,
-along with the \todo{YYY} calibration targets.
+% See: paper/figures/Compare with previous observations.ipynb
+We find that 155 of the observed stars have reliable prior measurements from
+the literature search described above.
 \figurename~\ref{fig:compare-previous} shows the distribution of velocity
 differences between our measurements and literature values.
 From this distribution, we compute the MAD and estimate the standard deviation
@@ -565,14 +566,14 @@ absolute radial velocities.
 We note, however, that for computing \emph{relative} velocities for pairs of
 nearby stars, it is the RV precision that matters.
 
-% \begin{figure}[htbp]
-%   \begin{center}
-%     \includegraphics[width=\linewidth]{compare_previous.pdf}
-%   \end{center}
-%   \caption{%
-%     \todo{Plot showing my RV's vs. previously measured.}
-%     \label{fig:compare-previous}}
-% \end{figure}
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{rv-comparison.pdf}
+  \end{center}
+  \caption{%
+    \todo{Plot showing my RV's vs. previously measured.}
+    \label{fig:compare-previous}}
+\end{figure}
 
 \section{Results} \label{sec:results}
 

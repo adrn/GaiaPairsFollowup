@@ -19,7 +19,7 @@
 
 % Project-specific
 \newcommand{\gaia}{\project{Gaia}}
-\newcommand{\DR}[1]{\acronym{DR}1}
+\newcommand{\DR}[1]{\acronym{DR}#1}
 \newcommand{\tgas}{\acronym{TGAS}}
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 \newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
@@ -107,17 +107,17 @@ progenitor gas cloud disperses quickly (cite), it is typically assumed that
 stars formed in the same birth cluster have the same initial chemistry
 (e.g., cite + \citealt{Feng:2014}) and same ages.
 These birth clusters are typically born un- or loosely-bound and therefore
-quickly succumb to the tidal field of the Milky Way; obvious dynamical
-associations between stars from the same cluster are then erased as the
-constituent stars mix into the general population of disk stars.
+quickly succumb to the tidal field of the Milky Way.
+Obvious dynamical associations between stars from the same cluster are then
+erased as the constituent stars mix into the general population of disk stars.
 However, the stars do preserve their initial associations in age, chemical
 abundance patterns, and dynamical invariants (e.g., orbital actions).
 It has therefore been long presumed that ``chemical tagging'' and chemodynamical
 models of the Galactic disk will allow for inferences about the formation and
-evolution of the Milky Way.
+evolution of the Milky Way (e.g., \citealt{todo}).
 That is, the chemical environment of a birth cluster is likely imprinted on its
-stellar children so that they may be re-associated with precisely measured
-abundance patterns (of $\gtrsim 10$ species).
+stellar children and preserved so that their initial association may be inferred
+with precisely measured abundance patterns (of $\gtrsim 10$ species).
 
 The feasibility of chemical tagging depends on the intrinsic chemical
 dispersions of stars formed from the same birth clusters, the precision of the
@@ -130,10 +130,12 @@ with having intrinsic dispersions smaller than the abundance measurement
 precisions ($\approx 0.03~\dex$; \citealt{Bovy:2016,Ness:2017}).
 In effect, for most elements, the intrinsic dispersions are unconstrained
 because of measurement noise, so the true intrinsic dispersions are not known.
-It was also recently shown that $\approx 0.3\%$ of random pairings of Galactic
-field red giant stars have abundance patterns that are indistinguishable at the
-same level (``doppelgangers''), even with 20 chemical species
-(\citealt{Ness:2017}).
+This demonstration of chemical uniformity in open clusters is promising for
+chemical tagging.
+However, it was also recently shown that $\approx 0.3\%$ of random pairings of
+Galactic field red giant stars have abundance patterns that are
+indistinguishable at the same level (``doppelgangers''), even with 20 chemical
+species (\citealt{Ness:2017}).
 
 Are these properties of open clusters universal, or limited to the few clusters
 presently studied?
@@ -142,7 +144,10 @@ efficiency, which may evolve with time?
 Ideal tests of the chemical homogeneity assumptions would use many more open
 clusters with varied cluster masses and member stars that span a large range in
 masses and evolutionary stages.
-\todo{Gaia will help \gaia\ (\cite{Gaia-Collaboration:2016,Gaia-Collaboration:2016a})}
+Precise kinematic and color data from the \gaia\ mission
+(\citealt{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}) will help refine
+existing membership catalogs and will lead to discoveries of many more open
+clusters and young star associations (see, e.g., \citealt{Oh:2017}).
 However, because they disrupt quickly, the present-day open cluster population
 is biased towards younger or more massive clusters.
 
@@ -150,8 +155,8 @@ An alternate tracer of the chemical properties mentioned above are
 widely-separated ($>XX~\pc$), coeval pairs or multiplets of stars.
 These tracers include both bound and unbound wide-separation stellar systems; we
 refer to these systems collectively as ``comoving stars'' because, at large
-separations, with present-day and near-future velocity uncertainties, it is
-typically not possible to determine whether these systems are in fact bound.
+separations with present-day and near-future velocity uncertainties, it is
+typically not possible to determine whether these systems are truly bound.
 Comoving stars are either wide binaries, disrupted wide binaries, or remnants of
 dissolving or disrupted open clusters.
 In any of these cases, it is likely that the stars formed from the same region
@@ -165,29 +170,30 @@ surveys (cite rave, etc.), several hundred such systems are already known
 (\citealt{Shaya:2011}).
 In addition, over ten-thousand \emph{candidate} comoving stars have been
 discovered from astrometric data alone, using data from both the
-\project{Hipparcos} mission (\citealt{hipparcos?}) and the \gaia\ mission
-(\citealt{Oh:2017,Andrews:2017}).
-- Need sample of confirmed widely-separated binaries, follow-up to get
-  detailed abundances
-- Need way to verify that widely separated stars are physically associated,
-  via kinematics
-
-Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
-
-Comoving stars are also sensitive potentiometers of the Galactic mass
-distribution.
-- Long-term goal is to study the separation distribution of wide-binaries as a
-  function of age and Galactic orbit distribution (disk vs. halo)
-    - Is there a separation truncation?
-    - Can that be described just from Galactic tides, or need perturbers?
+\project{Hipparcos} mission (\citealt{ESA:1997}---\citealt{Shaya:2011}) and
+\tgas\ catalog (\citealt{Gaia-Collaboration:2016a}---
+\citealt{Oh:2017,Andrews:2017}).
+Radial velocity follow-up is necessary to confirm pairs using these astrometric
+catalogs, though \gaia\ \DR{2} will provide radial velocities for the brightest
+stars ($G < 12$).
+High-resolution spectroscopy is still needed to measure detailed chemical
+abundances of these pairs, which may present interesting surprises; one
+large-separation ($\approx 0.6~\pc$) comoving pair of solar-type stars
+discovered in previous work (\citealt{Oh:2017}) with serendipitously observed
+high-resolution, high signal-to-noise spectra display large abundance
+differences ($\approx 0.2~\dex$) that appear to have resulted from massive
+accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
+submitted).
 
 In this work, we present a catalog of genuine comoving star pairs discovered
-through radial velocity follow-up of candidate comoving stars discovered from
-their astrometry alone (\citealt{Oh:2017}).
-We expect high-resolution follow-up to study chemistry...
-
-% Caution that prior results are for red giants, MS stars may have planetary
-% imprints that get erased as dredge-up and convective layer erases...
+through radial velocity follow-up of candidate comoving stars selected from
+inferences using their astrometry alone (\citealt{Oh:2017}).
+This work serves as a pilot study for data expected in upcoming data releases
+from the \gaia\ mission.
+We describe the data, observations, and spectroscopic reduction in
+\sectionname~\ref{sec:data}.
+If you are uninterested in these details, skip to \sectionname~\ref{sec:results}
+where we discuss our main results.
 
 \section{Data}\label{sec:data}
 
@@ -568,7 +574,7 @@ nearby stars, it is the RV precision that matters.
 %     \label{fig:compare-previous}}
 % \end{figure}
 
-\section{Results}
+\section{Results} \label{sec:results}
 
 \todo{Cross-match with exoplanets catalog http://exoplanets.org/csv-files/exoplanets.csv}
 
@@ -591,6 +597,19 @@ nearby stars, it is the RV precision that matters.
 \todo{Orbits of true pairs in the Galaxy, any halo or thick-disk?}
 
 \section{Discussion}
+
+Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
+
+Comoving stars are also sensitive potentiometers of the Galactic mass
+distribution.
+- Long-term goal is to study the separation distribution of wide-binaries as a
+  function of age and Galactic orbit distribution (disk vs. halo)
+    - Is there a separation truncation?
+    - Can that be described just from Galactic tides, or need perturbers?
+
+% Caution that prior results are for red giants, MS stars may have planetary
+% imprints that get erased as dredge-up and convective layer erases...
+
 
 Abundances!
 

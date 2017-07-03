@@ -12,6 +12,7 @@ from os import path
 # Third-party
 import astropy.coordinates as coord
 import astropy.units as u
+import numpy as np
 from sqlalchemy import Column, types
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.orm import relationship, backref
@@ -23,7 +24,7 @@ from .custom_types import (QuantityTypeClassFactory, JDTimeType,
 from .numpy_adapt import * # just need to execute code
 
 __all__ = ['Run', 'Observation', 'SimbadInfo', 'TGASSource',
-           'SpectralLineMeasurement', 'SpectralLineInfo']
+           'SpectralLineMeasurement', 'SpectralLineInfo', 'RVMeasurement']
 
 VelocityType = QuantityTypeClassFactory(u.km/u.s)
 WavelengthType = QuantityTypeClassFactory(u.angstrom)
@@ -113,6 +114,9 @@ class Observation(Base):
                       'n'+str(self.night))
         return path.join(p, self.filename_1d)
 
+    @property
+    def utc_hour(self):
+        return np.sum(np.array(list(map(float, self.time_obs.split(':')))) / np.array([1., 60., 3600.]))
 
 class SimbadInfo(Base):
     __tablename__ = 'simbad_info'
@@ -251,3 +255,17 @@ class SpectralLineInfo(Base):
     def __repr__(self):
         return '<SpectralLineInfo {0} @ {1}>'.format(self.name, self.wavelength)
 
+class RVMeasurement(Base):
+    __tablename__ = 'rv_measurement'
+
+    id = Column(types.Integer, primary_key=True)
+    rv = Column('rv', VelocityType, nullable=False)
+    err = Column('err', VelocityType, nullable=False)
+
+    # Relationships
+    observation_id = Column('observation_id', types.Integer,
+                            ForeignKey('observation.id'))
+    observation = relationship('Observation', single_parent=True,
+                               backref=backref('measurements',
+                                               cascade='all,delete-orphan',
+                                               uselist=False))

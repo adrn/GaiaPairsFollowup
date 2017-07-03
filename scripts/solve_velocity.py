@@ -212,6 +212,11 @@ def main(db_path, run_name, overwrite=False, pool=None):
             raise RuntimeError('Multiple RV measurements found for object {0}'
                                .format(obs))
 
+        elif len(obs.measurements) == 0:
+            logger.debug('Observation {0} has no line measurements.'
+                         .format(obs))
+            continue
+
         corrected_rv, err, flag = rv_corr.get_corrected_rv(obs)
 
         # remove previous RV measurements

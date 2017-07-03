@@ -261,11 +261,12 @@ class RVMeasurement(Base):
     id = Column(types.Integer, primary_key=True)
     rv = Column('rv', VelocityType, nullable=False)
     err = Column('err', VelocityType, nullable=False)
+    flag = Column('flag', types.Integer, nullable=False)
 
     # Relationships
     observation_id = Column('observation_id', types.Integer,
                             ForeignKey('observation.id'))
     observation = relationship('Observation', single_parent=True,
-                               backref=backref('measurements',
+                               backref=backref('rv_measurement',
                                                cascade='all,delete-orphan',
                                                uselist=False))

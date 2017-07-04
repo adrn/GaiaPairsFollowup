@@ -149,6 +149,31 @@ class Observation(Base):
                           pm_ra_cosdec=self.tgas_source.pmra*u.mas/u.yr,
                           pm_dec=self.tgas_source.pmdec*u.mas/u.yr, **kw)
 
+    def icrs_samples(self, size=1, custom_rv=None):
+        y = np.zeros(6)
+        Cov = np.zeros((6,6))
+
+        y[:5] = [self.tgas_source.ra.value, self.tgas_source.dec.value,
+                 self.tgas_source.parallax, self.tgas_source.pmra,
+                 self.tgas_source.pmdec]
+        Cov[:5,:5] = self.tgas_star().get_cov()[:5,:5]
+
+        if custom_rv is None:
+            rv = self.rv_measurement.rv
+            rv_err = self.rv_measurement.err
+        else:
+            rv, rv_err = custom_rv
+
+        Cov[5, 5] = rv_err.value**2
+        y[5] = rv.value
+        samples = np.random.multivariate_normal(y, Cov, size=size)
+
+        return coord.ICRS(ra=samples[:,0]*u.deg, dec=samples[:,1]*u.deg,
+                          distance=1000./samples[:,2]*u.pc,
+                          pm_ra_cosdec=samples[:,3]*u.mas/u.yr,
+                          pm_dec=samples[:,4]*u.mas/u.yr,
+                          radial_velocity=samples[:,5]*u.km/u.s)
+
 class SimbadInfo(Base):
     __tablename__ = 'simbad_info'
 

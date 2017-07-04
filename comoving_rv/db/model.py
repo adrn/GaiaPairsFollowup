@@ -118,6 +118,37 @@ class Observation(Base):
     def utc_hour(self):
         return np.sum(np.array(list(map(float, self.time_obs.split(':')))) / np.array([1., 60., 3600.]))
 
+    def tgas_star(self, with_rv=True):
+        """gwb.data.TGASData instance"""
+        from gwb.data import TGASStar
+
+        names = list(self.tgas_source.row_dict.keys())
+        dtype = dict(names=names, formats=['f8']*len(names))
+        arr = np.array([tuple([self.tgas_source.row_dict[k] for k in names])],
+                       dtype)
+
+        kw = dict()
+        if with_rv:
+            kw['rv'] = self.rv_measurement.rv
+            kw['rv_err'] = self.rv_measurement.err
+
+        return TGASStar(arr[0], **kw)
+
+    def icrs(self, with_rv=True):
+        kw = dict()
+        if with_rv:
+            if hasattr(with_rv, 'unit'):
+                rv = with_rv
+            else:
+                rv = self.rv_measurement.rv
+
+            kw['radial_velocity'] = rv
+
+        return coord.ICRS(ra=self.tgas_source.ra, dec=self.tgas_source.dec,
+                          distance=1000./self.tgas_source.parallax*u.pc,
+                          pm_ra_cosdec=self.tgas_source.pmra*u.mas/u.yr,
+                          pm_dec=self.tgas_source.pmdec*u.mas/u.yr, **kw)
+
 class SimbadInfo(Base):
     __tablename__ = 'simbad_info'
 
@@ -211,6 +242,24 @@ class TGASSource(Base):
     def skycoord(self):
         return coord.SkyCoord(ra=self.ra, dec=self.dec,
                               distance=1000./self.parallax*u.pc)
+
+    @property
+    def row_dict(self):
+        row = dict()
+        for k in self.__dict__:
+            if not k.startswith('_'):
+                v = getattr(self, k)
+
+                if hasattr(v, 'value'):
+                    row[k] = v.value
+
+                elif not isinstance(v, float):
+                    continue
+
+                else:
+                    row[k] = v
+
+        return row
 
 class SpectralLineMeasurement(Base):
     __tablename__ = 'spectral_line_measurement'

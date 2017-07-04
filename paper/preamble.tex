@@ -39,11 +39,13 @@
 
 % Maths
 \newcommand{\dd}{\mathrm{d}}
-\newcommand{\transpose}[1]{{#1}^{\mathsf{T}}}
+\newcommand{\transpose}[1]{{#1}^{\!\mathsf{T}}}
 \newcommand{\inverse}[1]{{#1}^{-1}}
 \newcommand{\argmin}{\operatornamewithlimits{argmin}}
 \newcommand{\argmax}{\operatornamewithlimits{argmax}}
 \newcommand{\mean}[1]{\left< #1 \right>}
+\renewcommand{\vec}[1]{\bs{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
 
 % Unit shortcuts
 \newcommand{\msun}{\ensuremath{\mathrm{M}_\odot}}

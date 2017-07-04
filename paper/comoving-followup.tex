@@ -24,6 +24,8 @@
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 \newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
 \newcommand{\dex}{\ensuremath{{\rm dex}}}
+\newcommand{\llrold}{\ensuremath{\mathcal{R}_\mu}}
+\newcommand{\llrnew}{\ensuremath{\mathcal{R}_{\rm RV}}}
 
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
@@ -280,7 +282,7 @@ atmospheric emission lines were used to correct the wavelength solution on a
 per-object basis.
 
 We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
-2017-03-15, corresponding to 321 unique star pairs and $\approx 120$
+2017-03-15, corresponding to 323 unique star pairs and $\approx 120$
 calibration targets.
 The calibration targets have previously measured radial velocities and chemical
 abundances, which will be used for validation of our reduction pipeline and in
@@ -535,7 +537,7 @@ is between $2$--$8~\kms$ \todo{double check numbers}.
     \label{fig:Halpha-mcmc-fit}}
 \end{figure}
 
-\subsection{Validation}
+\subsection{Validation of absolute radial velocities}
 
 Several of our targets and all of our calibration targets have previously
 measured radial velocities (RVs).
@@ -556,15 +558,16 @@ measurements (in decreasing order of priority) with:
   `A' and adopt a $5~\kms$ uncertainty for all such values.
 \end{enumerate}
 % See: paper/figures/Compare with previous observations.ipynb
-We find that 155 of the observed stars have reliable prior measurements from
-the literature search described above.
+We find that 155 of the observed stars (mainly calibration targets) have
+reliable prior measurements from the literature search described above.
 \figurename~\ref{fig:compare-previous} shows the distribution of velocity
 differences between our measurements and literature values.
-From this distribution, we compute the MAD and estimate the standard deviation
-to be $\approx 20~\kms$, which we adopt as our global systematic error for all
-absolute radial velocities.
+From this distribution, we compute the median absolute deviation (MAD) and
+estimate the standard deviation to be $\approx 20~\kms$, which we adopt as our
+global systematic error for all absolute radial velocities.
 We note, however, that for computing \emph{relative} velocities for pairs of
-nearby stars, it is the RV precision that matters.
+nearby stars, it is the RV precision (typically $\approx 5$--$10~\kms$) that
+matters.
 
 \begin{figure}[htbp]
   \begin{center}
@@ -577,25 +580,128 @@ nearby stars, it is the RV precision that matters.
 
 \section{Results} \label{sec:results}
 
-\todo{Cross-match with exoplanets catalog http://exoplanets.org/csv-files/exoplanets.csv}
+\subsection{Comoving pair catalog}\label{sec:catalog}
 
-\subsection{Catalog ...}\label{sec:}
+Of the 323 observed star pairs, 11 have at least one member with an unreliable
+(flagged) radial velocity measurement from the pipeline above.
+For the remaining 312 pairs, we use the measured radial velocities to re-compute
+the marginal likelihood ratio for the two hypotheses considered in previous work
+(see Appendix~B, \citealt{Oh:2017}).
+We compute two fully marginalized likelihoods (FMLs) for the data: (1) assuming
+that the two stars are comoving with identical 3D velocity vectors (within some
+allowed small dispersion), and (2) assuming that the two stars have independent
+3D velocity vectors drawn from a prior velocity distribution.
+As with previous work, we set the small dispersion to the orbital velocity of a
+binary with the separation of the pair, and use a mixture of three Gaussian
+velocity components for the prior, meant to represent the thin disk, thick disk,
+and halo velocity distributions relative to the sun.
 
-\todo{10 overlap with Shaya and Olling}
+To compute the new likelihood ratio, we modify the expressions from
+\citet{Oh:2017} to include the radial velocity measurements.
+In the same notation, this requires the following changes:
+\begin{itemize}
+  \item The projection matrix, $\mat{M}$, now has to include the radial unit
+    vector
+    \begin{equation}
+      \mat{M} =
+        \left(
+          \begin{array}{c c c}
+            -\sin\alpha & \cos\alpha & 0 \\
+            -\sin\delta \, \cos\alpha & -\sin\delta \, \sin\alpha & \cos\delta\\
+            \cos\delta \, \cos\alpha & \cos\delta \, \sin\alpha & \sin\delta
+          \end{array}
+        \right)
+    \end{equation}
+    where $(\alpha, \delta)$ are the ICRS coordinates (right ascension and
+    declination) of a given star.
+  \item The data-space velocity vector, $\vec{y}$, for one star now becomes
+    \begin{equation}
+      \vec{y} =
+        \transpose{\left(
+          \begin{array}{c c c}
+            r_i\,\mu_{\alpha}^* &
+            r_i\,\mu_{\delta} &
+            v_{r}
+          \end{array}
+        \right)}
+    \end{equation}
+    where $\mu_\alpha^*$ is the proper motion in right ascension (including the
+    $\cos{\delta}$ term), $\mu_\delta$ is the proper motion in declination, and
+    $v_r$ is the radial velocity.
+  \item The covariance matrix becomes the block-diagonal matrix
+    \begin{equation}
+      \mat{\Sigma} = \left(
+        \begin{array}{c c}
+          r^2 \, \mat{C} & 0 \\
+          0 & \sigma_{v_r}^2
+        \end{array}
+      \right)
+    \end{equation}
+    where $r$ is the distance, $\mat{C}$ is the proper motion covariance matrix
+    (from the \tgas\ catalog), and $\sigma_{v_r}$ is the radial velocity
+    uncertainty.
+\end{itemize}
+To compute the FML for hypothesis 1 for a pair of stars $(i,j)$, the data-space
+vector must become the 6-vector
+\begin{equation}
+  \vec{y} = \transpose{\left(
+    \begin{array}{c c}
+      \vec{y}_i &
+      \vec{y}_j
+    \end{array}
+    \right)}
+\end{equation}
+and the covariance matrix becomes the block-diagonal matrix
+\begin{equation}
+  \mat{\Sigma} = \left(
+    \begin{array}{c c}
+      \mat{\Sigma}_i & 0 \\
+      0 & \mat{\Sigma}_j
+    \end{array}
+  \right) \quad .
+\end{equation}
 
-\todo{Do I want to do isochrone fitting for all of them?}
+If the new likelihood ratio is larger than that computed from astrometry alone,
+the added radial velocity information likely supports the belief that the two
+stars are truly comoving in 3-space.
+Conversely, if the new likelihood ratio is smaller, the radial velocity data
+indicate that the pair is likely a false-positive and are not truly comoving.
+In practice, we compute the logarithm of the likelihood ratios,
+$\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
+proper-motion-only log-FML-ratio for a given pair of stars as
+\llrold\, and the log-FML-ratio including the radial velocity data as
+\llrnew.
+We consider a pair as being genuinely comoving if $\llrnew > \llrold$; 125 of
+the 312 comoving pairs satisfy this constraint.
+\figurename~\ref{fig:llr}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{llr-vs-dv.pdf}
+  \end{center}
+  \caption{%
+    FML
+    \label{fig:llr}}
+\end{figure}
+
+TODO: check on ipython notebook re-running with updated observation shite
 
 \subsection{Physical properties of genuine comoving pairs}\label{sec:}
 
-\todo{Plot of magnitude of 3d velocity difference vs. 3d separation (inferred).}
+\todo{Plot of magnitude of 3d velocity difference vs. 3d separation?}
 
-\todo{separation distribution - combine with Shaya and Olling sample!}
+\todo{separation distribution - compare with Shaya and Olling sample!}
+\todo{10 overlap with Shaya and Olling}
 
 \todo{distribution of orbital poles in Galactic coordinates}
 
 \subsection{Galactic orbits of the co-moving pairs}\label{sec:}
 
 \todo{Orbits of true pairs in the Galaxy, any halo or thick-disk?}
+
+\todo{Cross-match with exoplanets catalog http://exoplanets.org/csv-files/exoplanets.csv}
+
+\todo{Do I want to do isochrone fitting for all of them?}
 
 \section{Discussion}
 

@@ -134,7 +134,7 @@ class Observation(Base):
 
         return TGASStar(arr[0], **kw)
 
-    def icrs(self, with_rv=True):
+    def icrs(self, with_rv=True, lutz_kelker=True):
         kw = dict()
         if with_rv:
             if hasattr(with_rv, 'unit'):
@@ -144,8 +144,9 @@ class Observation(Base):
 
             kw['radial_velocity'] = rv
 
+        dist = self.tgas_star(with_rv).get_distance(lutz_kelker)
         return coord.ICRS(ra=self.tgas_source.ra, dec=self.tgas_source.dec,
-                          distance=1000./self.tgas_source.parallax*u.pc,
+                          distance=dist,
                           pm_ra_cosdec=self.tgas_source.pmra*u.mas/u.yr,
                           pm_dec=self.tgas_source.pmdec*u.mas/u.yr, **kw)
 

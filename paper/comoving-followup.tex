@@ -174,7 +174,7 @@ In addition, over ten-thousand \emph{candidate} comoving stars have been
 discovered from astrometric data alone, using data from both the
 \project{Hipparcos} mission (\citealt{ESA:1997}---\citealt{Shaya:2011}) and
 \tgas\ catalog (\citealt{Gaia-Collaboration:2016a}---
-\citealt{Oh:2017,Andrews:2017}).
+\citealt{Oh:2017,Oelkers:2017,Andrews:2017}).
 Radial velocity follow-up is necessary to confirm pairs using these astrometric
 catalogs, though \gaia\ \DR{2} will provide radial velocities for the brightest
 stars ($G < 12$).
@@ -584,7 +584,7 @@ matters.
 
 Of the 323 observed star pairs, 11 have at least one member with an unreliable
 (flagged) radial velocity measurement from the pipeline above.
-For the remaining 312 pairs, we use the measured radial velocities to re-compute
+For the remaining 311 pairs, we use the measured radial velocities to re-compute
 the marginal likelihood ratio for the two hypotheses considered in previous work
 (see Appendix~B, \citealt{Oh:2017}).
 We compute two fully marginalized likelihoods (FMLs) for the data: (1) assuming
@@ -661,6 +661,15 @@ and the covariance matrix becomes the block-diagonal matrix
   \right) \quad .
 \end{equation}
 
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{llr-vs-dv.pdf}
+  \end{center}
+  \caption{%
+    FML
+    \label{fig:llr}}
+\end{figure}
+
 If the new likelihood ratio is larger than that computed from astrometry alone,
 the added radial velocity information likely supports the belief that the two
 stars are truly comoving in 3-space.
@@ -671,29 +680,77 @@ $\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
 proper-motion-only log-FML-ratio for a given pair of stars as
 \llrold\, and the log-FML-ratio including the radial velocity data as
 \llrnew.
-We consider a pair as being genuinely comoving if $\llrnew > \llrold$; 125 of
-the 312 comoving pairs satisfy this constraint.
-\figurename~\ref{fig:llr}
+We consider a pair as being genuinely comoving if $\llrnew > \llrold$; 128 of
+the 311 comoving pairs satisfy this constraint.
+\figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
+plotted against the change in log-likelihood-ratio for the two stars in all
+observed pairs.
+In detail, for visualization, we sample from the error distributions over proper
+motion, parallax, and radial velocity for each star individually and compute the
+magnitude of the 3D velocity differences, $|\bs{v}_1-\bs{v}_2|$, for $2^{16}$
+samples.
+We plot the median of the resulting distribution over velocity-difference as
+dark markers (circles).
+The error bars show the 15th and 85th percentiles of the distributions for a few
+randomly chosen pairs.
+Note that pairs with large 3D velocity differences have large (negative) changes
+to their log-likelihood-ratio values.
+
+\subsection{Physical properties of genuine comoving pairs}\label{sec:separation}
+
+\figurename~\ref{fig:dx-dv} shows the magnitude of the 3D velocity difference
+plotted against the 3D positional separation of the two stars in all observed
+pairs.
+We again plot the median of the velocity difference distribution, and here use
+the Lutz-Kelker-corrected distance estimate (\citealt{Lutz:1973}) computed from
+the stars' \tgas\ parallax measurements to compute the 3D positions of the two
+stars.
+Small, grey markers are pairs for which $\llrnew < \llrold$, i.e. where the
+radial velocity measurements weaken or change our belief that a given pair is
+comoving.
+Larger, black markers are genuine comoving pairs ($\llrnew > \llrold$); note
+that many large-separation pairs have been ruled-out as comoving, but
+most small-separation pairs maintain their status as comoving.
+This is also apparent in \figurename~\ref{fig:separation}, which shows
+histograms of the spatial separation and sky separation for all pairs;
+background, grey histogram shows all observed pairs, and foreground, black
+histogram shows all pairs for which $\llrnew > \llrold$.
+
+At separations $\gtrsim 1~\pc$, $\approx 40\%$ of the comoving pairs are
+genuinely comoving; interestingly, the separation distribution of the genuine
+pairs appears to be at least uniform or possibly growing in number as the
+separation increases.
+This strongly suggests the existence of a population of unbound wide binaries or
+dissolved open clusters, which maintain approximate spatial coherence for long
+times because of the small relative velocities at the time of disruption of the
+constituent stars (e.g., \citealt{Jiang:2010}).
+The kinematic properties of these unbound binaries and associations contain
+information about the tidal field and fluctuations in the mass distribution of
+the Milky Way.
+With \gaia\ \DR{2}, we will be able to study the statistical properties of these
+widely-separated but comoving stars at even larger separations ($>10~\pc$).
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=\linewidth]{llr-vs-dv.pdf}
+    \includegraphics[width=\linewidth]{dx-dv.pdf}
   \end{center}
   \caption{%
     FML
-    \label{fig:llr}}
+    \label{fig:dx-dv}}
 \end{figure}
 
-TODO: check on ipython notebook re-running with updated observation shite
-
-\subsection{Physical properties of genuine comoving pairs}\label{sec:}
-
-\todo{Plot of magnitude of 3d velocity difference vs. 3d separation?}
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{separation-hist.pdf}
+  \end{center}
+  \caption{%
+    FML
+    \label{fig:separation}}
+\end{figure}
 
 \todo{separation distribution - compare with Shaya and Olling sample!}
 \todo{10 overlap with Shaya and Olling}
-
-\todo{distribution of orbital poles in Galactic coordinates}
+\todo{RAVE pairs - both observed}
 
 \subsection{Galactic orbits of the co-moving pairs}\label{sec:}
 
@@ -723,7 +780,7 @@ Abundances!
 - Stellar rotation of evolved-main sequence
 - Full catalog should contain Shaya and Olling, cross-match to RV surveys
 
-\section{Conclusions }
+\section{Conclusions}
 
 \acknowledgements
 John Brewer (Yale),

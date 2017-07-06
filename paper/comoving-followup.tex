@@ -322,8 +322,8 @@ the \package{scipy} package.
 From the 16 fits, the median profile width parameters, $\sigma_G$ and
 $\gamma_L$, are then taken to be the LSF width parameters.
 At each of 1600 rows in each source spectrum image, the LSF amplitude and
-centroid, and background slope and intercept at line centroid are then fit using
-the same procedure as above but with the width parameters fixed.
+centroid, and background slope and intercept at line centroid, are then fit
+using the same procedure as above but with the width parameters fixed.
 The LSF amplitudes are stored as the source fluxes, and the background model
 intercepts are stored as the background (sky) fluxes.
 Occasionally, nearby sources fall in the slit; these are masked by hand in the
@@ -565,7 +565,7 @@ is between $5$--$10~\kms$.
     \label{fig:Halpha-mcmc-fit}}
 \end{figure}
 
-\subsection{Validation of absolute radial velocities}
+\subsection{Validation of absolute radial velocities}\label{sec:rv-validation}
 
 Several of our targets and all of our calibration targets have previously
 measured radial velocities (RVs).
@@ -581,18 +581,19 @@ measurements (in decreasing order of priority) with:
   \item The General Catalogue of Mean Radial Velocities
   (\citealt{Barbier-Brossat:2000}).
   \item The SIMBAD database (\citealt{Wenger:2000}). We use \package{astroquery}
-  to retrieve records from the database, which do not contain uncertainties but
-  do contain a quality flag. We only retain RVs that have a quality flag set to
-  `A' and adopt a $5~\kms$ uncertainty for all such values.
+  (\citealt{Ginsburg:2016}) to retrieve records from the database, which do not
+  contain uncertainties but do contain a quality flag. We only retain RVs that
+  have a quality flag set to `A' and adopt a $5~\kms$ uncertainty for all such
+  values.
 \end{enumerate}
 % See: paper/figures/Compare with previous observations.ipynb
 We find that 155 of the observed stars (mainly calibration targets) have
 reliable prior measurements from the literature search described above.
 \figurename~\ref{fig:compare-previous} shows the distribution of velocity
 differences between our measurements and literature values.
-From this distribution, we compute the median absolute deviation (MAD) and
-estimate the standard deviation to be $\approx 20~\kms$, which we adopt as our
-global systematic error for all absolute radial velocities.
+From this distribution (right panel), we compute the median absolute deviation
+(MAD) and estimate the standard deviation to be $\approx 20~\kms$, which we
+adopt as our global systematic error for all absolute radial velocities.
 We note, however, that for computing \emph{relative} velocities for pairs of
 nearby stars, it is the RV precision (typically $\approx 5$--$10~\kms$) that
 matters.
@@ -602,7 +603,17 @@ matters.
     \includegraphics[width=\linewidth]{rv-comparison.pdf}
   \end{center}
   \caption{%
-    \todo{Plot showing my RV's vs. previously measured.}
+    Comparison of radial velocities measured from our observations with radial
+    velocities obtained from the literature search described in
+    \sectionname~\ref{sec:rv-validation}.
+    Left panel shows our values on the $x$-axis, ${\rm RV}$, against the
+    previous literature values on the $y$-axis, ${\rm RV}_{\rm lit}$, for 155
+    observed stars (mainly calibration targets) with previously measured radial
+    velocities.
+    Right panel shows a histogram of the differences, $\Delta{\rm RV} = {\rm RV}
+    - {\rm RV}_{\rm lit}$.
+    The estimated standard-deviation of the difference distribution implies a
+    global systematic uncertainty of $\approx 20~\kms$.
     \label{fig:compare-previous}}
 \end{figure}
 

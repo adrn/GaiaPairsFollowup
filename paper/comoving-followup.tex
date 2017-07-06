@@ -630,10 +630,10 @@ We compute two fully marginalized likelihoods (FMLs) for the data: (1) assuming
 that the two stars are comoving with identical 3D velocity vectors (within some
 allowed small dispersion), and (2) assuming that the two stars have independent
 3D velocity vectors drawn from a prior velocity distribution.
-As with previous work, we set the small dispersion to the orbital velocity of a
-binary with the separation of the pair, and use a mixture of three Gaussian
-velocity components for the prior, meant to represent the thin disk, thick disk,
-and halo velocity distributions relative to the sun.
+We set the small allowed dispersion ($s$, in previous work) to $1~\kms$, and use
+a mixture of three Gaussian velocity components for the prior, meant to
+represent the thin disk, thick disk, and halo velocity distributions relative to
+the sun.
 
 To compute the new likelihood ratio, we modify the expressions from
 \citet{Oh:2017} to include the radial velocity measurements.
@@ -705,30 +705,37 @@ and the covariance matrix becomes the block-diagonal matrix
     \includegraphics[width=0.7\linewidth]{llr-vs-dv.pdf}
   \end{center}
   \caption{%
-    FML
+    Point estimate of the 3D velocity difference between two stars in a comoving
+    pair, $|\bs{v}_1 - \bs{v}_2|$, plotted against the change in
+    log-likelihood-ratio computed when including radial velocity data.
+    Error bars are shown for a few randomly-chosen, representative pairs and
+    represent the 15th and 85th percentiles of velocity differences computed
+    from samples from the error distributions of parallax, proper motion
+    components, and radial velocity.
+    The likelihood ratio increases (i.e. the belief that the stars are comoving
+    becomes stronger) when the 3D velocity difference is small.
     \label{fig:llr}}
 \end{figure}
 
 If the new likelihood ratio is larger than that computed from astrometry alone,
-the added radial velocity information likely supports the belief that the two
-stars are truly comoving in 3-space.
+the added radial velocity information supports the belief that the two stars are
+truly comoving in 3-space.
 Conversely, if the new likelihood ratio is smaller, the radial velocity data
 indicate that the pair is likely a false-positive and are not truly comoving.
 In practice, we compute the logarithm of the likelihood ratios,
 $\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
 proper-motion-only log-FML-ratio for a given pair of stars as
-\llrold\, and the log-FML-ratio including the radial velocity data as
-\llrnew.
-We consider a pair as being genuinely comoving if $\llrnew > \llrold$; 128 of
+\llrold\ (as computed in \citealt{Oh:2017})m and the log-FML-ratio including the radial velocity data as \llrnew.
+We consider a pair as being genuinely comoving if $\llrnew > \llrold$---128 of
 the 311 comoving pairs satisfy this constraint.
 \figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
-plotted against the change in log-likelihood-ratio for the two stars in all
+plotted against the change in log-likelihood-ratio, $\llrnew - \llrold$, for all
 observed pairs.
 In detail, for visualization, we sample from the error distributions over proper
 motion, parallax, and radial velocity for each star individually and compute the
 magnitude of the 3D velocity differences, $|\bs{v}_1-\bs{v}_2|$, for $2^{16}$
 samples.
-We plot the median of the resulting distribution over velocity-difference as
+We plot the median of the resulting distribution of velocity-differences as
 dark markers (circles).
 The error bars show the 15th and 85th percentiles of the distributions for a few
 randomly chosen pairs.
@@ -755,11 +762,10 @@ histograms of the spatial separation and sky separation for all pairs;
 background, gray histogram shows all observed pairs, and foreground, black
 histogram shows all pairs for which $\llrnew > \llrold$.
 
-\todo{Discuss contamination rate vs. separation for ratio cut of 6?}
 At separations $\gtrsim 1~\pc$, $\approx 40\%$ of the comoving pairs are
 genuinely comoving; interestingly, the separation distribution of the genuine
-pairs appears to be at least uniform or possibly growing in number as the
-separation increases.
+pairs appears to be uniform or possibly growing in number with increasing
+separation.
 This strongly suggests the existence of a population of unbound wide binaries or
 dissolved open clusters, which maintain approximate spatial coherence for long
 times because of the small relative velocities at the time of disruption of the
@@ -775,7 +781,11 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \includegraphics[width=\linewidth]{dx-dv.pdf}
   \end{center}
   \caption{%
-    FML
+    Point estimate of the 3D velocity difference between two stars in a comoving
+    pair, $|\bs{v}_1 - \bs{v}_2|$, plotted against a point estimate of the 3D
+    spatial separation of the two stars, $|\bs{x}_1 - \bs{x}_2|$.
+    The distances used in the point estimates are computed using a
+    Lutz-Kelker-corrected parallax value (\citealt{Lutz:1973}).
     \label{fig:dx-dv}}
 \end{figure}
 
@@ -784,7 +794,13 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \includegraphics[width=\linewidth]{separation-hist.pdf}
   \end{center}
   \caption{%
-    FML
+    \emph{Left}: Distribution of point estimates of the 3D spatial separation of
+    the stars in all observed comoving star pairs (gray), and only those
+    identified as genuinely comoving (black). Note that the contamination rate
+    is $\approx 60\%$ at large separations ($>1~\pc$), but there are still a
+    significant number of genuine comoving pairs at these very wide separations.
+    \emph{Right}: Distribution of sky separations of all comoving star pairs
+    (gray) and only those identified as genuinely comoving (black).
     \label{fig:separation}}
 \end{figure}
 
@@ -803,9 +819,37 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \label{fig:genuine-cmd}}
 \end{figure}
 
-\todo{separation distribution - compare with Shaya and Olling sample!}
-\todo{10 overlap with Shaya and Olling}
-\todo{RAVE pairs - both observed}
+\subsection{Combined with RAVE}\label{sec:rave}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{separation-hist-rave.pdf}
+  \end{center}
+  \caption{%
+    \emph{Left}: Distribution of point estimates of the 3D spatial separation of
+    the stars in all observed comoving star pairs (gray), and only those
+    identified as genuinely comoving (black). Note that the contamination rate
+    is $\approx 60\%$ at large separations ($>1~\pc$), but there are still a
+    significant number of genuine comoving pairs at these very wide separations.
+    \emph{Right}: Distribution of sky separations of all comoving star pairs
+    (gray) and only those identified as genuinely comoving (black).
+    \label{fig:separation}}
+\end{figure}
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{genuine_cmd_rave.pdf}
+  \end{center}
+  \caption{%
+    Color-magnitude diagram of \emph{genuine} comoving star pairs plotted over
+    the density of all \tgas\ sources within 200 pc; similar to
+    \figurename~\ref{fig:sample-cmd}, but for only the genuine comoving
+    pairs.
+    Several interesting pairs that include main-sequence and giant component
+    stars are highlighted in the text
+    (\sectionname~\ref{sec:interesting-pairs}).
+    \label{fig:genuine-cmd}}
+\end{figure}
 
 \subsection{Highlighted comoving pairs}\label{sec:interesting-pairs}
 

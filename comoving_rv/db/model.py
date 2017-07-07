@@ -24,7 +24,8 @@ from .custom_types import (QuantityTypeClassFactory, JDTimeType,
 from .numpy_adapt import * # just need to execute code
 
 __all__ = ['Run', 'Observation', 'SimbadInfo', 'TGASSource',
-           'SpectralLineMeasurement', 'SpectralLineInfo', 'RVMeasurement']
+           'SpectralLineMeasurement', 'SpectralLineInfo', 'RVMeasurement',
+           'GroupToObservations']
 
 VelocityType = QuantityTypeClassFactory(u.km/u.s)
 WavelengthType = QuantityTypeClassFactory(u.angstrom)
@@ -345,3 +346,24 @@ class RVMeasurement(Base):
                                backref=backref('rv_measurement',
                                                cascade='all,delete-orphan',
                                                uselist=False))
+
+class GroupToObservations(Base):
+    __tablename__ = 'group_to_observations'
+
+    id = Column(types.Integer, primary_key=True)
+    group_id = Column(types.Integer, nullable=False)
+    new_group_id = Column(types.Integer, nullable=False)
+
+    observation1_id = Column('observation1_id', types.Integer,
+                             ForeignKey('observation.id'))
+    # observation1 = relationship('Observation', single_parent=True)
+
+    observation2_id = Column('observation2_id', types.Integer,
+                             ForeignKey('observation.id'))
+    # observation2 = relationship('Observation', single_parent=True)
+
+    def __repr__(self):
+        r = ('<GroupToObservations old group id={0}, new group id={1}, [{2}, {3}]>'
+             .format(self.group_id, self.new_group_id, self.observation1_id,
+                     self.observation2_id))
+        return r

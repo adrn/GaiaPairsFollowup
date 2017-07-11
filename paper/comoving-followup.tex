@@ -27,6 +27,9 @@
 \newcommand{\llrold}{\ensuremath{\mathcal{R}_\mu}}
 \newcommand{\llrnew}{\ensuremath{\mathcal{R}_{\rm RV}}}
 
+\definecolor{mediumpersianblue}{rgb}{0.0, 0.4, 0.65}
+\newcommand{\smoh}[1]{\textcolor{mediumpersianblue}{SO:#1}}
+
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Spectroscopic confirmation of very-wide binaries and large-separation
@@ -59,14 +62,17 @@
 
 \begin{abstract}
 % Context
-Widely-separated, coeval stars are powerful tools for testing star-formation
+Widely-separated ($\gtrsim X$~pc), coeval stars are powerful tools for testing star-formation
 model predictions, improving stellar atmosphere models, and inferring the
 mass distribution of the Milky Way.
+\smoh{The following sentence seems to be in the air while I get what you mean.}
 They vastly outnumber the Galactic open clusters, but are still expected to
 share a common origin and chemistry.
-The kinematic properties of bound wide binaries and their unbound complements
-serve as potentiometers for the smooth tidal field and perturbation spectrum in
+\smoh{How about sticking with the terminology ("comoving (star) pair") we want settled?}
+The kinematic properties of comoving pairs including bound wide binaries
+serve as potentiometers for the smooth tidal field and perturbation spectrum of
 the Milky Way.
+\smoh{If you are referring to Shaya \& Olling, how about adding 'using HIPPARCOS'?}
 Thus far, a few hundred genuine comoving star pairs with separations as large
 as $8~\pc$ have been discovered in the solar neighborhood.
 % Aims
@@ -74,13 +80,16 @@ In previous work, we have identified $\sim 10,000$ candidate comoving star pairs
 using only astrometric data from the Tycho-Gaia Astrometric Solution (TGAS)
 catalog, a part of \gaia\ \DR{1}.
 Without radial velocity measurements for the vast majority of the pairs, the
+\smoh{I prefer "false-positive rate" to "contamination rate" because it conveys
+the meaning more directly.}
 contamination rate at large separations is significant ($\sim 50\%$).
 % Methods
-Here, we present results from our own radial-velocity survey of a sample of the
+\smoh{I think some details of telescope/instrument or just R~2000 should be mentioned here.}
+Here, we present results from our own low-resolution radial-velocity survey of a sample of the
 candidate pairs to validate wide-separation comoving star pairs.
 % Results
 Of the 311 observed comoving pairs, we identify 128 genuine comoving pairs with
-separations as large as $\approx 10~\pc$.
+separations as large as $\approx 10~\pc$, our original search limit.
 % Conclusions
 We find that the number of comoving star pairs with very wide separations
 appears flat in linear separation at separations $\gtrsim 1~\pc$, strongly
@@ -106,15 +115,15 @@ stellar associations.
 \section{Introduction}\label{sec:introduction}
 
 The majority of stars are thought to form in dynamically cold, chemically
-homogeneous clusters, at least relative to the kinematic and chemical
-dispersions observed amongst typical stars in the Galactic disk.
+homogeneous clusters, relative to the kinematic and chemical
+dispersions observed amongst typical field stars in the Galactic disk.
 Because star formation proceeds rapidly (e.g., \citealt{Bovy:2016}) and the
 progenitor gas cloud disperses quickly (cite), it is typically assumed that
 stars formed in the same birth cluster have the same initial chemistry
 (e.g., cite + \citealt{Feng:2014}) and same ages.
 These birth clusters are typically born un- or loosely-bound and therefore
 quickly succumb to the tidal field of the Milky Way.
-Obvious dynamical associations between stars from the same cluster are then
+The initial kinematic associations between stars from the same cluster are then
 erased as the constituent stars mix into the general population of disk stars.
 However, the stars do preserve their initial associations in age, chemical
 abundance patterns, and dynamical invariants (e.g., orbital actions).
@@ -125,15 +134,18 @@ That is, the chemical environment of a birth cluster is likely imprinted on its
 stellar children and preserved so that their initial association may be inferred
 with precisely measured abundance patterns (of $\gtrsim 10$ species).
 
-The feasibility of chemical tagging depends on the intrinsic chemical
-dispersions of stars formed from the same birth clusters, the precision of the
-abundance measurements, and the ability to tell that the chemical abundances of
-two stars are more similar than two randomly-paired Galactic disk stars.
-Recent work suggests that, at least for red giant stars, the abundance
+The feasibility of chemical tagging depends on not only on the precision of
+the abundance measurements but also on the intrinsic chemical
+dispersions of stars formed from the same birth clusters,
+and the ability to tell that the chemical abundances of
+two stars from the same cluster are more similar than two randomly-paired Galactic disk stars.
+Recent works suggest that, at least for red giant stars, the abundance
 distributions of 20 elements in a handful of open clusters included in the
 \acronym{APOGEE} survey (\citealt{Majewski:2016,Nidever:2015}) are consistent
 with having intrinsic dispersions smaller than the abundance measurement
 precisions ($\approx 0.03~\dex$; \citealt{Bovy:2016,Ness:2017}).
+\smoh{I find the following sentence out of place. Doesn't it mean that
+  the intrinsic dispersion is effectively zero rather than ``unconstrained''?}
 In effect, for most elements, the intrinsic dispersions are unconstrained
 because of measurement noise, so the true intrinsic dispersions are not known.
 This demonstration of chemical uniformity in open clusters is promising for
@@ -154,7 +166,8 @@ Precise kinematic and color data from the \gaia\ mission
 (\citealt{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}) will help refine
 existing membership catalogs and will lead to discoveries of many more open
 clusters and young star associations (see, e.g., \citealt{Oh:2017}).
-However, because they disrupt quickly, the present-day open cluster population
+However, because they disrupt quickly (\smoh{a quantitative time scale?},
+the present-day open cluster population
 is biased towards younger or more massive clusters.
 
 An alternate tracer of the chemical properties mentioned above are
@@ -216,15 +229,17 @@ velocities of each star in the pair are identical and sampled from a disk-like,
 Sun-relative velocity distribution, and likelihood 2, $L_2$, considers a model
 in which the full-space velocities of each star were drawn independently from
 the same velocity distribution used above. The computed likelihood ratio is
-actually the the ratio of fully marginalized likelihoods,
+actually the ratio of fully marginalized likelihoods,
 $\mathcal{L}_1/\mathcal{L}_2$, after marginalizing over true velocity and
 distance for each star in a given pair.
 After a parallax signal-to-noise ratio (SNR) cut ($\pi/\sigma_\pi > 8$), we
 compute the likelihood ratio for all stars within $10~\pc$ of each target star
 from the \tgas\ catalog.
+\smoh{To be complete, we should mention $\Delta v_\perp < 10$~km/s cut.
+  Or I think it's also an option to cut on much of these details consistently.}
 The likelihoods appropriately take into account the reported covariances and
 uncertainties between the astrometric measurements in the \tgas\ catalog and
-naturally handle geometric or projection effects in comparing spherical
+naturally handle geometric or projection effects in comparing spherical \smoh{?}
 velocity components for star pairs separated by large angles on the sky.
 After applying a conservative cut on the likelihood ratio motivated by computing
 the same likelihood ratio for random pairings of stars ($\ln
@@ -271,7 +286,7 @@ Candidate comoving pairs are connected by (colored) lines.
 Spectra were obtained using the \project{Modspec} spectrograph mounted on the
 $2.4~{\rm m}$ Hiltner telescope at MDM
 observatory\footnote{\url{http://mdm.kpno.noao.edu}} on Kitt Peak (Arizona).
-\project{Modspec} was set up in long-slit mode with a 1'' slit, a $600~{\rm
+\project{Modspec} was set up in long-slit mode with a 1\arcsec\ slit, a $600~{\rm
 line}~{\rm mm}^{-1}$ grating, and a $2048\times2048~{\rm pixel}$ SITe CCD
 detector (``Echelle'').
 Only the central 300 pixel columns were read out from the CCD, and pixel rows
@@ -281,24 +296,32 @@ The resolution and wavelength range were $\approx2~{\rm \AA}~{\rm pixel}^{-1}$
 from $\approx 3600$--$7200~{\rm \AA}$.
 At this resolution, to obtain high signal-to-noise spectra, most exposures were
 between $30$--$120~{\rm s}$ (15th and 85th percentiles).
-To maximize the number of observed pairs, we therefore chose to not take
-comparison lamp spectra at each pointing, which adds an overhead of $\approx
+To maximize the number of observed pairs, we chose not to take
+comparison lamp spectra at each pointing as it adds an overhead of $\approx
 90~{\rm s}$ per observation.
-To determine rough nightly wavelength solutions, spectra were obtained using
-Hg-Ne and Ne comparison lamps at the beginning and end of each night, and
-atmospheric emission lines were used to correct the wavelength solution on a
+To determine rough nightly wavelength solutions, calibration spectra were obtained using
+Hg-Ne and Ne comparison lamps at the beginning and end of each night.
+Additionally, atmospheric emission lines were used to correct the wavelength solution on a
 per-object basis.
 
 We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
 2017-03-15, corresponding to 323 unique star pairs and $\approx 120$
 calibration targets.
+\smoh{How about ``The calibration targets serve two purposes. First, ...
+  just so that it is more explicit, plain, and direct, and also ties in
+  with how we chose the calibration targets?}
 The calibration targets have previously measured radial velocities and chemical
 abundances, which will be used for validation of our reduction pipeline and in
 future work to measure metallicities and stellar parameters for each observed
 source using \project{The Cannon} (\citealt{Ness:2015}).
 The spectra were reduced and calibrated using a custom, publicly-available
 pipeline written in \python, described below.
+\smoh{How the calibration targets were chosen is missing here.}
 
+\smoh{Throughout this paragraph, consider changing e.g.,
+  ``16 pixel rows'' to ``16 pixels in wavelength direction''?
+  Or explicitly mention somewhere (perhaps at the start of this section)
+  that x (along rows) is spatial and y (along columns) is spectral direction?}
 For each source or comparison lamp observation, the two-dimensional image is
 bias corrected, flat-field corrected, and trimmed using standard routines
 implemented in \package{ccdproc} (\citealt{Craig:2015}).
@@ -307,7 +330,7 @@ and summed along the spatial axis, weighted by the inverse-variances of each
 pixel.
 Source spectral traces were always placed in this region during observations,
 and the curvature of the wavelength solution over this region is negligible.
-For source observations, the 2D spectra are extracted to 1D using an empirical
+For source observations, 1D spectra are extracted using an empirical
 estimate of the pixel-convolved line spread function (LSF): at each of 16 pixel
 rows between indices 750 and 850 (i.e. around the effective center of the
 dispersion axis), a model for the LSF is fit to the 1D trace.
@@ -385,7 +408,7 @@ a significant velocity offset at \Ha\ of $\approx 25$--$100~\kms$ (discussed
 below).
 \figurename~\ref{fig:sample-spectra} shows a random sample of 10
 wavelength-calibrated source spectra of comoving star pair members normalized
-to 1 at $\lambda = 5500~{\rm \AA}$ and shifted by index for visualization.
+to 1 at $\lambda = 5500~{\rm \AA}$ and \smoh{shifted by index (confusing)} for visualization.
 As suggested by the features in these 10 spectra, there is a mix of
 metallicities and spectral types amongst the observed targets.
 Note that the spectra are not flux-calibrated, as we only care about measuring

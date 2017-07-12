@@ -222,68 +222,6 @@ If you are uninterested in these details, skip to \sectionname~\ref{sec:results}
 and \sectionname~\ref{sec:discussion} where we present and discuss our main
 results.
 
-% The majority of stars are thought to form in dynamically cold, chemically
-% homogeneous clusters, relative to the kinematic and chemical
-% dispersions observed amongst typical field stars in the Galactic disk.
-% Because star formation proceeds rapidly (e.g., \citealt{Bovy:2016}) and the
-% progenitor gas cloud disperses quickly (cite), it is typically assumed that
-% stars formed in the same birth cluster have the same initial chemistry
-% (e.g., cite + \citealt{Feng:2014}) and same ages.
-% These birth clusters are typically born un- or loosely-bound and therefore
-% quickly succumb to the tidal field of the Milky Way.
-% The initial kinematic associations between stars from the same cluster are then
-% erased as the constituent stars mix into the general population of disk stars.
-% However, the stars do preserve their initial associations in age, chemical
-% abundance patterns, and dynamical invariants (e.g., orbital actions).
-% It has therefore been long presumed that ``chemical tagging'' and chemodynamical
-% models of the Galactic disk will allow for inferences about the formation and
-% evolution of the Milky Way (e.g., \citealt{todo}).
-% That is, the chemical environment of a birth cluster is likely imprinted on its
-% stellar children and preserved so that their initial association may be inferred
-% with precisely measured abundance patterns (of $\gtrsim 10$ species).
-
-% The feasibility of chemical tagging depends on not only on the precision of
-% the abundance measurements but also on the intrinsic chemical
-% dispersions of stars formed from the same birth clusters,
-% and the ability to tell that the chemical abundances of
-% two stars from the same cluster are more similar than two randomly-paired Galactic disk stars.
-% Recent works suggest that, at least for red giant stars, the abundance
-% distributions of 20 elements in a handful of open clusters included in the
-% \acronym{APOGEE} survey (\citealt{Majewski:2016,Nidever:2015}) are consistent
-% with having intrinsic dispersions smaller than the abundance measurement
-% precisions ($\approx 0.03~\dex$; \citealt{Bovy:2016,Ness:2017}), though the true
-% intrinsic dispersions are not known.
-% This demonstration of chemical uniformity in open clusters is promising for
-% chemical tagging.
-% However, it was also recently shown that $\approx 0.3\%$ of random pairings of
-% Galactic field red giant stars have abundance patterns that are
-% indistinguishable at the same level (``doppelgangers''), even with 20 chemical
-% species (\citealt{Ness:2017}).
-
-% Are these properties of open clusters universal, or limited to the few clusters
-% presently studied?
-% Do the chemical properties of open clusters depend on the star formation rate or
-% efficiency, which may evolve with time?
-% Ideal tests of the chemical homogeneity assumptions would use many more open
-% clusters with varied cluster masses and member stars that span a large range in
-% stellar masses and evolutionary stages.
-% Precise kinematic and color data from the \gaia\ mission
-% (\citealt{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}) will help refine
-% existing membership catalogs and will lead to discoveries of many more open
-% clusters and young star associations (see, e.g., \citealt{Oh:2017}).
-% However, because they disrupt quickly (\smoh{a quantitative time scale?},
-% the present-day open cluster population
-% is biased towards younger or more massive clusters.
-
-% High-resolution spectroscopy is still needed to measure detailed chemical
-% abundances of these pairs, which may present interesting surprises; one
-% large-separation ($\approx 0.6~\pc$) comoving pair of solar-type stars
-% discovered in previous work (\citealt{Oh:2017}) with serendipitously observed
-% high-resolution, high signal-to-noise spectra display large abundance
-% differences ($\approx 0.2~\dex$) that appear to have resulted from massive
-% accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
-% submitted).
-
 \section{Data}\label{sec:data}
 
 \subsection{Sample selection}\label{sec:sample}
@@ -814,8 +752,8 @@ In practice, we compute the logarithm of the likelihood ratios,
 $\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
 proper-motion-only log-FML-ratio for a given pair of stars as
 \llrold\ (as computed in \citealt{Oh:2017})m and the log-FML-ratio including the radial velocity data as \llrnew.
-We consider a pair as being genuinely comoving if $\llrnew > \llrold$---128 of
-the 311 comoving pairs satisfy this constraint.
+We consider a pair as being genuinely comoving if $\llrnew > \llrold$ ---
+\ncomoving of the \npairsobs\ comoving pairs satisfy this constraint.
 \figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
 plotted against the change in log-likelihood-ratio, $\llrnew - \llrold$, for all
 observed pairs.
@@ -908,7 +846,8 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     pairs.
     Several interesting pairs that include main-sequence and giant component
     stars are highlighted in the text
-    (\sectionname~\ref{sec:interesting-pairs}).
+    (\sectionname~\ref{sec:interesting-pairs} and
+    \figurename~\ref{fig:highlighted-cmd}).
     \label{fig:genuine-cmd}}
 \end{figure}
 
@@ -919,50 +858,88 @@ the main sequence in color-magnitude space. The majority of our star pairs
 appear to follow this expectation, with the exception of a few visible outliers.
 For example, there appear to be at least a few main-sequence--giant-branch
 pairs, and a few pairs that appear to cross the main-sequence.
-We highlight a few of these pairs below.
+We highlight a few of these pairs below and in
+\figurename~\ref{fig:highlighted-cmd}.
 
-\subsubsection{HD 95088 \& HD 92278}
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{highlighted_cmd.pdf}
+  \end{center}
+  \caption{%
+    Same as \figurename~\ref{fig:genuine-cmd}, but only three highlighted
+    comoving star pairs are shown.
+    \label{fig:highlighted-cmd}}
+\end{figure}
 
-\todo{Highlight the G subgiant-A pair}
+\subsubsection{HD 95088 -- HD 92278}
 
+HD 95088 HD 92278
+Angular sep.: 4.49 deg
+Chord length: 8.66 pc
+3D sep.: 9.53 pc
+parallaxes: 9.00 +/- 0.50, 9.32 +/- 0.51
 
-\subsubsection{HD 151090 \& HIP 81988}
+This pair is separated by $8.7~\pc$ in chord length ($4.5^\circ$ on the sky) and
+have consistent distances within their uncertainties of $\approx 110~\pc$.
+From visual classification of the stars' location in the color--magnitude
+diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
+comprised of an A-type dwarf and a slightly less massive G-type subgiant.
+If this is indeed the case, the two stars could therefore not be coeval, as the
+more massive A star has not begun its post-main-sequence evolution.
+One possible explanation is that this pair is a false-positive in three
+dimensions, in which case they are unassociated but just appear to be comoving
+with small relative velocity at present day.
 
-\todo{G-subgiant - K-dwarf - well known high proper-motion comoving pair}
+Other possibilities stem from the possibility that the comoving pair is the
+outcome of an interaction between more stars.
+For example, an interaction between two wide binaries could result in an
+exchange of members, a hardening of one resulting binary, and a widening of the
+other binary (see, e.g., \citealt{Nathan??}).
+Or, the initial system could have been an unstable three-body system that
+resulted in a tight, inner binary and a wide outer binary;
+if the inner binary were close enough, it could have merged and formed a blue
+straggler star (e.g., \citealt{??}), leaving the wide binary untouched.
 
+These explanations are all speculative at the moment; high-resolution
+spectroscopy of these stars --- and precise measurements of the stellar
+parameters and chemical abundances --- may help to distinguish these
+possibilities.
 
-\subsubsection{HD 54318 \& TYC 3792-658-1}
+\subsubsection{HD 79247 -- TYC 3807-1439-1}
 
-\todo{Highlight the largest mag difference MS pair - K-dwarf - B-star}
+This pair is separated by $XX~\pc$ in chord length ($XX^\circ$ on the sky) and
+have consistent distances within their uncertainties of $\approx XX~\pc$.
+From visual classification of the stars' location in the color--magnitude
+diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
+comprised of a G-type subgiant and a G-type dwarf.
+
+\subsubsection{HD 54318 -- TYC 3792-658-1}
+
+TYC 3792-658-1 HD 54318
+Angular sep.: 2.51 deg
+Chord length: 8.45 pc
+3D sep.: 8.73 pc
+parallaxes: 5.20 +/- 0.23, 5.30 +/- 0.32
+
+This pair is separated by $8.5~\pc$ in chord length ($2.5^\circ$ on the sky) and
+have consistent distances within their uncertainties of $\approx 190~\pc$.
+
+From visual classification of the stars' location in the color--magnitude
+diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
+comprised of a late-A-/early-B-type dwarf and a G-type dwarf.
 
 
 \subsection{Combined with RAVE}\label{sec:rave}
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=\linewidth]{separation-hist-rave.pdf}
+    \includegraphics[width=\linewidth]{separation-with-rave.pdf}
   \end{center}
   \caption{%
-    Same as \figurename~\ref{fig:separation}, but for our sample of genuine
-    comoving stars combined with all genuine comoving stars identified from the
-    RAVE overlap.
     \label{fig:separation-RAVE}}
 \end{figure}
 
-% \begin{figure}[htbp]
-%   \begin{center}
-%     \includegraphics[width=\linewidth]{genuine_cmd_rave.pdf}
-%   \end{center}
-%   \caption{%
-%     Color-magnitude diagram of \emph{genuine} comoving star pairs plotted over
-%     the density of all \tgas\ sources within 200 pc; similar to
-%     \figurename~\ref{fig:sample-cmd}, but for only the genuine comoving
-%     pairs.
-%     Several interesting pairs that include main-sequence and giant component
-%     stars are highlighted in the text
-%     (\sectionname~\ref{sec:interesting-pairs}).
-%     \label{fig:genuine-cmd}}
-% \end{figure}
+Caution about selection criteria, false-positives at large separation...
 
 \section{Discussion} \label{sec:discussion}
 
@@ -986,13 +963,73 @@ distribution.
 % Caution that prior results are for red giants, MS stars may have planetary
 % imprints that get erased as dredge-up and convective layer erases...
 
-\todo{Do I want to do isochrone fitting for all of them?}
-
 Abundances - future work, Coronado in prep.! But: throw shade on abundances
 because planet engulfment (https://arxiv.org/pdf/1707.02180.pdf). Also Oh et al.
 2017b
 
 Dynamical capture at these radii are improbable, but <insert words about binary-binary encounters from Nathan>
+
+% The majority of stars are thought to form in dynamically cold, chemically
+% homogeneous clusters, relative to the kinematic and chemical
+% dispersions observed amongst typical field stars in the Galactic disk.
+% Because star formation proceeds rapidly (e.g., \citealt{Bovy:2016}) and the
+% progenitor gas cloud disperses quickly (cite), it is typically assumed that
+% stars formed in the same birth cluster have the same initial chemistry
+% (e.g., cite + \citealt{Feng:2014}) and same ages.
+% These birth clusters are typically born un- or loosely-bound and therefore
+% quickly succumb to the tidal field of the Milky Way.
+% The initial kinematic associations between stars from the same cluster are then
+% erased as the constituent stars mix into the general population of disk stars.
+% However, the stars do preserve their initial associations in age, chemical
+% abundance patterns, and dynamical invariants (e.g., orbital actions).
+% It has therefore been long presumed that ``chemical tagging'' and chemodynamical
+% models of the Galactic disk will allow for inferences about the formation and
+% evolution of the Milky Way (e.g., \citealt{todo}).
+% That is, the chemical environment of a birth cluster is likely imprinted on its
+% stellar children and preserved so that their initial association may be inferred
+% with precisely measured abundance patterns (of $\gtrsim 10$ species).
+
+% The feasibility of chemical tagging depends on not only on the precision of
+% the abundance measurements but also on the intrinsic chemical
+% dispersions of stars formed from the same birth clusters,
+% and the ability to tell that the chemical abundances of
+% two stars from the same cluster are more similar than two randomly-paired Galactic disk stars.
+% Recent works suggest that, at least for red giant stars, the abundance
+% distributions of 20 elements in a handful of open clusters included in the
+% \acronym{APOGEE} survey (\citealt{Majewski:2016,Nidever:2015}) are consistent
+% with having intrinsic dispersions smaller than the abundance measurement
+% precisions ($\approx 0.03~\dex$; \citealt{Bovy:2016,Ness:2017}), though the true
+% intrinsic dispersions are not known.
+% This demonstration of chemical uniformity in open clusters is promising for
+% chemical tagging.
+% However, it was also recently shown that $\approx 0.3\%$ of random pairings of
+% Galactic field red giant stars have abundance patterns that are
+% indistinguishable at the same level (``doppelgangers''), even with 20 chemical
+% species (\citealt{Ness:2017}).
+
+% Are these properties of open clusters universal, or limited to the few clusters
+% presently studied?
+% Do the chemical properties of open clusters depend on the star formation rate or
+% efficiency, which may evolve with time?
+% Ideal tests of the chemical homogeneity assumptions would use many more open
+% clusters with varied cluster masses and member stars that span a large range in
+% stellar masses and evolutionary stages.
+% Precise kinematic and color data from the \gaia\ mission
+% (\citealt{Gaia-Collaboration:2016,Gaia-Collaboration:2016a}) will help refine
+% existing membership catalogs and will lead to discoveries of many more open
+% clusters and young star associations (see, e.g., \citealt{Oh:2017}).
+% However, because they disrupt quickly (\smoh{a quantitative time scale?},
+% the present-day open cluster population
+% is biased towards younger or more massive clusters.
+
+% High-resolution spectroscopy is still needed to measure detailed chemical
+% abundances of these pairs, which may present interesting surprises; one
+% large-separation ($\approx 0.6~\pc$) comoving pair of solar-type stars
+% discovered in previous work (\citealt{Oh:2017}) with serendipitously observed
+% high-resolution, high signal-to-noise spectra display large abundance
+% differences ($\approx 0.2~\dex$) that appear to have resulted from massive
+% accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
+% submitted).
 
 \section{Conclusions}
 
@@ -1007,6 +1044,8 @@ Need much larger sample with no cuts on separation or signal-to-noise to study t
 Gaia DR2 for G < 12, but really we need a concerted effort to obtain spectroscopy of wide pairs.
 
 \acknowledgements
+
+Dave Zurek, Keith, Ruth, Kelle
 John Brewer (Yale),
 Jason Curtis (Columbia),
 James Davenport (WWU) for PyDIS,

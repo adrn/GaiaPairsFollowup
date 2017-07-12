@@ -113,72 +113,94 @@ stellar associations.
 Widely-separated, coeval pairs or multiplets of stars --- i.e. wide binaries,
 multiplets, or former binaries or multiplets --- are important tracers of many
 processes that formed and continue to shape the Milky Way.
-For example, they have been used to place limits on the mass distribution and
-population of massive perturbers in the Galaxy (e.g., \citealt{Yoo:2004}), to
-study the dynamical outcomes of star formation processes (e.g.,
-\citealt{Reipurth:2012}), and to calibrate stellar models and inferences across
-the main sequence (e.g., \citealt{Brewer:2016}).
+They have been used to place limits on the mass distribution and population of
+massive perturbers in the Galaxy (e.g., \citealt{Yoo:2004}), to study the
+dynamical outcomes of star formation processes (e.g., \citealt{Reipurth:2012}),
+and to calibrate stellar models and inferences across the main sequence (e.g.,
+\citealt{Brewer:2016}).
 These examples represent a small subset of a much broader range of applications
 (see, e.g., \citealt{Chaname:2007}).
 
 At smaller separations ($\lesssim 0.1~\pc$), comoving pairs of stars are likely
-bound wide binaries and are therefore coeval.
+bound wide binaries.
+It has long been recognized that the observed period or separation distribution
+of these low-binding-energy binaries encapsulates information about the
+Galactic mass distribution (\citealt{Opik:1924,Oort:1950,Bahcall:1985}).
+In particular, early simulations of populations of wide binaries showed that
+the expected separation distribution, $p(s)$, for $0.01 < s < 1~\pc$ tends to
+follow a power law, $p(s) \propto s^{-\alpha}$ for $\alpha \approx 1$--$2$,
+with a possible steep break that depends on the details of the population of
+massive perturbers in the Galaxy, i.e. giant molecular clouds (GMCs), black holes, etc. (\citealt{Weinberg:1987}).
+
 At larger separations ($\gtrsim 0.1~\pc$), comoving pairs are likely a mix of
-tenuously bound stars, recently disrupted binaries, moving groups or dynamical
-features, and the final products of dissolving stellar associations or open
+tenuously bound stars, recently disrupted binaries, moving groups or resonant
+features, and the final products of dissolving stellar associations or
 clusters.
 However, even at separations of $\sim 0.1~\pc$, we typically lack the precision
 to determine the binding energy of a system and therefore can't determine its
 true dynamical state; because of this ambiguity, we refer to both bound and
-unbound systems collectively as ``comoving stars.''
+unbound widely-separated ($\gtrsim 10^{-3}~\pc$) systems collectively as
+``comoving'' systems.
 
-Comoving stars are identified by searching for approximately cospatial stars
-that appear to be comoving either in full-space or in sky-projected velocities.
 Primarily thanks to large astrometric surveys and catalogs
 (\citealt{ESA:1997,Lepine:2005,Gaia-Collaboration:2016}) and radial-velocity
-surveys (\citealt{Steinmetz:2006}), several hundred confirmed comoving pairs
-(\citealt{Shaya:2011}) and over 10,000 candidate systems
-(\citealt{Gould:2004,Lepine:2007,Tokovinin:2012,Allen:2014,Oh:2017,Oelkers:2017,
-Andrews:2017}) have already been discovered.
-Radial velocity follow-up is still needed to confirm the majority of these
-pairs, though \gaia\ \DR{2} will provide radial velocities for the brightest
-stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
+surveys (\citealt{Steinmetz:2006}), several hundred confirmed comoving star
+pairs (\citealt{Shaya:2011}) and over 10,000 candidate systems
+(\citealt{Gould:2004,Lepine:2007,Tokovinin:2012,Allen:2014,Oh:2017,
+Oelkers:2017, Andrews:2017}) have been discovered over the last several decades (see also \citealt{Chaname:2007} and references therein).
+These pairs are identified by searching for approximately cospatial stars that
+appear to be comoving either in sky-projected velocities --- we refer to these
+as ``comoving pair candidates'' --- or using full-space velocity information --- we refer to these as ``comoving pairs.''
+Radial velocity follow-up is still needed to confirm the majority of the known
+candidates, though \gaia\ \DR{2} will provide radial velocities for the
+brightest stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
 
-It has long been recognized that the observed period or separation distribution
-of binary stars encapsulates information about star formation and dynamical
-processes of the Galaxy (\citealt{Opik:1924}).
-[If the initial distribution power law, break and steepens from perturbations]
-[a bit of theory about wide binaries...predictions for wide binary separations?]
-(Weinberg87)
-
-Using candidate comoving pairs selected based on their proper motions alone,
-several groups have measured the separation distribution of comoving stars at
-angular separations $\Delta \theta \lesssim 1^\circ$ where the false-positive
-rate is expected to be lower (\citealt{Chaname:2004,Lepine:2007,Sesar:2008});
-these are likely predominantly wide binaries.
+With large samples of candidate pairs, several groups have measured the
+separation distribution of wide binaries at angular separations $\Delta \theta
+\lesssim 1^\circ$ where the false-positive rate is expected to be lower
+and the samples are likely predominantly wide binaries
+(\citealt{Chaname:2004,Lepine:2007,Sesar:2008}).
 In most cases, the angular or projected separation distribution is fit using a
 decreasing power-law, and the power-law index, $\alpha$, is found to be $\alpha
 \approx 1.5$--$2$ out to angular separations of $\approx 0.25^\circ$ ($\approx
-0.65~\pc$ at a distance of $150~\pc$).
+0.65~\pc$ at a distance of $150~\pc$), apparently consistent with simulations.
 Tentative reports of a steepening or cutoff of the separation distribution at
 larger separations have been claimed (e.g., \citealt{Yoo:2004,Quinn:2009}), but
 these claims are limited by small numbers of confirmed pairs at large
 separations.
 
-While the separation distribution of wide binaries appears to and is expected to
-fall off rapidly with increasing separation, predictions for the separation
-distribution of \emph{comoving stars} are less clear.
-Early work suggested ionized pairs don't matter much...
-[But including tidal field...] (jiang and tremaine)
-[But still haven't included perturbers...]
-[Tentative evidence of this population in (shaya and olling)]
-[Need larger samples of confirmed large-separation pairs]
+Most measurements of the separation distribution have neglected the possible
+existence of larger separation ($\gtrsim 1~\pc$) unbound or ionized pairs.
+Early theoretical work either explicitly ignored these stars (e.g.,
+\citealt{Weinberg:1987}), or suggested that unbound stars would drift and no
+longer remain spatially coherent within one Galactic orbit (e.g., see Appendix
+in \citealt{Yoo:2004}).
+More recent simulations of the disruption and evolution of wide binary
+populations include an approximation of the Galactic tidal field and instead
+predict that ionized binaries could appear as a second peak or component in the
+separation distribution of comoving stars at much larger separations (10--
+$1000~\pc$; \citealt{Jiang:2010}).
+Though these simulations don't include perturbers like GMCs or black holes,
+this at least indicates that a simple, monotonic separation distribution may
+be too simple of a model for the separation distribution of comoving stars in
+our Galaxy.
 
+Indeed, observational work that followed appears to find tentative evidence for
+the existence of a second peak in the separation distribution of
+radial-velocity-confirmed comoving stars (\citealt{Shaya:2011}).
+Using a ... todo: describe their paper
+
+To verify the existence of this unbound population of very wide-separation
+comoving pairs, we will need to identify a large sample of confirmed comoving
+stars.
+This will already be possible for the brightest stars with \gaia\ \DR{2}, but
+obtaining even larger samples will require significant efforts to obtain radial
+velocities for candidate comoving pairs.
 In this work, we present a catalog of confirmed comoving star pairs discovered
-through radial velocity follow-up of candidate comoving stars selected from
-inferences using their astrometry alone (\citealt{Oh:2017}).
-This work serves as a pilot study for data expected in upcoming data releases
-from the \gaia\ mission.
+through low-resolution spectroscopic follow-up of candidate comoving stars
+selected from inferences using astrometric measurements from the \tgas\ catalog
+alone (\citealt{Oh:2017}).
+
 We describe the data, observations, and spectroscopic reduction in
 \sectionname~\ref{sec:data}.
 If you are uninterested in these details, skip to \sectionname~\ref{sec:results}

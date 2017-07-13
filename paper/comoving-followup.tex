@@ -22,6 +22,7 @@
 \newcommand{\gaia}{\project{Gaia}}
 \newcommand{\DR}[1]{\acronym{DR}#1}
 \newcommand{\tgas}{\acronym{TGAS}}
+\newcommand{\tmass}{\acronym{2MASS}}
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 \newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
 \newcommand{\dex}{\ensuremath{{\rm dex}}}
@@ -267,6 +268,24 @@ $\approx$4,000 of the pairs are mutually exclusive, i.e. neither member is
 paired with other stars.
 For a full description of the selection method, see \citealt{Oh:2017}.
 
+\begin{figure}[ht!]
+  \begin{center}
+    \includegraphics[width=0.8\linewidth]{sample_cmd.pdf}
+  \end{center}
+  \caption{%
+    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
+    blue histogram) and all comoving star pair members observed in this
+    follow-up effort (black points); colored lines connect candidate comoving
+    star pairs.
+    \tmass\ (\citealt{Skrutskie:2006}) $J$-band magnitudes are obtained
+    from the Gaia science archive.
+    Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
+    absolute magnitude, $M_G$, using a Lutz-Kelker-corrected
+    (\citealt{Lutz:1973}) distance estimate (see also \eqname~1 in
+    \citealt{Oh:2017}).
+    \label{fig:sample-cmd}}
+\end{figure}
+
 To select candidate pairs for follow-up spectroscopic observations, we only
 consider mutually exclusive star pairs within $200~\pc$ in Heliocentric
 distance; with the SNR cut used above and given the limitations of the \tgas\
@@ -278,24 +297,6 @@ From this source target list, we randomly observed targets with airmass $\sec z
 observed in this observing run (markers) plotted over the density of all \tgas\
 stars within $200~\pc$.
 Candidate comoving pairs are connected by (colored) lines.
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=\linewidth]{sample_cmd.pdf}
-  \end{center}
-  \caption{%
-    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
-    blue histogram) and all comoving star pair members observed in this
-    follow-up effort (black points); colored lines connect candidate comoving
-    star pairs.
-    2MASS $J$-band magnitudes are obtained from the Gaia science
-    archive.
-    Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
-    absolute magnitude, $M_G$, using a Lutz-Kelker-corrected
-    (\citealt{Lutz:1973}) distance estimate (see also \eqname~1 in
-    \citealt{Oh:2017}).
-    \label{fig:sample-cmd}}
-\end{figure}
 
 \subsection{Observations and data reduction}\label{sec:reduction}
 
@@ -491,6 +492,33 @@ the spectrum is flagged as having a suspect wavelength calibration.
 In practice, most such sources are calibration targets, which are more likely to
 have very short exposure times and thus weak night-sky lines.
 
+\begin{table}[ht]
+  \begin{center}
+    \begin{tabular}{ c | c }
+      \toprule
+        Parameter & Prior \\\toprule
+        $\ln A$ & $\mathcal{U}(2, 16)$\\
+        $x_0$ & $\mathcal{U}(6547, 6579)$\\
+        $\ln\sigma_G$ & $\mathcal{U}(-4, 2)$\\
+        $\ln\gamma_L$ & $\mathcal{U}(-4, 2)$\\
+        $\alpha_1$ & $\mathcal{U}(0, 10^{16})$\\
+        $\alpha_2$ & $\mathcal{U}(-10^8, 10^8)$\\
+        $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
+        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$\\
+      \bottomrule
+    \end{tabular}
+    \caption{
+      Priors used for \Ha\ line profile model parameters.
+      $\mathcal{U}(a, b)$ indicates a uniform prior between $a$ and $b$ and
+      $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
+      $\mu$ and variance $\sigma^2$.
+      Wavelength units are all angstroms.
+      \todo{what are the flux units?}
+      \label{tbl:prior-bounds}
+    }
+  \end{center}
+\end{table}
+
 To derive radial velocities for each source, we then measure the (wavelength)
 line centroid of \Ha\ in each corrected spectrum.
 We model the absorption line using a pixel-convolved Voigt profile and use a
@@ -540,35 +568,13 @@ We use the MAD to estimate the standard deviation ($\sigma \approx 1.5\times{\rm
 MAD}$, assuming the samples are Gaussian distributed) of the samples and find
 that the typical velocity \emph{precision} from measuring the centroid of \Ha\
 is between $5$--$10~\kms$.
+We report the measured absolute radial velocities along with compiled sky
+position, astrometry, and $G$-band magnitude from the \tgas\ catalog and \tmass\
+$J$-band magnitudes for all of our comoving star targets in the ``stars'' data
+table available with this \documentname; see \tablename~\ref{tbl:data-stars} for
+a detailed description of the content of this table.
 
-\begin{table}[ht]
-  \begin{center}
-    \begin{tabular}{ c | c }
-      \toprule
-        Parameter & Prior \\\toprule
-        $\ln A$ & $\mathcal{U}(2, 16)$\\
-        $x_0$ & $\mathcal{U}(6547, 6579)$\\
-        $\ln\sigma_G$ & $\mathcal{U}(-4, 2)$\\
-        $\ln\gamma_L$ & $\mathcal{U}(-4, 2)$\\
-        $\alpha_1$ & $\mathcal{U}(0, 10^{16})$\\
-        $\alpha_2$ & $\mathcal{U}(-10^8, 10^8)$\\
-        $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
-        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$\\
-      \bottomrule
-    \end{tabular}
-    \caption{
-      Priors used for \Ha\ line profile model parameters.
-      $\mathcal{U}(a, b)$ indicates a uniform prior between $a$ and $b$ and
-      $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
-      $\mu$ and variance $\sigma^2$.
-      Wavelength units are all angstroms.
-      \todo{what are the flux units?}
-      \label{tbl:prior-bounds}
-    }
-  \end{center}
-\end{table}
-
-\begin{figure}[htbp]
+\begin{figure}[!hp]
   \begin{center}
     \includegraphics[width=\linewidth]{mcmc_corner.pdf}
   \end{center}
@@ -584,7 +590,7 @@ is between $5$--$10~\kms$.
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=\linewidth]{mcmc_example_fit.pdf}
+    \includegraphics[width=0.7\linewidth]{mcmc_example_fit.pdf}
   \end{center}
   \caption{%
     Visualization of the \Ha\ absorption line model and fits for the source HD
@@ -602,6 +608,32 @@ is between $5$--$10~\kms$.
     computed from the median posterior PDF sample.
     \label{fig:Halpha-mcmc-fit}}
 \end{figure}
+
+\begin{table}[htb]
+    \centering
+    \caption{Description of columns in data table containing results from radial
+    velocity follow-up.} \label{tbl:data-stars}
+    \begin{tabular}{l|l|l}
+        \toprule
+        Column Name    & Unit & Description\\
+        \midrule
+        \texttt{Oh17\_id}         &      & Row index in candidate catalog (\citealt{Oh:2017})\\
+        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
+        \texttt{tgas\_source\_id} &      & Unique source identifier from \tgas\\
+        \texttt{name}             &      & HD, \project{Hipparcos}, or \project{Tycho-2} identifier\\
+        \texttt{ra}               & deg  & Right ascension from \tgas\\
+        \texttt{dec}              & deg  & Declination from \tgas\\
+        \texttt{parallax}         & mas  & Parallax from \tgas\\
+        \texttt{distance}         & pc   & Distance estimate using inverse parallax from \tgas\\
+        \texttt{G}                & mag  & \gaia\ $G$-band magnitudes\\
+        \texttt{J}                & mag  & \tmass\ $J$-band magnitudes\\
+        \texttt{rv}               & \kms & Radial velocity measured in this work\\
+        \texttt{rv\_err}          & \kms & Radial velocity error\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% \clearpage
 
 \subsection{Validation of absolute radial velocities}\label{sec:rv-validation}
 
@@ -781,6 +813,32 @@ randomly chosen pairs.
 Note that pairs with large 3D velocity differences have large (negative) changes
 to their log-likelihood-ratio values.
 
+The inferred 3D velocity differences and values for \llrnew\ and \llrold\ for
+all observed candidate comoving pairs are provided with the associated ``pairs''
+table; see \tablename~\ref{tbl:data-pairs} for a detailed description of the
+content of this table.
+
+\begin{table}[htb]
+    \centering
+    \caption{Description of columns in data table containing results from radial
+    velocity follow-up.} \label{tbl:data-stars}
+    \begin{tabular}{l|l|l}
+        \toprule
+        Column Name    & Unit & Description\\
+        \midrule
+        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
+        \texttt{R\_mu}            &      & Log-likelihood-ratio computed with only astrometric information\\
+        \texttt{R\_rv}            &      & Log-likelihood-ratio computed with radial velocities as well\\
+        \texttt{dx\_50}           & \pc  & Median of 3D spatial separation error distribution\\
+        \texttt{dv\_50}           & \kms & Median of 3D velocity difference error distribution\\
+        \texttt{dx\_15}           & \pc  & 15th percentile of 3D spatial separation error distribution\\
+        \texttt{dx\_85}           & \pc  & 85th percentile of 3D spatial separation error distribution\\
+        \texttt{dv\_15}           & \kms & 15th percentile of 3D velocity difference error distribution\\
+        \texttt{dv\_85}           & \kms & 85th percentile of 3D velocity difference error distribution\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 \subsection{Confirmed comoving pairs}\label{sec:genuine}
 
 \figurename~\ref{fig:dx-dv} shows the magnitude of the 3D velocity difference
@@ -851,7 +909,7 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=\linewidth]{genuine_cmd.pdf}
+    \includegraphics[width=0.8\linewidth]{genuine_cmd.pdf}
   \end{center}
   \caption{%
     Color-magnitude diagram of confirmed comoving star pairs plotted over
@@ -921,7 +979,7 @@ We highlight a few of these pairs below and in
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=\linewidth]{highlighted_cmd.pdf}
+    \includegraphics[width=0.8\linewidth]{highlighted_cmd.pdf}
   \end{center}
   \caption{%
     Same as \figurename~\ref{fig:genuine-cmd}, but only three highlighted
@@ -929,10 +987,11 @@ We highlight a few of these pairs below and in
     \label{fig:highlighted-cmd}}
 \end{figure}
 
-We compile Tycho 2 ($B$, $V$; \citealt{derp}), 2MASS ($J$, $H$, $K_{\rm s}$;
-\citealt{derp}), and WISE ($W_1$, $W_2$, $W_3$; \citealt{derp}) photometry for
-each star in the pairs below and fit isochrones to the stars individually to
-measure their stellar parameters.
+We compile \project{Tycho-2} ($B$, $V$; \citealt{Hog:2000}), \tmass\
+($J$, $H$, $K_{\rm s}$; \citealt{Skrutskie:2006}), and \acronym{WISE} ($W_1$,
+$W_2$, $W_3$; \citealt{Wright:2010}) photometry for each star in the pairs below
+and fit isochrones to the stars individually to measure their stellar
+parameters.
 We use the \package{isochrones} \python\ package (\citealt{Morton:2015}) to fit
 the photometric and parallax information (and uncertainties) for each star to
 infer the \logg, \teff, and stellar mass; these values are reported in
@@ -1036,6 +1095,10 @@ formation models (e.g., \citealt{Raghavan:2010}).
 
 \section{Discussion} \label{sec:discussion}
 
+\subsection{Caveats} \label{sec:caveats}
+
+Need much larger sample with no cuts on separation or signal-to-noise to study
+true separation distribution
 
 Need precise chemical information
 
@@ -1045,21 +1108,11 @@ Going forward, will have to use hierarchical mixture models to study population 
 
 Great reward: Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
 
-Comoving stars are also sensitive potentiometers of the Galactic mass
-distribution.
-- Long-term goal is to study the separation distribution of wide-binaries as a
-  function of age and Galactic orbit distribution (disk vs. halo)
-    - Is there a separation truncation?
-    - Can that be described just from Galactic tides, or need perturbers?
-
-% Caution that prior results are for red giants, MS stars may have planetary
-% imprints that get erased as dredge-up and convective layer erases...
-
 Abundances - future work, Coronado in prep.! But: throw shade on abundances
 because planet engulfment (https://arxiv.org/pdf/1707.02180.pdf). Also Oh et al.
 2017b
 
-Dynamical capture at these radii are improbable, but <insert words about binary-binary encounters from Nathan>
+% \subsection{Prospects for chemical tagging} \label{sec:chemical-tagging}
 
 % The majority of stars are thought to form in dynamically cold, chemically
 % homogeneous clusters, relative to the kinematic and chemical
@@ -1123,14 +1176,11 @@ Dynamical capture at these radii are improbable, but <insert words about binary-
 % accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
 % submitted).
 
-% Low-resolution spectroscopic follow-up of comoving pairs.
+% \subsection{Prospects for Galactic structure} \label{sec:dynamics}
 
-% Using relative RV's, confirm a sample of very wide separation comoving star pairs.
+\subsection{Future spectroscopic surveys} \label{sec:future-rvs}
 
-% Either wide binaries, unbound binaries, or dissolving clusters
-
-% Need much larger sample with no cuts on separation or signal-to-noise to study
-% true separation distribution
+DISCO / AS4, 4MOST, WEAVE, DESI, PFS
 
 \section{Conclusions}
 

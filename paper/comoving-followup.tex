@@ -16,6 +16,7 @@
 \include{preamble}
 \graphicspath{{figures/}}
 \usepackage{microtype}
+\usepackage{multirow}
 
 % Project-specific
 \newcommand{\gaia}{\project{Gaia}}
@@ -24,10 +25,16 @@
 \newcommand{\lbfgsb}{\texttt{L-BFGS-B}}
 \newcommand{\Ha}{\ensuremath{{\rm H}\alpha}}
 \newcommand{\dex}{\ensuremath{{\rm dex}}}
+\newcommand{\logg}{\ensuremath{\ensuremath{\log g}}}
+\newcommand{\teff}{\ensuremath{\ensuremath{T_{\rm eff}}}}
 \newcommand{\llrold}{\ensuremath{\mathcal{R}_\mu}}
 \newcommand{\llrnew}{\ensuremath{\mathcal{R}_{\rm RV}}}
+
 \newcommand{\npairsobs}{311}
 \newcommand{\ncomoving}{127}
+\newcommand{\nraveoverlap}{154}
+\newcommand{\nravecomoving}{59}
+\newcommand{\ncomovingtotal}{186}
 
 \definecolor{mediumpersianblue}{rgb}{0.0, 0.4, 0.65}
 \newcommand{\smoh}[1]{\textcolor{mediumpersianblue}{SO:#1}}
@@ -72,7 +79,7 @@ still expected to share a common origin and chemistry.
 The kinematic properties of comoving pairs---including bound wide binaries---
 serve as potentiometers for the smooth tidal field and mass perturbation
 spectrum of the Milky Way.
-Thus far, a few hundred genuine comoving star pairs with separations as large
+Thus far, a few hundred confirmed comoving star pairs with separations as large
 as $8~\pc$ have been discovered in the solar neighborhood using
 \project{Hipparcos}.
 % Aims
@@ -131,7 +138,8 @@ In particular, early simulations of populations of wide binaries showed that
 the expected separation distribution, $p(s)$, for $0.01 < s < 1~\pc$ tends to
 follow a power law, $p(s) \propto s^{-\alpha}$ for $\alpha \approx 1$--$2$,
 with a possible steep break that depends on the details of the population of
-massive perturbers in the Galaxy, i.e. giant molecular clouds (GMCs), black holes, etc. (\citealt{Weinberg:1987}).
+massive perturbers in the Galaxy, i.e. giant molecular clouds (GMCs), black
+holes, etc. (\citealt{Weinberg:1987}).
 
 At larger separations ($\gtrsim 0.1~\pc$), comoving pairs are likely a mix of
 tenuously bound stars, recently disrupted binaries, moving groups or resonant
@@ -148,10 +156,12 @@ Primarily thanks to large astrometric surveys and catalogs
 surveys (\citealt{Steinmetz:2006}), several hundred confirmed comoving star
 pairs (\citealt{Shaya:2011}) and over 10,000 candidate systems
 (\citealt{Gould:2004,Lepine:2007,Tokovinin:2012,Allen:2014,Oh:2017,
-Oelkers:2017, Andrews:2017}) have been discovered over the last several decades (see also \citealt{Chaname:2007} and references therein).
+Oelkers:2017, Andrews:2017}) have been discovered over the last several decades
+(see also \citealt{Chaname:2007} and references therein).
 These pairs are identified by searching for approximately cospatial stars that
 appear to be comoving either in sky-projected velocities --- we refer to these
-as ``comoving pair candidates'' --- or using full-space velocity information --- we refer to these as ``comoving pairs.''
+as ``comoving pair candidates'' --- or using full-space velocity information ---
+we refer to these as ``comoving pairs.''
 Radial velocity follow-up is still needed to confirm the majority of the known
 candidates, though \gaia\ \DR{2} will provide radial velocities for the
 brightest stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
@@ -292,9 +302,9 @@ Candidate comoving pairs are connected by (colored) lines.
 Spectra were obtained using the \project{Modspec} spectrograph mounted on the
 $2.4~{\rm m}$ Hiltner telescope at MDM
 observatory\footnote{\url{http://mdm.kpno.noao.edu}} on Kitt Peak (Arizona).
-\project{Modspec} was set up in long-slit mode with a 1\arcsec\ slit, a $600~{\rm
-line}~{\rm mm}^{-1}$ grating, and a $2048\times2048~{\rm pixel}$ SITe CCD
-detector (``Echelle'').
+\project{Modspec} was set up in long-slit mode with a 1\arcsec\ slit, a
+$600~{\rm line}~{\rm mm}^{-1}$ grating, and a $2048\times2048~{\rm pixel}$ SITe
+CCD detector (``Echelle'').
 Only the central 300 pixel columns were read out from the CCD, and pixel rows
 $>1600$ (at the blue end) were later trimmed because of the poor quantum
 efficiency of the CCD at wavelengths $\lesssim 3600~{\rm \AA}$.
@@ -305,15 +315,17 @@ between $30$--$120~{\rm s}$ (15th and 85th percentiles).
 To maximize the number of observed pairs, we chose not to take
 comparison lamp spectra at each pointing as it adds an overhead of $\approx
 90~{\rm s}$ per observation.
-To determine rough nightly wavelength solutions, calibration spectra were obtained using
-Hg-Ne and Ne comparison lamps at the beginning and end of each night.
-Additionally, atmospheric emission lines were used to correct the wavelength solution on a
-per-object basis.
+To determine rough nightly wavelength solutions, calibration spectra were
+obtained using Hg-Ne and Ne comparison lamps at the beginning and end of each
+night.
+Additionally, atmospheric emission lines were used to correct the wavelength
+solution on a per-object basis.
 
 We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
 2017-03-15, corresponding to 323 unique star pairs and $\approx 120$
 calibration targets.
-For the purposes of this work, all of the calibration targets have previously measured radial velocities and were selected from high-resolution spectroscopic
+For the purposes of this work, all of the calibration targets have previously
+measured radial velocities and were selected from high-resolution spectroscopic
 surveys \citealt{Bensby:2014,Pinsonneault:2014}; these stars are used to
 validate our radial velocity measurements.
 These stars also have measured chemical abundances, and will be used in future
@@ -751,7 +763,8 @@ indicate that the pair is likely a false-positive and are not truly comoving.
 In practice, we compute the logarithm of the likelihood ratios,
 $\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
 proper-motion-only log-FML-ratio for a given pair of stars as
-\llrold\ (as computed in \citealt{Oh:2017})m and the log-FML-ratio including the radial velocity data as \llrnew.
+\llrold\ (as computed in \citealt{Oh:2017}) and the log-FML-ratio including the
+radial velocity data as \llrnew.
 We consider a pair as being genuinely comoving if $\llrnew > \llrold$ ---
 \ncomoving of the \npairsobs\ comoving pairs satisfy this constraint.
 \figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
@@ -768,11 +781,11 @@ randomly chosen pairs.
 Note that pairs with large 3D velocity differences have large (negative) changes
 to their log-likelihood-ratio values.
 
-\subsection{Properties of genuine comoving pairs}\label{sec:genuine}
+\subsection{Confirmed comoving pairs}\label{sec:genuine}
 
 \figurename~\ref{fig:dx-dv} shows the magnitude of the 3D velocity difference
 plotted against the 3D positional separation of the two stars in all observed
-pairs.
+pairs from this work.
 We again plot the median of the velocity difference distribution, and here use
 the Lutz-Kelker-corrected distance estimate (\citealt{Lutz:1973}) computed from
 the stars' \tgas\ parallax measurements to compute the 3D positions of the two
@@ -780,7 +793,7 @@ stars.
 Small, gray markers are pairs for which $\llrnew < \llrold$, i.e. where the
 radial velocity measurements weaken or change our belief that a given pair is
 comoving.
-Larger, black markers are genuine comoving pairs ($\llrnew > \llrold$); note
+Larger, black markers are confirmed comoving pairs ($\llrnew > \llrold$); note
 that many large-separation pairs have been ruled-out as comoving, but
 most small-separation pairs maintain their status as comoving.
 This is also apparent in \figurename~\ref{fig:separation}, which shows
@@ -789,9 +802,9 @@ background, gray histogram shows all observed pairs, and foreground, black
 histogram shows all pairs for which $\llrnew > \llrold$.
 
 At separations $\gtrsim 1~\pc$, $\approx 40\%$ of the comoving pairs are
-genuinely comoving; interestingly, the separation distribution of the genuine
-pairs appears to be uniform or possibly growing in number with increasing
-separation.
+confirmed to be comoving; interestingly, the separation distribution of the
+genuine pairs appears to be uniform or possibly growing in number with
+increasing separation.
 This strongly suggests the existence of a population of unbound wide binaries or
 dissolved open clusters, which maintain approximate spatial coherence for long
 times because of the small relative velocities at the time of disruption of the
@@ -822,12 +835,13 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
   \caption{%
     \emph{Left}: Distribution of point estimates of the 3D spatial separation of
     the stars in all observed comoving star pairs (gray), and only those
-    identified as genuinely comoving (black). Note that the contamination rate
-    is $\approx 60\%$ at large separations ($>1~\pc$), but there are still a
-    significant number of genuine comoving pairs at these very wide separations.
+    confirmed as comoving (black).
+    Note that the false-positive rate is $\approx 60\%$ at large separations
+    ($>1~\pc$), but there are still a significant number of comoving pairs at
+    these very wide separations.
     \emph{Right}: Distribution of chord lengths (tangential separations) for all
-    comoving star pairs (gray) and only those identified as genuinely comoving
-    (black).
+    comoving star pairs (gray) and only those identified as comoving with 3D
+    velocity information (black).
     Noise in the parallax measurements makes the 3D separation distribution
     appear roughly uniform.
     Even the distribution in chord length appears to be approximately linear for
@@ -840,10 +854,9 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \includegraphics[width=\linewidth]{genuine_cmd.pdf}
   \end{center}
   \caption{%
-    Color-magnitude diagram of \emph{genuine} comoving star pairs plotted over
+    Color-magnitude diagram of confirmed comoving star pairs plotted over
     the density of all \tgas\ sources within 200 pc; similar to
-    \figurename~\ref{fig:sample-cmd}, but for only the genuine comoving
-    pairs.
+    \figurename~\ref{fig:sample-cmd}, but for only the confirmed comoving pairs.
     Several interesting pairs that include main-sequence and giant component
     stars are highlighted in the text
     (\sectionname~\ref{sec:interesting-pairs} and
@@ -851,7 +864,52 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \label{fig:genuine-cmd}}
 \end{figure}
 
-\subsection{Highlighted comoving pairs}\label{sec:interesting-pairs}
+An additional 202 candidate comoving pairs (\citealt{Oh:2017}) have radial
+velocities (for each star) reported in \DR{5} of the Radial Velocity Experiment
+(RAVE; \citealt{Kunder:2017}).
+Using the same procedure described in \sectionname~\ref{sec:catalog}, we
+identify confirmed comoving pairs using the RAVE velocities for all pairs within
+$200~\pc$ and find a similar false-positive rate at large separations ($\approx
+38\%$ are confirmed).
+Of the \nraveoverlap\ RAVE-overlap candidate comoving pairs (within $200~\pc$)
+that meet the above criteria, we find \nravecomoving\ confirmed comoving pairs.
+We plot the confirmed comoving pairs identified through radial velocity
+follow-up in this work along with the RAVE-confirmed pairs in
+\figurename~\ref{fig:separation-RAVE}.
+Top histogram shows the separation (chord length) distribution for the joint
+sample, scatter plot shows log-chord-length and the pair distances, and right
+histogram shows the distance distribution of the confirmed pairs.
+At larger distances ($\gtrsim 150~\pc$) it appears that the detection efficiency
+of our method drops, as expected given the hard cut in log-FML-ratio applied to
+define the candidate sample.
+Reassuringly, there do not appear to be any trends of the chord length
+distribution with distance.
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=\linewidth]{separation-with-rave.pdf}
+  \end{center}
+  \caption{%
+    \emph{Top}: Distribution of chord lengths for all confirmed comoving star
+      pairs, either from the radial velocity follow-up presented in this work or
+      from RAVE \DR{5} radial velocities.
+      At separations $\lesssim 10^{-1}~\pc$, the distribution (in log-log)
+      appears uniform, consistent with past measurements of the wide binary
+      separation distribution.
+      At separations between $\approx 10^{-1}$--$10^{0}~\pc$, there appears to
+      be an underabundance of comoving pairs, but the number of comoving pairs
+      then begins to increase again out to our sample separation limit of
+      $10~\pc$.
+    \emph{Middle}: Chord length plotted against mean distance for each comoving
+      pair identified from this work (circles, blue) or from RAVE overlap
+      (squares, orange).
+    \emph{Right}: Distance distribution for all confirmed comoving pairs.
+      Note that at distances $\gtrsim 150~\pc$, our detection efficiency appears
+      to decline.
+    \label{fig:separation-RAVE}}
+\end{figure}
+
+\subsection{A few highlighted comoving pairs}\label{sec:interesting-pairs}
 
 We naively expect that comoving, coeval stars should lie along lines parallel to
 the main sequence in color-magnitude space. The majority of our star pairs
@@ -871,79 +929,113 @@ We highlight a few of these pairs below and in
     \label{fig:highlighted-cmd}}
 \end{figure}
 
+We compile Tycho 2 ($B$, $V$; \citealt{derp}), 2MASS ($J$, $H$, $K_{\rm s}$;
+\citealt{derp}), and WISE ($W_1$, $W_2$, $W_3$; \citealt{derp}) photometry for
+each star in the pairs below and fit isochrones to the stars individually to
+measure their stellar parameters.
+We use the \package{isochrones} \python\ package (\citealt{Morton:2015}) to fit
+the photometric and parallax information (and uncertainties) for each star to
+infer the \logg, \teff, and stellar mass; these values are reported in
+\tablename~\ref{tbl:highlighted-pairs}.
+In brief, we use the model grids from the Dartmouth Stellar Evolution Database
+(\citealt{Dotter:2008}) and the built-in interpolation in \package{isochrones}
+to compute the posterior probability of a given set of stellar parameters given
+the data (photometry and parallax).
+We generate samples (in stellar parameters) from this posterior pdf using the
+ensemble MCMC sampler implemented in \package{emcee}
+(\citealt{Foreman-Mackey:2013}) using 128 walkers.
+We run the sampler for 256 initial steps from random initial positions, compute
+the median position of the walkers in parameter-space and re-initialize the
+walkers in a small Gaussian ball around this median position to run for another
+1024 burn-in steps.
+We then discard all but the last position and re-run for a final 8192 steps,
+saving only every 128th step.
+The stellar parameter values listed below are computed by taking the median
+posterior sample, and the uncertainties are estimated by computing the median
+absolute deviation, ${\rm MAD}$, and converting to a standard deviation under
+the assumption of Gaussianity ($\sigma \approx 1.5 \times {\rm MAD}$).
+
+\begin{table}[ht]
+  \begin{center}
+    \begin{tabular}{ c | c | c | c | c }
+      \toprule
+        Star name & \logg\ & \teff\ [K] & mass [$M_\odot$] &
+          chord length [pc]  \\
+        \toprule
+        HD 95088 & $3.7 \pm 0.02$ & $5303 \pm 74$ & $1.490 \pm 0.002$ &
+          \multirow{2}{*}{$8.6 \pm 0.8$}\\
+        HD 92278 & $4.2 \pm 0.05$ & $8519 \pm 300$ & $1.8 \pm 0.1$ &\\
+        \midrule
+        HD 79247 & $3.61 \pm 0.02$ & $5075 \pm 60$ & $1.150 \pm 0.004$ &
+          \multirow{2}{*}{$6.8 \pm 0.3$}\\
+        TYC 3807-1439-1 & $4.50 \pm 0.04$ & $5409 \pm 80$ & $0.88 \pm 0.05$ &\\
+        \midrule
+        HD 54318 & $4.15 \pm 0.04$ & $10030 \pm 345$ & $2.4 \pm 0.1$ &
+          \multirow{2}{*}{$8.4 \pm 1.1$}\\
+        TYC 3792-658-1 & $4.54 \pm 0.03$ & $5462 \pm 139$ & $0.89 \pm 0.06$ &\\
+      \bottomrule
+    \end{tabular}
+    \caption{
+      Stellar parameters inferred using isochrone-fitting for the three pairs
+      highlighted in \sectionname~\ref{sec:interesting-pairs}.
+      \label{tbl:highlighted-pairs}
+    }
+  \end{center}
+\end{table}
+
 \subsubsection{HD 95088 -- HD 92278}
 
-HD 95088 HD 92278
-Angular sep.: 4.49 deg
-Chord length: 8.66 pc
-3D sep.: 9.53 pc
-parallaxes: 9.00 +/- 0.50, 9.32 +/- 0.51
-
-This pair is separated by $8.7~\pc$ in chord length ($4.5^\circ$ on the sky) and
-have consistent distances within their uncertainties of $\approx 110~\pc$.
-From visual classification of the stars' location in the color--magnitude
-diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
-comprised of an A-type dwarf and a slightly less massive G-type subgiant.
-If this is indeed the case, the two stars could therefore not be coeval, as the
+From their surface gravities and temperatures, the component stars of this pair
+appear to be an A-type dwarf (HD 92278) and a slightly less massive G-type
+subgiant (HD 95088).
+This pair is separated by $4.5^\circ$ on the sky (corresponding to $\approx
+8.6~\pc$ in chord length, see \tablename~\ref{tbl:highlighted-pairs}) and have
+consistent distances within their uncertainties of $\approx 110 \pm 5~\pc$.
+At first glance, it seems unlikely that the two stars could be coeval, as the
 more massive A star has not begun its post-main-sequence evolution.
 One possible explanation is that this pair is a false-positive in three
 dimensions, in which case they are unassociated but just appear to be comoving
 with small relative velocity at present day.
 
-Other possibilities stem from the possibility that the comoving pair is the
-outcome of an interaction between more stars.
+Other speculative explanations for this pair stem from the possibility that it
+is the outcome of an interaction between even more stars.
 For example, an interaction between two wide binaries could result in an
 exchange of members, a hardening of one resulting binary, and a widening of the
 other binary (see, e.g., \citealt{Nathan??}).
 Or, the initial system could have been an unstable three-body system that
-resulted in a tight, inner binary and a wide outer binary;
+resulted in a tight inner binary and a wide outer binary;
 if the inner binary were close enough, it could have merged and formed a blue
 straggler star (e.g., \citealt{??}), leaving the wide binary untouched.
 
-These explanations are all speculative at the moment; high-resolution
-spectroscopy of these stars --- and precise measurements of the stellar
-parameters and chemical abundances --- may help to distinguish these
-possibilities.
+High-resolution spectroscopy of these stars --- and precise measurements of the
+stellar parameters and chemical abundances --- may help to distinguish these
+scenarios.
 
 \subsubsection{HD 79247 -- TYC 3807-1439-1}
 
-This pair is separated by $XX~\pc$ in chord length ($XX^\circ$ on the sky) and
-have consistent distances within their uncertainties of $\approx XX~\pc$.
-From visual classification of the stars' location in the color--magnitude
-diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
-comprised of a G-type subgiant and a G-type dwarf.
+The components of this pair appear to be a K-type subgiant (HD 79247) and a
+G-type dwarf (TYC 3807-1439-1).
+This pair is separated by $4^\circ$ on the sky or $6.8~\pc$ in chord length and
+have an apparent radial separation of $\approx 3~\pc$, corresponding to a 3D
+separation of $\approx 9.8~\pc$ at a distance of $\approx 100~\pc$.
+Coeval stars at different phases of stellar evolution are extremely valuable for
+calibrating and testing stellar evolution models (e.g., \citealt{Torres:2013}).
+With a larger sample of confirmed comoving pairs, identified pairs that contain
+both an evolved star and a main sequence star --- such as this pair --- will be
+of great interest.
 
 \subsubsection{HD 54318 -- TYC 3792-658-1}
 
-TYC 3792-658-1 HD 54318
-Angular sep.: 2.51 deg
-Chord length: 8.45 pc
-3D sep.: 8.73 pc
-parallaxes: 5.20 +/- 0.23, 5.30 +/- 0.32
-
-This pair is separated by $8.5~\pc$ in chord length ($2.5^\circ$ on the sky) and
-have consistent distances within their uncertainties of $\approx 190~\pc$.
-
-From visual classification of the stars' location in the color--magnitude
-diagram (\figurename~\ref{fig:highlighted-cmd}), the pair appears to be
-comprised of a late-A-/early-B-type dwarf and a G-type dwarf.
-
-
-\subsection{Combined with RAVE}\label{sec:rave}
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=\linewidth]{separation-with-rave.pdf}
-  \end{center}
-  \caption{%
-    \label{fig:separation-RAVE}}
-\end{figure}
-
-Caution about selection criteria, false-positives at large separation...
+The components of this pair appear to be an A- or B-type dwarf (HD 54318) and a
+G-type dwarf (TYC 3792-658-1), the largest magnitude difference between all of
+the confirmed comoving pairs.
+This pair is separated by $2.5^\circ$ on the sky or $8.5~\pc$ in chord length
+and have a consistent distance of $\approx 190~\pc$ within their uncertainties.
+The mass ratio distribution of comoving star pairs will help constrain star
+formation models (e.g., \citealt{Raghavan:2010}).
 
 \section{Discussion} \label{sec:discussion}
 
-Abundance of large-separation pairs
 
 Need precise chemical information
 
@@ -1031,27 +1123,51 @@ Dynamical capture at these radii are improbable, but <insert words about binary-
 % accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
 % submitted).
 
+% Low-resolution spectroscopic follow-up of comoving pairs.
+
+% Using relative RV's, confirm a sample of very wide separation comoving star pairs.
+
+% Either wide binaries, unbound binaries, or dissolving clusters
+
+% Need much larger sample with no cuts on separation or signal-to-noise to study
+% true separation distribution
+
 \section{Conclusions}
 
-Low-resolution spectroscopic follow-up of comoving pairs.
-
-Using relative RV's, confirm a sample of very wide separation comoving star pairs.
-
-Either wide binaries, unbound binaries, or dissolving clusters
-
-Need much larger sample with no cuts on separation or signal-to-noise to study true separation distribution
-
-Gaia DR2 for G < 12, but really we need a concerted effort to obtain spectroscopy of wide pairs.
+The information contained in a large sample of widely-separated, comoving star
+pairs spans from the dynamics of stars and dark matter in the Galaxy, the
+fundamentals of star formation, and the stability of planetary systems.
+Through our own low-resolution spectroscopic follow-up and a cross-match with
+the RAVE \DR{5} catalog, we have identified \ncomovingtotal\ comoving star pairs
+by combining these radial velocity measurements with astrometry from the \tgas\
+catalog.
+The separation distribution of these spectroscopically-confirmed comoving star
+pairs presented shows an abundance of comoving pairs at separations between
+$1$--$10~\pc$ (\figurename~\ref{fig:separation-RAVE}), the imposed limit in our
+initial search (\citealt{Oh:2017}).
+This result is further tentative evidence (see also \citealt{Shaya:2011}) for
+the existence of a population of unbound comoving stars that represent the
+ultimate fate of wide binaries and moving groups that slowly dissociate due to
+weak perturbations from stars (\citealt{Jiang:2010}) and other massive
+perturbers in the Galaxy.
+With future data releases from the \gaia\ mission combined with large
+spectroscopic surveys, the anticipated catalogs of confirmed comoving star pairs
+will offer a new ``stereo'' view on the evolution and state of our Galaxy.
 
 \acknowledgements
 
-Dave Zurek, Keith, Ruth, Kelle
+It is a pleasure to thank
+Ruth Angus (Columbia),
 John Brewer (Yale),
 Jason Curtis (Columbia),
-James Davenport (WWU) for PyDIS,
+Keith Hawkins (Columbia),
 David W. Hogg (NYU),
-Melissa Ness (MPIA)
-
+Melissa Ness (MPIA), and
+Dave Zurek (AMNH)
+for useful discussions and advice.
+We thank James Davenport (WWU) for releasing his open source spectroscopic
+reduction code, \package{PyDIS}, which served as inspiration for the pipeline
+used in this work.
 This work is based on observations obtained at the MDM Observatory, operated by
 Dartmouth College, Columbia University, Ohio State University, Ohio University,
 and the University of Michigan.

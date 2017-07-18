@@ -19,7 +19,7 @@ setup(
     author="Adrian Price-Whelan",
     author_email="adrianmpw@gmail.com",
     url="https://github.com/adrn/GaiaPairsFollowup",
-    packages=["comoving_rv"],
+    packages=["comoving_rv", "comoving_rv.longslit", "comoving_rv.db"],
     description="Spectroscopic reduction and radial velocity analysis.",
     long_description=open("README.md").read(),
     package_data={"": ["README.md", "LICENSE"]},

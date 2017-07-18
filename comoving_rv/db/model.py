@@ -25,7 +25,7 @@ from .numpy_adapt import * # just need to execute code
 
 __all__ = ['Run', 'Observation', 'SimbadInfo', 'TGASSource',
            'SpectralLineMeasurement', 'SpectralLineInfo', 'RVMeasurement',
-           'GroupToObservations']
+           'GroupToObservations', 'Photometry']
 
 VelocityType = QuantityTypeClassFactory(u.km/u.s)
 WavelengthType = QuantityTypeClassFactory(u.angstrom)
@@ -367,3 +367,46 @@ class GroupToObservations(Base):
              .format(self.group_id, self.new_group_id, self.observation1_id,
                      self.observation2_id))
         return r
+
+class Photometry(Base):
+    __tablename__ = 'photometry'
+
+    id = Column(types.Integer, primary_key=True)
+
+    observation_id = Column('observation_id', types.Integer,
+                            ForeignKey('observation.id'))
+    observation = relationship('Observation', cascade='all,delete-orphan',
+                               backref=backref('photometry', uselist=False),
+                               single_parent=True)
+
+    bt_mag = Column('bt_mag', types.REAL)
+    vt_mag = Column('vt_mag', types.REAL)
+    e_bt_mag = Column('e_bt_mag', types.REAL)
+    e_vt_mag = Column('e_vt_mag', types.REAL)
+
+    j_m = Column('j_m', types.REAL)
+    j_msigcom = Column('j_msigcom', types.REAL)
+    h_m = Column('h_m', types.REAL)
+    h_msigcom = Column('h_msigcom', types.REAL)
+    ks_m = Column('ks_m', types.REAL)
+    ks_msigcom = Column('ks_msigcom', types.REAL)
+
+    w1mpro = Column('w1mpro', types.REAL)
+    w1mpro_error = Column('w1mpro_error', types.REAL)
+    w2mpro = Column('w2mpro', types.REAL)
+    w2mpro_error = Column('w2mpro_error', types.REAL)
+    w3mpro = Column('w3mpro', types.REAL)
+    w3mpro_error = Column('w3mpro_error', types.REAL)
+    w4mpro = Column('w4mpro', types.REAL)
+    w4mpro_error = Column('w4mpro_error', types.REAL)
+
+    u_mag = Column('u_mag', types.REAL)
+    u_mag_error = Column('u_mag_error', types.REAL)
+    g_mag = Column('g_mag', types.REAL)
+    g_mag_error = Column('g_mag_error', types.REAL)
+    r_mag = Column('r_mag', types.REAL)
+    r_mag_error = Column('r_mag_error', types.REAL)
+    i_mag = Column('i_mag', types.REAL)
+    i_mag_error = Column('i_mag_error', types.REAL)
+    z_mag = Column('z_mag', types.REAL)
+    z_mag_error = Column('z_mag_error', types.REAL)

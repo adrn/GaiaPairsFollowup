@@ -110,8 +110,8 @@ class GPModel(object):
         # set up the gp
         self.gp = GP(self.kernel, mean=self.mean_model, fit_mean=True)
         self.gp.compute(x, yerr=wave_err)
-        logger.debug("Initial log-likelihood: {0}"
-                     .format(self.gp.log_likelihood(y)))
+        logger.log(0, "Initial log-likelihood: {0}"
+                   .format(self.gp.log_likelihood(y)))
 
         if x_shift is None:
             self.x_shift = 0.

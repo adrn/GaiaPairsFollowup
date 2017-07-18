@@ -219,7 +219,7 @@ class LineFitter(object):
 
         init_params = self.gp.get_parameter_vector()
         init_ll = self.gp.log_likelihood(self.flux)
-        logger.debug("Initial log-likelihood: {0}".format(init_ll))
+        logger.log(0, "Initial log-likelihood: {0}".format(init_ll))
 
         return init_params
 
@@ -251,7 +251,12 @@ class LineFitter(object):
 
     def _neg_log_like(self, params):
         self.gp.set_parameter_vector(params)
-        ll = self.gp.log_likelihood(self.flux)
+
+        try:
+            ll = self.gp.log_likelihood(self.flux)
+        except RuntimeError:
+            return np.inf
+
         if np.isnan(ll):
             return np.inf
         return -ll

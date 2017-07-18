@@ -249,8 +249,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         # -------------------------------------------
 
         fname_1d = path.join(output_path, '1d_{0}'.format(fname))
-        # if path.exists(fname_1d) and not overwrite:
-        if False:
+        if path.exists(fname_1d) and not overwrite:
             logger.log(1, "\tAlready extracted! {}".format(fname_1d))
             continue
 

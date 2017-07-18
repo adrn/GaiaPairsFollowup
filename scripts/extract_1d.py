@@ -93,7 +93,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         with open(skip_list_file, 'r') as f:
             skip_list = [x.strip() for x in f if x.strip()]
     else:
-        skip_list = []
+        skip_list = None
 
     # look for pixel mask file
     if mask_file is not None:
@@ -110,6 +110,9 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
     logger.info("- Comparison lamp frames: {}".format(len(ic.files_filtered(imagetyp='COMP'))))
     logger.info("- Object frames: {}".format(len(ic.files_filtered(imagetyp='OBJECT'))))
 
+    # HACK:
+    ic = GlobImageFileCollection(night_path, skip_filenames=skip_list)
+
     # ============================
     # Create the master bias frame
     # ============================
@@ -123,6 +126,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         # get list of overscan-subtracted bias frames as 2D image arrays
         bias_list = []
         for hdu, fname in ic.hdus(return_fname=True, imagetyp='BIAS'):
+            logger.debug('Processing Bias frame: {0}'.format(fname))
             ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
             ccd = ccdproc.gain_correct(ccd, gain=ccd_gain)
             ccd = ccdproc.subtract_overscan(ccd, overscan=ccd[:,oscan_idx:])
@@ -158,6 +162,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
     # ============================
     # Create the master flat field
     # ============================
+    # HACK:
+    ic = GlobImageFileCollection(night_path, skip_filenames=skip_list)
 
     master_flat_file = path.join(output_path, 'master_flat.fits')
 
@@ -165,6 +171,7 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
         # create a list of flat frames
         flat_list = []
         for hdu, fname in ic.hdus(return_fname=True, imagetyp='FLAT'):
+            logger.debug('Processing Flat frame: {0}'.format(fname))
             ccd = CCDData.read(path.join(ic.location, fname), unit='adu')
             ccd = ccdproc.gain_correct(ccd, gain=ccd_gain)
             ccd = ccdproc.ccd_process(ccd, oscan=oscan_fits_section,
@@ -203,6 +210,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
     # =====================
     # Process object frames
     # =====================
+    # HACK:
+    ic = GlobImageFileCollection(night_path, skip_filenames=skip_list)
 
     logger.info("Beginning object frame processing...")
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='OBJECT'):
@@ -269,6 +278,8 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
     # ==============================
     # Process comparison lamp frames
     # ==============================
+    # HACK:
+    ic = GlobImageFileCollection(night_path, skip_filenames=skip_list)
 
     logger.info("Beginning comp. lamp frame processing...")
     for hdu, fname in ic.hdus(return_fname=True, imagetyp='COMP'):

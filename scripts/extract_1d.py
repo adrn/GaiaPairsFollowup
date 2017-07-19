@@ -300,7 +300,9 @@ def main(night_path, skip_list_file, mask_file, overwrite=False, plot=False):
             # process the frame!
             ext = CompCCDExtractor(filename=path.join(ic.location, fname),
                                    plot_path=plot_path, unit='adu', **ccd_props)
-            nccd = ext.process_raw_frame(pixel_mask_spec=pixel_mask_spec.get(fname, None),
+
+            _pix_mask = pixel_mask_spec.get(fname, None) if pixel_mask_spec is not None else None
+            nccd = ext.process_raw_frame(pixel_mask_spec=_pix_mask,
                                          master_bias=master_bias,
                                          master_flat=master_flat,)
             nccd.write(new_fname, overwrite=overwrite)

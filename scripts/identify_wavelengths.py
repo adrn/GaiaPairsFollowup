@@ -12,6 +12,8 @@ from os import path
 
 # Third-party
 from astropy.table import Table
+import matplotlib as mpl
+mpl.use('Qt5Agg')
 from matplotlib.widgets import SpanSelector
 import matplotlib.pyplot as plt
 import numpy as np

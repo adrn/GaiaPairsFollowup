@@ -22,7 +22,8 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 # Package
 from comoving_rv.log import logger
 from comoving_rv.longslit import voigt_polynomial, GlobImageFileCollection
-from comoving_rv.longslit.fitting import fit_spec_line # fit_spec_line_GP, gp_to_fit_pars
+# from comoving_rv.longslit.fitting import fit_spec_line # fit_spec_line_GP, gp_to_fit_pars
+from comoving_rv.longslit.extract import fast_trace_fit
 
 class GUIWavelengthSolver(object):
 
@@ -199,8 +200,8 @@ class GUIWavelengthSolver(object):
 
         # line_props = gp_to_fit_pars(gp, absorp_emiss=1.)
 
-        line_props = fit_spec_line(pix, flux, flux_ivar, n_bg_coef=1,
-                                   absorp_emiss=1., **kwargs)
+        line_props,_ = fast_trace_fit(pix, flux, flux_ivar, n_bg_coef=1,
+                                      absorp_emiss=1., **kwargs)
 
         # store these to help auto-identify
         self._line_std_G = line_props['std_G']

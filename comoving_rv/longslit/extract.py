@@ -31,7 +31,7 @@ def errfunc(p, pix, flux, flux_ivar, lsf_pars):
 def fast_trace_fit(x, flux, ivar, lsf_pars,
                    amp0=None, x0=None,
                    bg0=None, n_bg_coef=2, target_x=None,
-                   leastsq_kw=None):
+                   leastsq_kw=None, absorp_emiss=1.):
     """
     Custom fitting function to fit for the source and background flux at a given
     row in the CCD.
@@ -62,7 +62,7 @@ def fast_trace_fit(x, flux, ivar, lsf_pars,
     else:
         ivar = np.ones_like(flux)
 
-    lf = VoigtLineFitter(x, flux, ivar, absorp_emiss=1.)
+    lf = VoigtLineFitter(x, flux, ivar, absorp_emiss=absorp_emiss)
     init_params = lf.init_gp()
     p0 = init_params[[2,3,6,7]]
     p0[0] = np.exp(p0[0])

@@ -62,8 +62,8 @@ class GUIWavelengthSolver(object):
             # self._map_dict['pixel_err'] = []
 
         else:
-            self._map_dict['wavel'] = init_map['wavelength']
-            self._map_dict['pixel'] = init_map['pixel']
+            self._map_dict['wavel'] = list(init_map['wavelength'])
+            self._map_dict['pixel'] = list(init_map['pixel'])
             # self._map_dict['pixel_err'] = np.zeros_like(init_map['pixel']) # TODO: hack
 
         self._line_std_G = None

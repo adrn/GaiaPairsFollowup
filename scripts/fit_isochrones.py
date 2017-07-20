@@ -68,10 +68,10 @@ def obs_to_starmodel(obs, iso=None):
 
 class Worker(object):
 
-    def __init__(self, session, samples_path,
+    def __init__(self, db_path, samples_path,
                  nwalkers=128, ninit=256, nburn=1024, niter=4096,
                  overwrite=False):
-        self.session = session
+        self.db_path = db_path
         self.samples_path = samples_path
         self.overwrite = overwrite
 
@@ -81,7 +81,9 @@ class Worker(object):
         self.niter = niter
 
     def work(self, id):
-        obs = self.session.query(Observation).filter(Observation.id == id).one()
+        engine = db_connect(self.db_path)
+        session = Session()
+        obs = session.query(Observation).filter(Observation.id == id).one()
         model = obs_to_starmodel(obs)
 
         # initial conditions for emcee walkers
@@ -141,15 +143,13 @@ def main(db_file, pool, overwrite=False):
     # HACK:
     base_path = '../data/'
     db_path = path.join(base_path, 'db.sqlite')
-    engine = db_connect(db_path)
-    session = Session()
 
     # HACK:
     from astropy.table import Table
     tbl = Table.read('../paper/figures/group_llr_dv_tbl.ecsv',
                      format='ascii.ecsv')
 
-    worker = Worker(session=session,
+    worker = Worker(db_path=db_path,
                     samples_path=path.abspath('../data/isochrone_samples'),
                     overwrite=overwrite)
 

@@ -143,6 +143,8 @@ def main(db_file, pool, overwrite=False):
     # HACK:
     base_path = '../data/'
     db_path = path.join(base_path, 'db.sqlite')
+    engine = db_connect(db_path)
+    session = Session()
 
     # HACK:
     from astropy.table import Table
@@ -159,6 +161,8 @@ def main(db_file, pool, overwrite=False):
                    .filter(Observation.group_id.in_(tbl['group_id'][comoving]))\
                    .group_by(Observation.group_id).all()
     tasks = tasks[:1]
+
+    session.close()
 
     for r in pool.map(worker, tasks, callback=worker.callback):
         pass

@@ -43,7 +43,7 @@
 \begin{document}\sloppy\sloppypar\raggedbottom\frenchspacing % trust me
 
 \title{Spectroscopic confirmation of very-wide binaries and large-separation
-       comoving stars from \textsl{Gaia DR1}}
+       comoving pairs from \textsl{Gaia DR1}}
 
 \author{Adrian~M.~Price-Whelan}
 \affiliation{Department of Astrophysical Sciences,
@@ -84,7 +84,7 @@ Thus far, a few hundred confirmed comoving star pairs with separations as large
 as $8~\pc$ have been discovered in the solar neighborhood using
 \project{Hipparcos}.
 % Aims
-In previous work, we have identified $\sim 10,000$ candidate comoving star pairs
+In previous work, we have identified $\sim 4,000$ candidate comoving star pairs
 using only astrometric data from the Tycho-Gaia Astrometric Solution (TGAS)
 catalog, a part of \gaia\ \DR{1}.
 Without radial velocity measurements for the vast majority of the pairs, the
@@ -143,10 +143,10 @@ massive perturbers in the Galaxy, i.e. giant molecular clouds (GMCs), black
 holes, etc. (\citealt{Weinberg:1987}).
 
 At larger separations ($\gtrsim 0.1~\pc$), comoving pairs are likely a mix of
-tenuously bound stars, recently disrupted binaries, moving groups or resonant
+tenuously bound stars such as recently disrupted binaries, moving groups or resonant
 features, and the final products of dissolving stellar associations or
 clusters.
-However, even at separations of $\sim 0.1~\pc$, we typically lack the precision
+However, even at separations of $\sim 0.1~\pc$, we typically lack the precision {\bf in what?}
 to determine the binding energy of a system and therefore can't determine its
 true dynamical state; because of this ambiguity, we refer to both bound and
 unbound widely-separated ($\gtrsim 10^{-3}~\pc$) systems collectively as
@@ -155,7 +155,7 @@ unbound widely-separated ($\gtrsim 10^{-3}~\pc$) systems collectively as
 Primarily thanks to large astrometric surveys and catalogs
 (\citealt{ESA:1997,Lepine:2005,Gaia-Collaboration:2016}) and radial-velocity
 surveys (\citealt{Steinmetz:2006}), several hundred confirmed comoving star
-pairs (\citealt{Shaya:2011}) and over 10,000 candidate systems
+pairs (\citealt{Shaya:2011}) and over \smoh{check: 10,000} candidate systems
 (\citealt{Gould:2004,Lepine:2007,Tokovinin:2012,Allen:2014,Oh:2017,
 Oelkers:2017, Andrews:2017}) have been discovered over the last several decades
 (see also \citealt{Chaname:2007} and references therein).
@@ -169,13 +169,13 @@ brightest stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
 
 With large samples of candidate pairs, several groups have measured the
 separation distribution of wide binaries at angular separations $\Delta \theta
-\lesssim 1^\circ$ where the false-positive rate is expected to be lower
+\lesssim 1^\circ$ where the false-positive rate is expected to be lower \smoh{value?}
 and the samples are likely predominantly wide binaries
 (\citealt{Chaname:2004,Lepine:2007,Sesar:2008}).
 In most cases, the angular or projected separation distribution is fit using a
 decreasing power-law, and the power-law index, $\alpha$, is found to be $\alpha
 \approx 1.5$--$2$ out to angular separations of $\approx 0.25^\circ$ ($\approx
-0.65~\pc$ at a distance of $150~\pc$), apparently consistent with simulations.
+0.65~\pc$ at a distance of $150~\pc$), apparently consistent with simulations \smoh{which? citation needed}.
 Tentative reports of a steepening or cutoff of the separation distribution at
 larger separations have been claimed (e.g., \citealt{Yoo:2004,Quinn:2009}), but
 these claims are limited by small numbers of confirmed pairs at large
@@ -193,9 +193,11 @@ predict that ionized binaries could appear as a second peak or component in the
 separation distribution of comoving stars at much larger separations (10--
 $1000~\pc$; \citealt{Jiang:2010}).
 Though these simulations don't include perturbers like GMCs or black holes,
-this at least indicates that a simple, monotonic separation distribution may
+they at least indicate that \smoh{the phase-space coherence of wide binaries
+  may linger on for a longer period of time than previously thought, and thus,
+  a monotonically decreasing separation distribution may
 be too simple of a model for the separation distribution of comoving stars in
-our Galaxy.
+our Galaxy.}
 In addition, the distribution of unbound but comoving stars should be very
 sensitive to diffusive processes that determine the rate at which the pairs
 separate.
@@ -209,7 +211,7 @@ velocity vector for pairs of stars.
 At separations of $1$--$10~\pc$, star pairs in the local solar neighborhood
 subtend large angles on the sky; therefore, even if the two component stars were
 moving with the same 3D velocity, their proper motions and radial velocities
-would be different because of geometric effects.
+can be different due to projections.
 By compiling radial velocities from the literature for \project{Hipparcos}
 stars, they applied this method to search for all comoving star pairs with
 separations larger than $0.01~\pc$ within $100~\pc$ of the sun.
@@ -242,30 +244,29 @@ comoving star pairs (\citealt{Oh:2017}) using only astrometric information from
 the \tgas\ catalog (\citealt{Michalik:2015,Gaia-Collaboration:2016a}).
 These comoving pairs were selected using a cut on a marginalized likelihood
 ratio computed for all nearly co-spatial pairs of stars.
-Briefly, likelihood 1, $L_1$, considers a model in which the full-space
-velocities of each star in the pair are identical and sampled from a disk-like,
-Sun-relative velocity distribution, and likelihood 2, $L_2$, considers a model
-in which the full-space velocities of each star were drawn independently from
-the same velocity distribution used above. The computed likelihood ratio is
-actually the ratio of fully marginalized likelihoods,
-$\mathcal{L}_1/\mathcal{L}_2$, after marginalizing over true velocity and
-distance for each star in a given pair.
-After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$),
-we compute the likelihood ratio for all stars within $10~\pc$ and with a
-difference in tangential velocity $\Delta v_\perp < 10~\kms$ of each target star
-from the \tgas\ catalog.
-The likelihoods appropriately take into account the reported covariances and
-uncertainties between the astrometric measurements in the \tgas\ catalog and
-naturally handle geometric or projection effects in comparing spherical
+Briefly, we perform a model selection between
+two cases: that the velocities of the two stars in a pair are
+identical (case 1) or that they are indepndent (case 2).
+We marginalize over the (unknown) true velocity and distance of each star
+to obtain the ratio of fully marginalized likelihoods,
+$\mathcal{L}_1/\mathcal{L}_2$.
+The likelihoods appropriately take into account the reported uncertainties and
+covariances of the astrometric measurements in the \tgas\ catalog
+as well as projection effect in comparing spherical
 velocities for star pairs separated by large angles on the sky.
+After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$),
+we compute the marginalized likelihood ratio for all stars within $10~\pc$ and
+with a difference in tangential velocity $\Delta v_\perp < 10~\kms$ of each
+target star from the \tgas\ catalog.
 After applying a conservative cut on the likelihood ratio motivated by computing
 the same likelihood ratio for random pairings of stars ($\ln
-\mathcal{L}_1/\mathcal{L}_2 > 6$, we find 13,058 comoving star pairs with
+\mathcal{L}_1/\mathcal{L}_2 > 6$, we found 13,058 comoving star pairs with
 physical separations between $10^3~\au$ and $10~\pc$.
 Of these pairs, there are 10,606 unique sources, implying that a significant
 fraction of the identified pairs are members of larger groups.
-$\approx$4,000 of the pairs are mutually exclusive, i.e. neither member is
-paired with other stars.
+However, we have also found a large number ($\approx$4,000) of mutually
+exclusively-linked pairs in increasing number with increasing separation at
+$\sim 1$~\pc.
 For a full description of the selection method, see \citealt{Oh:2017}.
 
 \begin{figure}[ht!]
@@ -311,7 +312,7 @@ $>1600$ (at the blue end) were later trimmed because of the poor quantum
 efficiency of the CCD at wavelengths $\lesssim 3600~{\rm \AA}$.
 The resolution and wavelength range were $\approx2~{\rm \AA}~{\rm pixel}^{-1}$
 from $\approx 3600$--$7200~{\rm \AA}$.
-At this resolution, to obtain high signal-to-noise spectra, most exposures were
+At this resolution, to obtain high signal-to-noise \smoh{value?} spectra, most exposures were
 between $30$--$120~{\rm s}$ (15th and 85th percentiles).
 To maximize the number of observed pairs, we chose not to take
 comparison lamp spectra at each pointing as it adds an overhead of $\approx
@@ -323,18 +324,19 @@ Additionally, atmospheric emission lines were used to correct the wavelength
 solution on a per-object basis.
 
 We observed a total of 765 unique sources over 5 nights from (UT) 2017-03-11 to
-2017-03-15, corresponding to 323 unique star pairs and $\approx 120$
+2017-03-15, corresponding to 323 unique pairs and $\approx 120$
 calibration targets.
-For the purposes of this work, all of the calibration targets have previously
-measured radial velocities and were selected from high-resolution spectroscopic
-surveys \citealt{Bensby:2014,Pinsonneault:2014}; these stars are used to
-validate our radial velocity measurements.
+All calibration targets have previously measured radial velocities from
+high-resolution spectroscopic surveys (\citealt{Bensby:2014,Pinsonneault:2014})
+in order to validate our radial velocity measurements.
 These stars also have measured chemical abundances, and will be used in future
-work as a training set for \project{The Cannon} (\citealt{Ness:2015}) to infer
+work as a training set for a method of transferring chemical abundance labels,
+\project{The Cannon} (\citealt{Ness:2015}), to infer
 metallicities and stellar parameters for our observed sources.
 The spectra were reduced and calibrated using a custom, publicly-available
 pipeline written in \python, described below.
 
+% this paragraph can be simplified
 For each source or comparison lamp observation, the two-dimensional image is
 bias corrected, flat-field corrected, and trimmed using standard routines
 implemented in \package{ccdproc} (\citealt{Craig:2015}).
@@ -346,20 +348,25 @@ pixel.
 Source spectral traces were always placed in this region during observations,
 and the curvature of the wavelength solution over this region is negligible.
 For source observations, 1D spectra are extracted using an empirical
-estimate of the pixel-convolved line spread function (LSF): at each of 16 pixel
-rows between indices 750 and 850 (i.e. around the effective center of the
-dispersion axis), a model for the LSF is fit to the 1D trace.
+estimate of the line spread function (LSF).
 The LSF is assumed to be a Voigt profile with parameters $A$, amplitude; $x_0$,
 profile centroid; $\sigma_G$, Gaussian root-variance; $\gamma_L$, Lorentzian
 half-width at half maximum, and the background is modeled using a linear
 polynomial with parameters $\alpha_1$ and $\alpha_2$, the slope and intercept
 at the profile centroid, respectively.
 The maximum-likelihood LSF + background model parameters are estimated from
-each pixel row using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented in
+{\bf each pixel row} using \lbfgsb\ optimization (\citealt{Zhu:1994}), implemented in
 the \package{scipy} package.
-From the 16 fits, the median profile width parameters, $\sigma_G$ and
+We first determine the width parameters, $\sigma_G$ and $\gamma_L$
+from the fits to
+\smoh{16 pixel rows - Is it every 16 rows (meaning total/16=1600/16=100 fits),
+  or 16 rows spread across the entire 1600 rows? I think you mean the latter,
+  but this combined with bold-faced text is a little confusing. }
+between indices 750 and 850 (i.e. around the effective center of the
+dispersion axis), a model for the LSF is fit to the 1D trace.
+{\bf From the 16 fits}, the median profile width parameters, $\sigma_G$ and
 $\gamma_L$, are then taken to be the LSF width parameters.
-At each of 1600 rows in each source spectrum image, the LSF amplitude and
+Then, {\bf at each of 1600 rows} in each source spectrum image, the LSF amplitude and
 centroid, and background slope and intercept at line centroid, are then fit
 using the same procedure as above but with the width parameters fixed.
 The LSF amplitudes are stored as the source fluxes, and the background model
@@ -371,18 +378,17 @@ We start the wavelength calibration by interactively identifying the 12
 strongest, least blended emission lines in one of the extracted 1D comparison
 lamp spectra by comparing to standard HgNe line lists.\footnote{\url{http:
 //physics.nist.gov/PhysRefData/ASD/lines_form.html}}
-Once a rough mapping from pixel to wavelength is determined, we then fit for the
-individual line centroids in each comparison lamp spectrum by extracting small,
-8 pixel-wide segments of the comparison lamp spectrum around each identified
-emission line and fitting a model for the line profile and background to each
-individually.
-We use a pixel-convolved Gaussian profile for each emission line with
+Once a rough mapping from pixel to wavelength is determined, we fit
+8 pixel-wide segments around each identified emission line
+for the individual line centroids in each comparison lamp spectrum.
+We use a {\bf pixel-convolved} Gaussian profile for each emission line with
 parameters: amplitude, $A$; centroid, $x_0$; and root-variance, $\sigma_G$.
 We find that nearby blended or low-amplitude lines (i.e. part of the
 ``background'') sometimes bias the line centroid determination when using a
-simple background model.
+simple {\bf linear? quadratic?} background model.
 We therefore model the background flux around each comparison lamp emission
-line using a constant offset + Gaussian process (GP).
+line using a constant offset + Gaussian process (GP)
+{\bf in order to ..?}.
 For the GP model, we use a Mat\'ern 3/2 kernel function
 (\citealt{Matern:1986,Rasmussen:2005}) parametrized by amplitude parameter
 $\sigma_{3/2}$ and correlation scale $\rho_{3/2}$.
@@ -400,8 +406,8 @@ fit for the wavelength dispersion function.
 We found that using such functions can lead to vastly incorrect wavelength
 values near either end of the pixel grid where the polynomial function is
 un- or weakly-constrained.
-We instead use a combined linear polynomial + GP to model the wavelength
-dispersion.
+\smoh{We instead use a combined linear polynomial + GP to model the wavelength
+  dispersion. - what is each component supposed to capture?}
 We again use a Mat\'ern 3/2 kernel, use \lbfgsb\ optimization, and convert any
 scale parameter to log-space before maximizing the log-likelihood.
 \figurename~\ref{fig:wavelength-GP} shows an example of the residuals from one
@@ -413,20 +419,19 @@ pixel-to-wavelength mapping is uncertain.
 We therefore only use the pixel range from 250--1210, corresponding to a
 wavelength range of $\approx 5500$--$7400~{\rm \AA}$; gray shaded region shows
 the excluded pixel/wavelength ranges.
+\smoh{The wavelength solution is not well constrained at either end no matter
+  what (due to lack of data), and using GP model instead of polynomials does
+  not change that. Instead, it seems to me that GP model informs us of the
+  regions to discard.  Thus, technically, I think ``We instead use ...'' is not
+  correctly justified. Modify at will. Obviously quite a minor point..}
 
-This wavelength calibration procedure produces a nightly model for the
-nonlinear dispersion of wavelength as a function of pixel value for each
-extracted 1D spectrum.
-However, because of flexure in the spectrograph, each observation will have an
-additional offset of, typically, $\approx 0.5$--$2~{\rm \AA}$, corresponding to
-a significant velocity offset at \Ha\ of $\approx 25$--$100~\kms$ (discussed
-below).
 \figurename~\ref{fig:sample-spectra} shows a random sample of 10
 wavelength-calibrated source spectra of comoving star pair members normalized
 to 1 at $\lambda = 5500~{\rm \AA}$ and shifted by an arbitrary offset for
 visualization.
-As suggested by the features in these 10 spectra, there is a mix of
-metallicities and spectral types amongst the observed targets.
+As suggested by the features ({\bf the depth of the absorption features?}) in
+these 10 spectra, there is a mix of metallicities and spectral types amongst
+the observed targets.
 Note that the spectra are not flux-calibrated, as we only care about measuring
 radial velocities from this sample.
 
@@ -462,6 +467,12 @@ radial velocities from this sample.
     \label{fig:sample-spectra}}
 \end{figure}
 
+The wavelength calibration procedure described above produces a nightly model
+for the nonlinear dispersion of wavelength as a function of pixel value for
+each extracted 1D spectrum.
+However, because of flexure in the spectrograph, each observation will have an
+additional offset of, typically, $\approx 0.5$--$2~{\rm \AA}$, corresponding to
+a significant velocity offset at \Ha\ of $\approx 25$--$100~\kms$.
 As mentioned, comparison lamp spectra were not obtained at each telescope
 pointing.
 The absolute wavelength solution at each pointing can therefore be shifted
@@ -514,11 +525,13 @@ have very short exposure times and thus weak night-sky lines.
       $\mu$ and variance $\sigma^2$.
       Wavelength units are all angstroms.
       \todo{what are the flux units?}
+      \smoh{A column of brief description of parameters would be useful.}
       \label{tbl:prior-bounds}
     }
   \end{center}
 \end{table}
 
+\smoh{Long paragraph - may break up at the discussion of an example case (bold-faced)}
 To derive radial velocities for each source, we then measure the (wavelength)
 line centroid of \Ha\ in each corrected spectrum.
 We model the absorption line using a pixel-convolved Voigt profile and use a
@@ -542,9 +555,10 @@ walker positions and run again for 512 steps; together, these two steps
 constitute our burn-in phase.
 From the final walker positions after burn-in, we run again for 1024 steps and
 store these as our posterior samples.
+{\bf
 \figurename~\ref{fig:Halpha-mcmc-corner} shows a \package{corner} plot
 (\citealt{Foreman-Mackey:2016}) of all projections of these posterior PDF
-samples for a randomly-chosen source (HD 63408, in this case).
+samples for a randomly-chosen source (HD 63408, in this case).}
 The marginal posterior distribution over $x_0$ can be converted to a
 distribution over radial velocity; in this case, the estimated (Gaussian
 standard deviation) precision is $\approx 2.5~\kms$.
@@ -617,8 +631,8 @@ a detailed description of the content of this table.
         \toprule
         Column Name    & Unit & Description\\
         \midrule
-        \texttt{Oh17\_id}         &      & Row index in candidate catalog (\citealt{Oh:2017})\\
-        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
+        \texttt{Oh17\_id}         &      & Star row index from the candidate catalog (\citealt{Oh:2017})\\
+        \texttt{Oh17\_group\_id}  &      & Group ID from the candidate catalog (\citealt{Oh:2017})\\
         \texttt{tgas\_source\_id} &      & Unique source identifier from \tgas\\
         \texttt{name}             &      & HD, \project{Hipparcos}, or \project{Tycho-2} identifier\\
         \texttt{ra}               & deg  & Right ascension from \tgas\\
@@ -798,7 +812,7 @@ proper-motion-only log-FML-ratio for a given pair of stars as
 \llrold\ (as computed in \citealt{Oh:2017}) and the log-FML-ratio including the
 radial velocity data as \llrnew.
 We consider a pair as being genuinely comoving if $\llrnew > \llrold$ ---
-\ncomoving of the \npairsobs\ comoving pairs satisfy this constraint.
+\ncomoving\ of the \npairsobs\ comoving pairs satisfy this constraint.
 \figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
 plotted against the change in log-likelihood-ratio, $\llrnew - \llrold$, for all
 observed pairs.
@@ -821,7 +835,7 @@ content of this table.
 \begin{table}[htb]
     \centering
     \caption{Description of columns in data table containing results from radial
-    velocity follow-up.} \label{tbl:data-stars}
+      velocity follow-up.} \label{tbl:data-pairs}
     \begin{tabular}{l|l|l}
         \toprule
         Column Name    & Unit & Description\\

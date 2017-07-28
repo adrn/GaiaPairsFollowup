@@ -345,7 +345,8 @@ metallicities and stellar parameters for our observed sources.
 The spectra were reduced and calibrated using a custom, publicly-available
 pipeline written in \python, described below.
 
-% this paragraph can be simplified
+\subsubsection{1D spectrum extraction}
+
 For each source or comparison lamp observation, the two-dimensional image is
 bias corrected, flat-field corrected, and trimmed using standard routines
 implemented in \package{ccdproc} (\citealt{Craig:2015}).
@@ -378,6 +379,8 @@ The LSF amplitudes are stored as the source fluxes, and the background model
 intercepts are stored as the background (sky) fluxes.
 Occasionally, nearby sources fall in the slit; these are masked by hand in the
 2D images and do not bias the LSF extraction fits.
+
+\subsubsection{Wavelength calibration}
 
 We start the wavelength calibration by interactively identifying the 12
 strongest, least blended emission lines in one of the extracted 1D comparison
@@ -533,6 +536,8 @@ have very short exposure times and thus weak night-sky lines.
   \end{center}
 \end{table}
 
+\subsubsection{Radial velocity measurement}
+
 To derive radial velocities for each source, we then measure the (wavelength)
 line centroid of \Ha\ in each corrected spectrum.
 We model the absorption line using a pixel-convolved Voigt profile and use a
@@ -557,9 +562,9 @@ constitute our burn-in phase.
 From the final walker positions after burn-in, we run again for 1024 steps and
 store these as our posterior samples.
 
-\figurename~\ref{fig:Halpha-mcmc-corner} shows a \package{corner} plot
-(\citealt{Foreman-Mackey:2016}) of all projections of these posterior PDF
-samples for a randomly-chosen source (HD 63408, in this case).
+\figurename~\ref{fig:Halpha-mcmc-corner} shows a corner plot of all projections
+of these posterior PDF samples for a randomly-chosen source (HD 63408, in this
+case).
 The marginal posterior distribution over $x_0$ can be converted to a
 distribution over radial velocity; in this case, the estimated (Gaussian
 standard deviation) precision is $\approx 2.5~\kms$.
@@ -572,7 +577,7 @@ percentiles computed from all posterior samples.
 Bottom panel shows the residuals of the data from the median linear polynomial +
 absorption line model (black line) along with the Gaussian process computed from
 the median parameters (orange curve) used to model other correlated structure in
-the vicinity of \Ha (which can be interpreted as correlated noise).
+the vicinity of \Ha\ (which can be interpreted as correlated noise).
 These figures are produced for all source spectrum fits and visually inspected
 to ensure that the MCMC sampling appears to have converged for all cases.
 
@@ -585,9 +590,9 @@ that the typical velocity \emph{precision} from measuring the centroid of \Ha\
 is between $5$--$10~\kms$.
 We report the measured absolute radial velocities along with compiled sky
 position, astrometry, and $G$-band magnitude from the \tgas\ catalog and \tmass\
-$J$-band magnitudes for all of our comoving star targets in the ``stars'' data
-table available with this \documentname; see \tablename~\ref{tbl:data-stars} for
-a detailed description of the content of this table.
+$J$-band magnitudes for all of our comoving star targets in
+\tablename~\ref{tbl:data-stars} available with this \documentname\ (see table
+caption for a detailed description of the contents).
 
 \begin{figure}[!hp]
   \begin{center}
@@ -656,8 +661,10 @@ Several of our targets and all of our calibration targets have previously
 measured radial velocities (RVs).
 We can therefore estimate the absolute velocity uncertainties by comparing our
 derived radial velocities with high-quality prior measurements.
-Following previous work (\citealt{Shaya:2011}), we search for previous RV
-measurements (in decreasing order of priority) with:
+For calibration sources, we use radial velocity values reported in the source
+catalogs (\citealt{Bensby:2014,Pinsonneault:2014}).
+For all other sources, following previous work (\citealt{Shaya:2011}), we search
+for previous RV measurements (in decreasing order of priority) with:
 \begin{enumerate}
   \item The Geneva-Copenhagen Survey of the Solar Neighborhood
   (\citealt{Nordstrom:2004}).
@@ -829,9 +836,9 @@ Note that pairs with large 3D velocity differences have large (negative) changes
 to their log-likelihood-ratio values.
 
 The inferred 3D velocity differences and values for \llrnew\ and \llrold\ for
-all observed candidate comoving pairs are provided with the associated ``pairs''
-table; see \tablename~\ref{tbl:data-pairs} for a detailed description of the
-content of this table.
+all observed candidate comoving pairs are provided with the associated
+\tablename~\ref{tbl:data-pairs} table (see table caption for a detailed
+description of the content).
 
 \begin{table}[htb]
     \centering
@@ -1113,22 +1120,37 @@ formation models (e.g., \citealt{Raghavan:2010}).
 
 \subsection{Caveats} \label{sec:caveats}
 
-Need much larger sample with no cuts on separation or signal-to-noise to study
-true separation distribution
+The results presented in this work demonstrate that even at separations larger
+than a parsec, a substantial fraction of comoving pair candidates selected from
+astrometry alone are confirmed with three-dimensional velocity information.
+This is exciting because it confirms the existence of what is likely a
+population of nearly-coherent but unbound coeval stars.
+It is also encouraging for the prospect of selecting large samples of comoving
+pairs purely with astrometric data from future data releases of the \gaia\
+mission (radial velocity measurements will only be released for bright stars, $G
+< 12$).
+However, in this work, we do not claim to report the true number or density of
+large-separation comoving pairs.
+To model the abundance and formation of comoving pairs, it will be crucial to
+select larger samples of pairs without hard cuts on separation, tangential
+velocity, signal-to-noise, or likelihood ratio, as were done with the input
+sample used in this work.
 
-Need precise chemical information
 
-But at very large separations, how do you convince yourself that a pair was truly coeval? Same chemistry? To what precision? What about chemical differences from planet formation?
-
-Going forward, will have to use hierarchical mixture models to study population of singles in conjunction
-
-Great reward: Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
-
-Abundances - future work, Coronado in prep.! But: throw shade on abundances
-because planet engulfment (https://arxiv.org/pdf/1707.02180.pdf). Also Oh et al.
-2017b
 
 % \subsection{Prospects for chemical tagging} \label{sec:chemical-tagging}
+
+% Need precise chemical information
+
+% But at very large separations, how do you convince yourself that a pair was truly coeval? Same chemistry? To what precision? What about chemical differences from planet formation?
+
+% Going forward, will have to use hierarchical mixture models to study population of singles in conjunction
+
+% Great reward: Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
+
+% Abundances - future work, Coronado in prep.! But: throw shade on abundances
+% because planet engulfment (https://arxiv.org/pdf/1707.02180.pdf). Also Oh et al.
+% 2017b
 
 % The majority of stars are thought to form in dynamically cold, chemically
 % homogeneous clusters, relative to the kinematic and chemical

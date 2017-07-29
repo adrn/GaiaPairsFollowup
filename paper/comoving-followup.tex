@@ -510,17 +510,25 @@ have very short exposure times and thus weak night-sky lines.
 
 \begin{table}[ht]
   \begin{center}
-    \begin{tabular}{ c | c }
+    \begin{tabular}{ c | c | l }
       \toprule
-        Parameter & Prior \\\toprule
-        $\ln A$ & $\mathcal{U}(2, 16)$\\
-        $x_0$ & $\mathcal{U}(6547, 6579)$\\
-        $\ln\sigma_G$ & $\mathcal{U}(-4, 2)$\\
-        $\ln\gamma_L$ & $\mathcal{U}(-4, 2)$\\
-        $\alpha_1$ & $\mathcal{U}(0, 10^{16})$\\
-        $\alpha_2$ & $\mathcal{U}(-10^8, 10^8)$\\
-        $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$\\
-        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$\\
+        Parameter & Prior & Description \\\toprule
+        $\ln A$ & $\mathcal{U}(2, 16)$ & Logarithm of line amplitude
+          [${\rm photons}$]\\
+        $x_0$ & $\mathcal{U}(6547, 6579)$ & Line wavelength centroid
+          [${\rm \AA}$]\\
+        $\ln\sigma_G$ & $\mathcal{U}(-4, 2)$ & Logarithm of Gaussian standard
+          deviation of line profile [${\rm \AA}$]\\
+        $\ln\gamma_L$ & $\mathcal{U}(-4, 2)$ & Logarithm of Lorentzian HWHM of
+          line profile\\
+        $\alpha_1$ & $\mathcal{U}(0, 10^{16})$ & Background model offset at line
+          centroid [${\rm photons}$]\\
+        $\alpha_2$ & $\mathcal{U}(-10^8, 10^8)$ & Background model slope
+          [${\rm photons}~{\rm \AA}^{-1}$]\\
+        $\ln\sigma_{3/2}$ & $\mathcal{U}(-8, 8)$ & Logarithm of Gaussian process
+          amplitude [${\rm photons}$]\\
+        $\ln\rho_{3/2}$ & $\mathcal{N}(1, 1)$ & Logarithm of Gaussian process
+          correlation scale [${\rm \AA}$]\\
       \bottomrule
     \end{tabular}
     \caption{
@@ -528,9 +536,7 @@ have very short exposure times and thus weak night-sky lines.
       $\mathcal{U}(a, b)$ indicates a uniform prior between $a$ and $b$ and
       $\mathcal{N}(\mu, \sigma^2)$ indicates a normal distribution with mean
       $\mu$ and variance $\sigma^2$.
-      Wavelength units are all angstroms.
-      \todo{what are the flux units?}
-      \smoh{A column of brief description of parameters would be useful.}
+      Flux units are photons, i.e. the spectra are not flux-calibrated.
       \label{tbl:prior-bounds}
     }
   \end{center}
@@ -944,7 +950,6 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \label{fig:genuine-cmd}}
 \end{figure}
 
-\todo{TESS-HERMES}
 An additional 202 candidate comoving pairs (\citealt{Oh:2017}) have
 previously-measured radial velocities (for each star) reported in \DR{5} of the
 Radial Velocity Experiment (RAVE; \citealt{Kunder:2017}).
@@ -1118,7 +1123,7 @@ formation models (e.g., \citealt{Raghavan:2010}).
 
 \section{Discussion} \label{sec:discussion}
 
-\subsection{Caveats} \label{sec:caveats}
+% \subsection{Caveats and additional validation} \label{sec:caveats}
 
 The results presented in this work demonstrate that even at separations larger
 than a parsec, a substantial fraction of comoving pair candidates selected from
@@ -1135,22 +1140,47 @@ To model the abundance and formation of comoving pairs, it will be crucial to
 select larger samples of pairs without hard cuts on separation, tangential
 velocity, signal-to-noise, or likelihood ratio, as were done with the input
 sample used in this work.
+It will also be important to quantify the contamination rate of (3D) comoving
+pair lookalikes, especially at large separations.
 
+We do not try to estimate a contamination rate in this work, but instead use
+metallicities and radial velocities from 61 candidate comoving pairs that are in
+\DR{3} of the \acronym{LAMOST} survey (\citealt{Deng:2012}) as an additional
+validation test.
+\figurename~\ref{fig:lamost} shows these pairs plotted as the difference in
+radial velocity and difference in iron abundance with points colored by the
+chord length separation of each pair.
+There is a clear over-density of pairs with abundance and radial-velocity
+differences close to zero.
+From this figure it is also clear that the false positives are predominantly the
+largest separation pairs (i.e. are the darkest markers), but a number of
+$>1~\pc$ pairs appear to have small radial-velocity differences and small
+differences in iron abundances, making them even more likely to be genuine
+pairs.
 
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.9\linewidth]{lamost.pdf}
+  \end{center}
+  \caption{%
+    Stuff
+    \label{fig:lamost}}
+\end{figure}
+
+Going forward, definitive confirmation of comoving star pairs may require
+precise measurements of chemical abundances combined with precise radial
+velocities, as demonstrated with the \acronym{LAMOST} data.
+However, we would also like to \emph{test} assumptions about chemical
+homogeneity, rather than simply assuming that all true comoving pairs must have
+identical abundances.
+For example, the outcomes of planet formation may lead to large or appreciable
+abundance differences between coeval stars (e.g., \citealt{yo}, Oh et al.,
+submitted).
+We therefore caution that---to study the chemical properties of comoving pairs
+and star formation in general---the comoving pairs should be selected from their
+kinematics alone.
 
 % \subsection{Prospects for chemical tagging} \label{sec:chemical-tagging}
-
-% Need precise chemical information
-
-% But at very large separations, how do you convince yourself that a pair was truly coeval? Same chemistry? To what precision? What about chemical differences from planet formation?
-
-% Going forward, will have to use hierarchical mixture models to study population of singles in conjunction
-
-% Great reward: Once chemical homogeneity understood amongst stars of same spectral type, can be used to calibrate stellar models across the HR diagram: should have same age, chemistry, etc. Also tests of chemical enrichment due to planetary systems
-
-% Abundances - future work, Coronado in prep.! But: throw shade on abundances
-% because planet engulfment (https://arxiv.org/pdf/1707.02180.pdf). Also Oh et al.
-% 2017b
 
 % The majority of stars are thought to form in dynamically cold, chemically
 % homogeneous clusters, relative to the kinematic and chemical
@@ -1214,11 +1244,9 @@ sample used in this work.
 % accretion of planetary (rocky) material onto one of the two stars (Oh et al.,
 % submitted).
 
-% \subsection{Prospects for Galactic structure} \label{sec:dynamics}
+% \subsection{Future spectroscopic surveys} \label{sec:future-rvs}
 
-\subsection{Future spectroscopic surveys} \label{sec:future-rvs}
-
-DISCO / AS4, 4MOST, WEAVE, DESI, PFS
+% DISCO / AS4, 4MOST, WEAVE, DESI, PFS
 
 \section{Conclusions}
 
@@ -1272,6 +1300,11 @@ France.
 % center at Princeton University which is jointly supported by the Princeton
 % Institute for Computational Science and Engineering and the Princeton
 % University Office of Information Technology's Research Computing department.
+Guoshoujing Telescope (the Large Sky Area Multi-Object Fiber Spectroscopic
+Telescope LAMOST) is a National Major Scientific Project built by the Chinese
+Academy of Sciences. Funding for the project has been provided by the National
+Development and Reform Commission. LAMOST is operated and managed by the
+National Astronomical Observatories, Chinese Academy of Sciences.
 
 \software{
 The code used in this project is available from

@@ -326,11 +326,8 @@ class GUIWavelengthSolver(object):
         # self.solution['pixel_err'] = self._map_dict['pixel_err']
         plt.close(self.fig)
 
-def main(proc_path, linelist_file, overwrite=False):
+def main(proc_path, init_file, linelist_file, overwrite=False):
     """ """
-
-    # HACK:
-    init_file = '../config/mdm-spring-2017/init_wavelength.csv'
 
     proc_path = path.realpath(path.expanduser(proc_path))
     if not path.exists(proc_path):
@@ -421,6 +418,10 @@ if __name__ == "__main__":
                         help='Path to a text file where the 0th column is a list of '
                              'emission lines for the comparison lamp. Default is to '
                              'require the user to enter exact wavelengths.')
+
+    parser.add_argument('--initfile', dest='init_file', type=str, default=None,
+                        help='Initial guess file to help the auto-solver.')
+    # TODO: do this init_file = '../config/mdm-spring-2017/init_wavelength.csv'
 
     args = parser.parse_args()
 

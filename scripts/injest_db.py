@@ -51,7 +51,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
     # Make sure the specified paths actually exist
     db_path = path.abspath(db_path)
     run_root_path = path.abspath(run_root_path)
-    for path_ in [db_path, run_root_path]:
+    for path_ in [path.dirname(db_path), run_root_path]:
         if not path.exists(path_):
             raise ValueError("Path '{0}' doesn't exist!".format(path_))
 

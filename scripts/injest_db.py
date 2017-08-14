@@ -170,6 +170,8 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
 
             # get group id from object name
             if '-' in hdr['OBJECT']:
+                # Per APW and SMOH's convention
+
                 split_name = hdr['OBJECT'].split('-')
                 kw['group_id'] = int(split_name[0])
 
@@ -204,6 +206,37 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                 else:
                     logger.log(1, 'simbad names for this object could not be '
                                'retrieved')
+
+            elif hdr['OBJECT'].startswith('k') or hdr['OBJECT'][0].isdigit():
+                # Assume it's a KIC number - per Ruth and Dan's convention
+
+                if hdr['OBJECT'].startswith('k'):
+                    object_name = 'KIC {0}'.format(hdr['OBJECT'][1:])
+
+                else:
+                    object_name = 'KIC {0}'.format(hdr['OBJECT'])
+
+                # query Simbad to get all possible names for this target
+                logger.log(1, 'common name: {0}'.format(object_name))
+
+                try:
+                    all_ids = Simbad.query_objectids(object_name)['ID'].astype(str)
+                except Exception as e:
+                    logger.warning('Simbad query_objectids failed for "{0}" '
+                                   'with error: {1}'
+                                   .format(object_name, str(e)))
+                    all_ids = []
+
+                logger.log(1, 'this is a KIC object')
+
+                if len(all_ids) > 0:
+                    logger.log(1, 'other names for this object: {0}'
+                               .format(', '.join(all_ids)))
+                else:
+                    logger.log(1, 'simbad names for this object could not be '
+                               'retrieved')
+
+                result_table = Simbad.query_object(object_name)
 
             else:
                 object_name = hdr['OBJECT']

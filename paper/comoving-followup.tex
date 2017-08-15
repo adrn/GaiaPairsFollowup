@@ -85,7 +85,7 @@ gravitational perturbation spectrum of the Milky Way.
 % \project{Hipparcos} astrometry combined with radial velocity surveys.
 In previous work, we identified $>4,000$ candidate comoving pairs using only
 astrometric data from the Tycho-Gaia Astrometric Solution (TGAS) catalog and
-find an abundance of pairs at separations $\gtrsim 1~\pc$.
+find a large number of pairs with separations $\gtrsim 1~\pc$.
 Without radial velocity measurements for the vast majority of these pairs, the
 false-positive rate at these separations is significant ($\sim 50\%$).
 % Methods
@@ -105,7 +105,6 @@ We therefore confirm the discovery of a population of comoving star pairs at
 very large separations, strongly suggesting an abundance of disrupted wide
 binaries and stellar associations in the Galactic disk.
 \end{abstract}
-
 
 % The confirmed discovery of this population of coeval, comoving stars will
 % enable future dynamical tests of dark matter and XX of star formation XX.
@@ -132,10 +131,10 @@ Widely-separated, coeval pairs or multiplets of stars --- i.e. wide binaries,
 multiplets, or former binaries or multiplets --- are important tracers of many
 processes that formed and continue to shape the Milky Way.
 They have been used to place limits on the mass distribution and population of
-massive perturbers in the Galaxy (e.g., \citealt{Yoo:2004}), to study the
-physics of star formation (e.g., \citealt{Parker:2009,Reipurth:2012}),
-and to calibrate stellar models and inferences across the main sequence (e.g.,
-\citealt{Brewer:2016}).
+massive perturbers in the Galaxy (e.g.,
+\citealt{Yoo:2004,Monroy-Rodriguez:2014}), to study the physics of star
+formation (e.g., \citealt{Parker:2009,Reipurth:2012}), and to calibrate stellar
+models and inferences across the main sequence (e.g., \citealt{Brewer:2016}).
 These examples represent a small subset of a much broader range of applications
 (see, e.g., \citealt{Chaname:2007}).
 
@@ -254,7 +253,7 @@ the \tgas\ catalog (\citealt{Michalik:2015,Gaia-Collaboration:2016a}).
 These comoving pairs were selected using a cut on a marginalized likelihood
 ratio computed for all nearly co-spatial pairs of stars.
 Briefly, we perform a model selection between
-two cases: that the velocities of the two stars in a pair are
+two hypotheses: that the velocities of the two stars in a pair are
 identical (case 1) or that they are indepndent (case 2).
 We marginalize over the (unknown) true velocity and distance of each star
 to obtain the ratio of fully marginalized likelihoods,
@@ -325,7 +324,9 @@ At this resolution, to obtain high signal-to-noise ($>100$) spectra, most
 exposures were between $30$--$120~{\rm s}$ (15th and 85th percentiles).
 To maximize the number of observed pairs, we chose not to take
 comparison lamp spectra at each pointing as it adds an overhead of $\approx
-90~{\rm s}$ per observation.
+90~{\rm s}$ per observation; we are primarily interested in relative velocities
+between pair members and therefore don't need precise absolute calibrations of
+their radial velocities.
 To determine rough nightly wavelength solutions, calibration spectra were
 obtained using Hg-Ne and Ne comparison lamps at the beginning and end of each
 night.
@@ -485,7 +486,7 @@ and the covariance matrix becomes the block-diagonal matrix
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=0.7\linewidth]{llr-vs-dv.pdf}
+    \includegraphics[width=0.5\linewidth]{llr-vs-dv.pdf}
   \end{center}
   \caption{%
     Point estimate of the 3D velocity difference between two stars in a comoving
@@ -510,7 +511,7 @@ $\mathcal{R} = \ln \mathcal{L}_1/\mathcal{L}_2$; we refer to the
 proper-motion-only log-FML-ratio for a given pair of stars as
 \llrold\ (as computed in \citealt{Oh:2017}) and the log-FML-ratio including the
 radial velocity data as \llrnew.
-We consider a pair as being genuinely comoving if $\llrnew > \llrold$ ---
+We consider a pair as being genuinely comoving if $\llrnew > \llrold$:
 \ncomoving\ of the \npairsobs\ comoving pairs satisfy this constraint.
 \figurename~\ref{fig:llr} shows the magnitude of the 3D velocity difference
 plotted against the change in log-likelihood-ratio, $\llrnew - \llrold$, for all
@@ -530,6 +531,19 @@ The inferred 3D velocity differences and values for \llrnew\ and \llrold\ for
 all observed candidate comoving pairs are provided with the associated
 \tablename~\ref{tbl:data-pairs} table (see table caption for a detailed
 description of the content).
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.7\linewidth]{dx-dv.pdf}
+  \end{center}
+  \caption{%
+    Point estimate of the 3D velocity difference between two stars in a comoving
+    pair, $|\bs{v}_1 - \bs{v}_2|$, plotted against a point estimate of the 3D
+    spatial separation of the two stars, $|\bs{x}_1 - \bs{x}_2|$.
+    The distances used in the point estimates are computed using a
+    Lutz-Kelker-corrected parallax value (\citealt{Lutz:1973}).
+    \label{fig:dx-dv}}
+\end{figure}
 
 \begin{table}[htb]
     \centering
@@ -585,19 +599,6 @@ information about the tidal field and fluctuations in the mass distribution of
 the Milky Way.
 With \gaia\ \DR{2}, we will be able to study the statistical properties of these
 widely-separated but comoving stars at even larger separations ($>10~\pc$).
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=\linewidth]{dx-dv.pdf}
-  \end{center}
-  \caption{%
-    Point estimate of the 3D velocity difference between two stars in a comoving
-    pair, $|\bs{v}_1 - \bs{v}_2|$, plotted against a point estimate of the 3D
-    spatial separation of the two stars, $|\bs{x}_1 - \bs{x}_2|$.
-    The distances used in the point estimates are computed using a
-    Lutz-Kelker-corrected parallax value (\citealt{Lutz:1973}).
-    \label{fig:dx-dv}}
-\end{figure}
 
 \begin{figure}[htbp]
   \begin{center}
@@ -682,9 +683,10 @@ distribution with distance.
 
 \subsection{A few highlighted comoving pairs}\label{sec:interesting-pairs}
 
-We naively expect that comoving, coeval stars should lie along lines parallel to
-the main sequence in color-magnitude space. The majority of our star pairs
-appear to follow this expectation, with the exception of a few visible outliers.
+We naively expect that comoving, coeval stars should lie along isochrones
+color-magnitude space.
+The majority of our star pairs appear to follow this expectation, with the
+exception of a few visible outliers.
 For example, there appear to be at least a few main-sequence--giant-branch
 pairs, and a few pairs that appear to cross the main-sequence.
 We highlight a few of these pairs below and in
@@ -976,9 +978,14 @@ John Brewer (Yale),
 Jason Curtis (Columbia),
 Keith Hawkins (Columbia),
 David W. Hogg (NYU),
-Melissa Ness (MPIA), and
-Dave Zurek (AMNH)
+Nathan Leigh (AMNH),
+Melissa Ness (MPIA),
+Dave Zurek (AMNH),
 for useful discussions and advice.
+We also thank all attendees of the ``Stars'' group meeting at the Center for
+Computational Astrophysics at the Flatiron Institute.
+The Flatiron Institute is supported by the Simons Foundation.
+
 We thank James Davenport (WWU) for releasing his open source spectroscopic
 reduction code, \package{PyDIS}, which served as inspiration for the pipeline
 used in this work.
@@ -993,7 +1000,8 @@ for the DPAC has been provided by national institutions, in particular
 the institutions participating in the {\it Gaia} Multilateral Agreement.
 This research has made use of the SIMBAD database, operated at CDS, Strasbourg,
 France.
-This project was developed in part at the 2017 Heidelberg Gaia Sprint, hosted by the Max-Planck-Institut für Astronomie, Heidelberg.
+This project was developed in part at the 2017 Heidelberg Gaia Sprint, hosted by
+the Max-Planck-Institut für Astronomie, Heidelberg.
 
 Guoshoujing Telescope (the Large Sky Area Multi-Object Fiber Spectroscopic
 Telescope LAMOST) is a National Major Scientific Project built by the Chinese

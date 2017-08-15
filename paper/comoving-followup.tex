@@ -245,6 +245,24 @@ results.
 
 \section{Data}\label{sec:data}
 
+\begin{figure}[htb!]
+  \begin{center}
+    \includegraphics[width=0.8\linewidth]{sample_cmd.pdf}
+  \end{center}
+  \caption{%
+    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
+    blue histogram) and all comoving star pair members observed in this
+    follow-up effort (black points); colored lines connect candidate comoving
+    star pairs.
+    \tmass\ (\citealt{Skrutskie:2006}) $J$-band magnitudes are obtained
+    from the Gaia science archive.
+    Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
+    absolute magnitude, $M_G$, using a Lutz-Kelker-corrected
+    (\citealt{Lutz:1973}) distance estimate (see also \eqname~1 in
+    \citealt{Oh:2017}).
+    \label{fig:sample-cmd}}
+\end{figure}
+
 \subsection{Sample selection}\label{sec:sample}
 
 In previous work, we have identified a sample of high-confidence, candidate
@@ -262,6 +280,7 @@ The likelihoods appropriately take into account the reported uncertainties and
 covariances of the astrometric measurements in the \tgas\ catalog
 as well as projection effect in comparing spherical
 velocities for star pairs separated by large angles on the sky.
+
 After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$),
 we compute the marginalized likelihood ratio for all stars within $10~\pc$ and
 with a difference in tangential velocity $\Delta v_\perp < 10~\kms$ of each
@@ -276,24 +295,6 @@ However, we have also found a large number ($\approx$4,000) of mutually
 exclusively-linked pairs in increasing number with increasing separation at
 $\sim 1$~\pc.
 For a full description of the selection method, see \citealt{Oh:2017}.
-
-\begin{figure}[ht!]
-  \begin{center}
-    \includegraphics[width=0.8\linewidth]{sample_cmd.pdf}
-  \end{center}
-  \caption{%
-    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
-    blue histogram) and all comoving star pair members observed in this
-    follow-up effort (black points); colored lines connect candidate comoving
-    star pairs.
-    \tmass\ (\citealt{Skrutskie:2006}) $J$-band magnitudes are obtained
-    from the Gaia science archive.
-    Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
-    absolute magnitude, $M_G$, using a Lutz-Kelker-corrected
-    (\citealt{Lutz:1973}) distance estimate (see also \eqname~1 in
-    \citealt{Oh:2017}).
-    \label{fig:sample-cmd}}
-\end{figure}
 
 To select candidate pairs for follow-up spectroscopic observations, we only
 consider mutually exclusive star pairs within $200~\pc$ in Heliocentric
@@ -382,9 +383,9 @@ We note, however, that for computing \emph{relative} velocities for pairs of
 nearby stars, it is the RV precision (typically $\approx 5$--$10~\kms$) that
 matters.
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \begin{center}
-    \includegraphics[width=\linewidth]{rv-comparison.pdf}
+    \includegraphics[width=0.85\linewidth]{rv-comparison.pdf}
   \end{center}
   \caption{%
     Comparison of radial velocities measured from our observations with radial
@@ -528,13 +529,12 @@ Note that pairs with large 3D velocity differences have large (negative) changes
 to their log-likelihood-ratio values.
 
 The inferred 3D velocity differences and values for \llrnew\ and \llrold\ for
-all observed candidate comoving pairs are provided with the associated
-\tablename~\ref{tbl:data-pairs} table (see table caption for a detailed
-description of the content).
+all observed candidate comoving pairs are provided with the associated table
+(\tablename~\ref{tbl:data-pairs}; see Appendix~\ref{sec:table}).
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \begin{center}
-    \includegraphics[width=0.7\linewidth]{dx-dv.pdf}
+    \includegraphics[width=0.9\linewidth]{dx-dv.pdf}
   \end{center}
   \caption{%
     Point estimate of the 3D velocity difference between two stars in a comoving
@@ -544,27 +544,6 @@ description of the content).
     Lutz-Kelker-corrected parallax value (\citealt{Lutz:1973}).
     \label{fig:dx-dv}}
 \end{figure}
-
-\begin{table}[htb]
-    \centering
-    \caption{Description of columns in data table containing results from radial
-      velocity follow-up.} \label{tbl:data-pairs}
-    \begin{tabular}{l|l|l}
-        \toprule
-        Column Name    & Unit & Description\\
-        \midrule
-        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
-        \texttt{R\_mu}            &      & Log-likelihood-ratio computed with only astrometric information\\
-        \texttt{R\_rv}            &      & Log-likelihood-ratio computed with radial velocities as well\\
-        \texttt{dx\_50}           & \pc  & Median of 3D spatial separation error distribution\\
-        \texttt{dv\_50}           & \kms & Median of 3D velocity difference error distribution\\
-        \texttt{dx\_15}           & \pc  & 15th percentile of 3D spatial separation error distribution\\
-        \texttt{dx\_85}           & \pc  & 85th percentile of 3D spatial separation error distribution\\
-        \texttt{dv\_15}           & \kms & 15th percentile of 3D velocity difference error distribution\\
-        \texttt{dv\_85}           & \kms & 85th percentile of 3D velocity difference error distribution\\
-        \bottomrule
-    \end{tabular}
-\end{table}
 
 \subsection{Confirmed comoving pairs}\label{sec:genuine}
 
@@ -600,7 +579,7 @@ the Milky Way.
 With \gaia\ \DR{2}, we will be able to study the statistical properties of these
 widely-separated but comoving stars at even larger separations ($>10~\pc$).
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
   \begin{center}
     \includegraphics[width=\linewidth]{separation-hist.pdf}
   \end{center}
@@ -621,43 +600,7 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \label{fig:separation}}
 \end{figure}
 
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=0.8\linewidth]{genuine_cmd.pdf}
-  \end{center}
-  \caption{%
-    Color-magnitude diagram of confirmed comoving star pairs plotted over
-    the density of all \tgas\ sources within 200 pc; similar to
-    \figurename~\ref{fig:sample-cmd}, but for only the confirmed comoving pairs.
-    Several interesting pairs that include main-sequence and giant component
-    stars are highlighted in the text
-    (\sectionname~\ref{sec:interesting-pairs} and
-    \figurename~\ref{fig:highlighted-cmd}).
-    \label{fig:genuine-cmd}}
-\end{figure}
-
-An additional 202 candidate comoving pairs (\citealt{Oh:2017}) have
-previously-measured radial velocities (for each star) reported in \DR{5} of the
-Radial Velocity Experiment (RAVE; \citealt{Kunder:2017}).
-Using the same procedure described in \sectionname~\ref{sec:catalog}, we
-identify confirmed comoving pairs using the RAVE velocities for all pairs within
-$200~\pc$ and find a similar false-positive rate at large separations ($\approx
-38\%$ are confirmed).
-Of the \nraveoverlap\ RAVE-overlap candidate comoving pairs (within $200~\pc$)
-that meet the above criteria, we find \nravecomoving\ confirmed comoving pairs.
-We plot the confirmed comoving pairs identified through radial velocity
-follow-up in this work along with the RAVE-confirmed pairs in
-\figurename~\ref{fig:separation-RAVE}.
-Top histogram shows the separation (chord length) distribution for the joint
-sample, scatter plot shows log-chord-length and the pair distances, and right
-histogram shows the distance distribution of the confirmed pairs.
-At larger distances ($\gtrsim 150~\pc$) it appears that the detection efficiency
-of our method drops, as expected given the hard cut in log-FML-ratio applied to
-define the candidate sample.
-Reassuringly, there do not appear to be any trends of the chord length
-distribution with distance.
-
-\begin{figure}[htbp]
+\begin{figure}[p]
   \begin{center}
     \includegraphics[width=\linewidth]{separation-with-rave.pdf}
   \end{center}
@@ -681,27 +624,59 @@ distribution with distance.
     \label{fig:separation-RAVE}}
 \end{figure}
 
-\subsection{A few highlighted comoving pairs}\label{sec:interesting-pairs}
+An additional 202 candidate comoving pairs (\citealt{Oh:2017}) have
+previously-measured radial velocities (for each star) reported in \DR{5} of the
+Radial Velocity Experiment (RAVE; \citealt{Kunder:2017}).
+Using the same procedure described in \sectionname~\ref{sec:catalog}, we
+identify confirmed comoving pairs using the RAVE velocities for all pairs within
+$200~\pc$ and find a similar false-positive rate at large separations ($\approx
+38\%$ are confirmed).
+Of the \nraveoverlap\ RAVE-overlap candidate comoving pairs (within $200~\pc$)
+that meet the above criteria, we find \nravecomoving\ confirmed comoving pairs.
+We plot the confirmed comoving pairs identified through radial velocity
+follow-up in this work along with the RAVE-confirmed pairs in
+\figurename~\ref{fig:separation-RAVE}.
+Top histogram shows the separation (chord length) distribution for the joint
+sample, scatter plot shows log-chord-length and the pair distances, and right
+histogram shows the distance distribution of the confirmed pairs.
+At larger distances ($\gtrsim 150~\pc$) it appears that the detection efficiency
+of our method drops, as expected given the hard cut in log-FML-ratio applied to
+define the candidate sample.
+Reassuringly, there do not appear to be any trends of the chord length
+distribution with distance.
 
-We naively expect that comoving, coeval stars should lie along isochrones
-color-magnitude space.
-The majority of our star pairs appear to follow this expectation, with the
-exception of a few visible outliers.
+\figurename~\ref{fig:genuine-highlighted-cmd} (left) shows the color-magnitude
+diagram for all confirmed comoving pairs.
+As would be expected if all of the pairs are coeval, the majority of pairs lie
+along isochrones in color-magnitude space, with the exception of a few visible
+outliers.
 For example, there appear to be at least a few main-sequence--giant-branch
 pairs, and a few pairs that appear to cross the main-sequence.
-We highlight a few of these pairs below and in
-\figurename~\ref{fig:highlighted-cmd}.
+We highlight a few of these pairs in the next section
+(\sectionname~\ref{sec:interesting-pairs}).
+
+\clearpage
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=0.8\linewidth]{highlighted_cmd.pdf}
+    \includegraphics[width=\linewidth]{genuine_highlighted_cmd.pdf}
   \end{center}
   \caption{%
-    Same as \figurename~\ref{fig:genuine-cmd}, but only three highlighted
-    comoving star pairs are shown.
-    \label{fig:highlighted-cmd}}
+    {\it Left}: Color-magnitude diagram of confirmed comoving star pairs plotted
+    over the density of all \tgas\ sources within 200 pc; similar to
+    \figurename~\ref{fig:sample-cmd}, but for only the confirmed comoving pairs.
+    Several interesting pairs that include main-sequence and giant component
+    stars are highlighted in the text (\sectionname~\ref{sec:interesting-pairs})
+    and in the right panel.
+    {\it Right}: Same as left panel, but only three highlighted comoving star
+    pairs are shown.
+    \label{fig:genuine-highlighted-cmd}}
 \end{figure}
 
+\subsection{A few highlighted comoving pairs}\label{sec:interesting-pairs}
+
+\figurename~\ref{fig:genuine-highlighted-cmd} (right) shows a few highlighted
+pairs selected from the color-magnitude diagram of confirmed comoving stars.
 We compile \project{Tycho-2} ($B$, $V$; \citealt{Hog:2000}), \tmass\
 ($J$, $H$, $K_{\rm s}$; \citealt{Skrutskie:2006}), and \acronym{WISE} ($W_1$,
 $W_2$, $W_3$; \citealt{Wright:2010}) photometry for each star in the pairs below
@@ -1033,6 +1008,32 @@ This work additionally used the Gaia science archive
 \facility{MDM: Hiltner (Modspec)}
 
 \appendix
+
+\section{Data products} \label{sec:table}
+
+See the caption for \tablename~\ref{tbl:data-pairs} for a full description of
+the columns in the associated data file.
+
+\begin{table}[htb]
+    \centering
+    \caption{Description of columns in data table containing results from radial
+      velocity follow-up.} \label{tbl:data-pairs}
+    \begin{tabular}{l|l|l}
+        \toprule
+        Column Name    & Unit & Description\\
+        \midrule
+        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
+        \texttt{R\_mu}            &      & Log-likelihood-ratio computed with only astrometric information\\
+        \texttt{R\_rv}            &      & Log-likelihood-ratio computed with radial velocities as well\\
+        \texttt{dx\_50}           & \pc  & Median of 3D spatial separation error distribution\\
+        \texttt{dv\_50}           & \kms & Median of 3D velocity difference error distribution\\
+        \texttt{dx\_15}           & \pc  & 15th percentile of 3D spatial separation error distribution\\
+        \texttt{dx\_85}           & \pc  & 85th percentile of 3D spatial separation error distribution\\
+        \texttt{dv\_15}           & \kms & 15th percentile of 3D velocity difference error distribution\\
+        \texttt{dv\_85}           & \kms & 85th percentile of 3D velocity difference error distribution\\
+        \bottomrule
+    \end{tabular}
+\end{table}
 
 \section{1D spectrum extraction} \label{sec:1d-ext}
 

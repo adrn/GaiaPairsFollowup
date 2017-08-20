@@ -53,7 +53,7 @@
 \affiliation{Department of Astrophysical Sciences,
              Princeton University, Princeton, NJ 08544, USA}
 
-\author{David~N.~Spergel}
+\author[0000-0002-5151-0006]{David~N.~Spergel}
 \affiliation{Flatiron Institute,
              Simons Foundation,
              162 Fifth Avenue,
@@ -89,7 +89,7 @@ find a large number of pairs with separations $\gtrsim 1~\pc$.
 Without radial velocity measurements for the vast majority of these pairs, the
 false-positive rate at these separations is significant ($\sim 50\%$).
 % Methods
-Here, we present results from our own low-resolution radial-velocity survey of a
+Here we present results from our own low-resolution radial-velocity survey of a
 random sample of the candidate pairs to identify and validate true comoving star
 pairs.
 % Results
@@ -101,9 +101,9 @@ separation (number per log separation is uniform).
 From $\approx 0.5~\pc$ to $10~\pc$, the number per separation is approximately
 uniform (number per log separation increases).
 % Conclusions
-We therefore confirm the discovery of a population of comoving star pairs at
-very large separations, strongly suggesting an abundance of disrupted wide
-binaries and stellar associations in the Galactic disk.
+We confirm the discovery of a population of comoving star pairs at very large
+separations, suggesting that disrupted wide binaries and stellar associations
+remain approximately spatially coherent.
 \end{abstract}
 
 % The confirmed discovery of this population of coeval, comoving stars will
@@ -127,7 +127,7 @@ binaries and stellar associations in the Galactic disk.
 
 \section{Introduction}\label{sec:introduction}
 
-Widely-separated, coeval pairs or multiplets of stars --- i.e. wide binaries,
+Widely-separated, coeval star pairs or multiples --- i.e. wide binaries,
 multiplets, or former binaries or multiplets --- are important tracers of many
 processes that formed and continue to shape the Milky Way.
 They have been used to place limits on the mass distribution and population of
@@ -170,7 +170,7 @@ Oelkers:2017, Andrews:2017}) have been discovered over the last several decades
 These pairs are identified by searching for approximately cospatial stars that
 appear to be comoving either in sky-projected velocities --- we refer to these
 as ``comoving pair candidates'' --- or using full-space velocity information ---
-we refer to these as ``comoving pairs.''
+we refer to these as ``confirmed comoving pairs.''
 Radial velocity follow-up is still needed to confirm the majority of the known
 candidates, though \gaia\ \DR{2} will provide radial velocities for the
 brightest stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
@@ -199,36 +199,36 @@ in \citealt{Yoo:2004}).
 More recent simulations of the disruption and evolution of wide binary
 populations include an approximation of the Galactic tidal field and instead
 predict that ionized binaries could appear as a second peak or component in the
-separation distribution of comoving stars at much larger separations (10--
-$1000~\pc$; \citealt{Jiang:2010}).
+separation distribution of comoving stars at much larger separations
+(10--$1000~\pc$; \citealt{Jiang:2010}).
 Though these simulations don't include perturbers like GMCs or black holes, they
 at least indicate that disrupted wide binaries may remain coherent for a longer
-period of time than previously thought, and thus, a monotonically decreasing
-separation distribution may be too simple of a model for the separation
-distribution of comoving stars in our Galaxy.
+period of time than previously thought.
+Thus, a monotonically decreasing separation distribution may be too simple of a
+model for the separation distribution of comoving stars in our Galaxy.
 In addition, the distribution of unbound but comoving stars should be very
 sensitive to diffusive processes that determine the rate at which the pairs
 separate.
 
 Indeed, observational work that followed appears to find tentative evidence for
 the existence of a second peak in the separation distribution of
-radial-velocity-confirmed comoving stars (\citealt{Shaya:2011}).
+radial-velocity-confirmed comoving stars (\citealt{Shaya:2011}; hereafter SO11).
 A key aspect of this work was to move from searching for common proper motion
 pairs to performing a statistical inference of the difference in full-space
 velocity vector for pairs of stars.
 At separations of $1$--$10~\pc$, star pairs in the local solar neighborhood
-subtend large angles on the sky; therefore, even if the two component stars were
-moving with the same 3D velocity, their proper motions and radial velocities
-can be different due to projections.
+subtend large angles on the sky: even if the two component stars were moving
+with the same 3D velocity, their proper motions and radial velocities can be
+different.
 By compiling radial velocities from the literature for \project{Hipparcos}
-stars, they applied this method to search for all comoving star pairs with
+stars, SO11 applied this method to search for all comoving star pairs with
 separations larger than $0.01~\pc$ within $100~\pc$ of the sun.
 They find $\sim 200$ high probability comoving pairs with a separation
 distribution that falls of until $\sim 1~\pc$, where the number of pairs then
-begins rising with separations.
+begins rising in bins of log-separation.
 
-To verify the existence of this unbound population of very wide-separation
-comoving pairs, we need to identify a large sample of confirmed comoving stars.
+To verify the existence of a population of very wide-separation comoving pairs,
+we first need to identify a large sample of confirmed comoving stars.
 This will already be possible for the brightest stars with \gaia\ \DR{2}, but
 obtaining even larger samples will require significant efforts to obtain radial
 velocities for candidate comoving pairs.
@@ -237,11 +237,11 @@ through low-resolution spectroscopic follow-up of candidate comoving stars
 selected from inferences using astrometric measurements from the \tgas\ catalog
 alone (\citealt{Oh:2017}).
 
-We describe the data, observations, and spectroscopic reduction in
-\sectionname~\ref{sec:data}.
-If you are uninterested in these details, skip to \sectionname~\ref{sec:results}
-and \sectionname~\ref{sec:discussion} where we present and discuss our main
-results.
+We describe the data and observations in \sectionname~\ref{sec:data}.
+Details of the spectroscopic reduction and velocity measurements are described
+in the Appendix.
+We present our main results in \sectionname~\ref{sec:results} and
+\sectionname~\ref{sec:discussion}.
 
 \section{Data}\label{sec:data}
 
@@ -270,39 +270,39 @@ comoving star pairs (\citealt{Oh:2017}) using only astrometric information from
 the \tgas\ catalog (\citealt{Michalik:2015,Gaia-Collaboration:2016a}).
 These comoving pairs were selected using a cut on a marginalized likelihood
 ratio computed for all nearly co-spatial pairs of stars.
-Briefly, we perform a model selection between
-two hypotheses: that the velocities of the two stars in a pair are
-identical (case 1) or that they are indepndent (case 2).
-We marginalize over the (unknown) true velocity and distance of each star
-to obtain the ratio of fully marginalized likelihoods,
+We performed a model selection between two hypotheses: that the velocities of
+the two stars in a pair are identical (case 1) or that they are indepndent (case
+2).
+We marginalized over the (unknown) true velocity and distance of each star to
+obtain the ratio of fully marginalized likelihoods,
 $\mathcal{L}_1/\mathcal{L}_2$.
 The likelihoods appropriately take into account the reported uncertainties and
 covariances of the astrometric measurements in the \tgas\ catalog
 as well as projection effect in comparing spherical
 velocities for star pairs separated by large angles on the sky.
 
-After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$),
+After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$,
 we compute the marginalized likelihood ratio for all stars within $10~\pc$ and
-with a difference in tangential velocity $\Delta v_\perp < 10~\kms$ of each
-target star from the \tgas\ catalog.
+with a difference in tangential velocity $\Delta v_\perp < 10~\kms$ for each
+star in the \tgas\ catalog.
 After applying a conservative cut on the likelihood ratio motivated by computing
-the same likelihood ratio for random pairings of stars ($\ln
+the same likelihood ratio for random pairings of stars, $\ln
 \mathcal{L}_1/\mathcal{L}_2 > 6$, we found 13,058 comoving star pairs with
 physical separations between $10^3~\au$ and $10~\pc$.
 Of these pairs, there are 10,606 unique sources, implying that a significant
 fraction of the identified pairs are members of larger groups.
-However, we have also found a large number ($\approx$4,000) of mutually
-exclusively-linked pairs in increasing number with increasing separation at
-$\sim 1$~\pc.
+However, we have also found a large number ($\approx$4,000) of
+mutually-exclusive linked pairs that increase in number with increasing
+log-separation from $\sim 1$~\pc.
 For a full description of the selection method, see \citealt{Oh:2017}.
 
 To select candidate pairs for follow-up spectroscopic observations, we only
 consider mutually exclusive star pairs within $200~\pc$ in Heliocentric
-distance; with the SNR cut used above and given the limitations of the \tgas\
-catalog itself, \tgas\ is $\approx$90\% complete to $200~\pc$
-(\citealt{Bovy:2017}).
+distance.
+With the SNR cut used above and given the limitations of the \tgas\ catalog
+itself, \tgas\ is $\approx$90\% complete to $200~\pc$ (\citealt{Bovy:2017}).
 From this source target list, we randomly observed targets with airmass $\sec z
-< 1.5$.
+< 1.5$ during our observing run.
 \figurename~\ref{fig:sample-cmd} shows a color-magnitude diagram of all targets
 observed in this observing run (markers) plotted over the density of all \tgas\
 stars within $200~\pc$.
@@ -321,13 +321,13 @@ $>1600$ (at the blue end) were later trimmed because of the poor quantum
 efficiency of the CCD at wavelengths $\lesssim 3600~{\rm \AA}$.
 The resolution and wavelength range were $\approx2~{\rm \AA}~{\rm pixel}^{-1}$
 from $\approx 3600$--$7200~{\rm \AA}$.
-At this resolution, to obtain high signal-to-noise ($>100$) spectra, most
-exposures were between $30$--$120~{\rm s}$ (15th and 85th percentiles).
+At this resolution, to obtain high signal-to-noise ($>100$ per pixel) spectra,
+most exposures were between $30$--$120~{\rm s}$.
 To maximize the number of observed pairs, we chose not to take
 comparison lamp spectra at each pointing as it adds an overhead of $\approx
-90~{\rm s}$ per observation; we are primarily interested in relative velocities
-between pair members and therefore don't need precise absolute calibrations of
-their radial velocities.
+90~{\rm s}$ per observation.
+We are primarily interested in relative velocities between pair members and
+therefore don't need precise absolute calibrations of their radial velocities.
 To determine rough nightly wavelength solutions, calibration spectra were
 obtained using Hg-Ne and Ne comparison lamps at the beginning and end of each
 night.
@@ -341,8 +341,7 @@ All calibration targets have previously measured radial velocities from
 high-resolution spectroscopic surveys (\citealt{Bensby:2014,Pinsonneault:2014})
 in order to validate our radial velocity measurements.
 These stars also have measured chemical abundances, and will be used in future
-work as a training set for a method of transferring chemical abundance labels,
-\project{The Cannon} (\citealt{Ness:2015}), to infer
+work as a training set for \project{The Cannon} (\citealt{Ness:2015}) to infer
 metallicities and stellar parameters for our observed sources.
 The spectra were reduced and calibrated using a custom, publicly-available
 pipeline written in \python; see Appendices~\ref{sec:1d-ext}--\ref{sec:rv-meas}
@@ -383,7 +382,7 @@ We note, however, that for computing \emph{relative} velocities for pairs of
 nearby stars, it is the RV precision (typically $\approx 5$--$10~\kms$) that
 matters.
 
-\begin{figure}[htb]
+\begin{figure}[!ht]
   \begin{center}
     \includegraphics[width=0.85\linewidth]{rv-comparison.pdf}
   \end{center}
@@ -407,7 +406,7 @@ matters.
 \subsection{Comoving pair catalog}\label{sec:catalog}
 
 Of the 323 observed star pairs, 12 have at least one member with an unreliable
-(flagged) radial velocity measurement from the pipeline above.
+(flagged) radial velocity measurement from the spectroscopic reduction pipeline.
 For the remaining 311 pairs, we use the measured radial velocities to re-compute
 the marginal likelihood ratio for the two hypotheses considered in previous work
 (see Appendix~B, \citealt{Oh:2017}).
@@ -418,7 +417,7 @@ allowed small dispersion), and (2) assuming that the two stars have independent
 We set the small allowed dispersion ($s$, in previous work) to $1~\kms$, and use
 a mixture of three Gaussian velocity components for the prior, meant to
 represent the thin disk, thick disk, and halo velocity distributions relative to
-the sun.
+the sun (see \citealt{Oh:2017}).
 
 To compute the new likelihood ratio, we modify the expressions from
 \citet{Oh:2017} to include the radial velocity measurements.
@@ -527,6 +526,9 @@ The error bars show the 15th and 85th percentiles of the distributions for a few
 randomly chosen pairs.
 Note that pairs with large 3D velocity differences have large (negative) changes
 to their log-likelihood-ratio values.
+Some pairs with large velocity differences also have small (near zero) changes
+to the log-likelihood ratio: these are pairs where each member has a velocity
+that is an outlier with respect to the prior velocity distribution.
 
 The inferred 3D velocity differences and values for \llrnew\ and \llrold\ for
 all observed candidate comoving pairs are provided with the associated table
@@ -560,12 +562,21 @@ comoving.
 Larger, black markers are confirmed comoving pairs ($\llrnew > \llrold$); note
 that many large-separation pairs have been ruled-out as comoving, but
 most small-separation pairs maintain their status as comoving.
-This is also apparent in \figurename~\ref{fig:separation}, which shows
-histograms of the spatial separation and sky separation for all pairs;
-background, gray histogram shows all observed pairs, and foreground, black
-histogram shows all pairs for which $\llrnew > \llrold$.
 
-At separations $\gtrsim 1~\pc$, $\approx 40\%$ of the comoving pairs are
+\figurename~\ref{fig:separation} shows histograms of the spatial separation and
+sky separation for all pairs; background, gray histogram shows all observed
+pairs, and foreground, black histogram shows all pairs for which $\llrnew >
+\llrold$.
+In this and subsequent figures, we use the phrase ``tangential separation'' (and
+symbol $s_{\rm tan}$) to refer to the chord length separation between the two
+pairs assuming the two stars are at the same distance (the smaller distance of
+the two, $d_{\rm min}$):
+\begin{equation}
+    s_{\rm sky} = 2\, d_{\rm min} \, \sin{\left( \frac{1}{2}\theta \right)}
+\end{equation}
+where $\theta$ is the angular extent of the pair.
+
+At sky separations $\gtrsim 1~\pc$, $\approx 40\%$ of the comoving pairs are
 confirmed to be comoving; interestingly, the separation distribution of the
 genuine pairs appears to be uniform or possibly growing in number with
 increasing separation.
@@ -590,13 +601,13 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     Note that the false-positive rate is $\approx 60\%$ at large separations
     ($>1~\pc$), but there are still a significant number of comoving pairs at
     these very wide separations.
-    \emph{Right}: Distribution of chord lengths (tangential separations) for all
-    comoving star pairs (gray) and only those identified as comoving with 3D
-    velocity information (black).
+    \emph{Right}: Distribution of tangential separations for all comoving star
+    pairs (gray) and only those identified as comoving with 3D velocity
+    information (black).
     Noise in the parallax measurements makes the 3D separation distribution
     appear roughly uniform.
-    Even the distribution in chord length appears to be approximately linear for
-    large separations ($\gtrsim 0.1~\pc$).
+    Even the distribution in tangential separation appears to be approximately
+    linear for large separations ($\gtrsim 0.1~\pc$).
     \label{fig:separation}}
 \end{figure}
 
@@ -605,9 +616,9 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \includegraphics[width=\linewidth]{separation-with-rave.pdf}
   \end{center}
   \caption{%
-    \emph{Top}: Distribution of chord lengths for all confirmed comoving star
-      pairs, either from the radial velocity follow-up presented in this work or
-      from RAVE \DR{5} radial velocities.
+    \emph{Top}: Distribution of tangential separation for all confirmed comoving
+      star pairs, either from the radial velocity follow-up presented in this
+      work or from RAVE \DR{5} radial velocities.
       At separations $\lesssim 10^{-1}~\pc$, the distribution (in log-log)
       appears uniform, consistent with past measurements of the wide binary
       separation distribution.
@@ -615,9 +626,9 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
       be an underabundance of comoving pairs, but the number of comoving pairs
       then begins to increase again out to our sample separation limit of
       $10~\pc$.
-    \emph{Middle}: Chord length plotted against mean distance for each comoving
-      pair identified from this work (circles, blue) or from RAVE overlap
-      (squares, orange).
+    \emph{Middle}: Tangential separation plotted against mean distance for each
+      comoving pair identified from this work (circles, blue) or from RAVE
+      overlap (squares, orange).
     \emph{Right}: Distance distribution for all confirmed comoving pairs.
       Note that at distances $\gtrsim 150~\pc$, our detection efficiency appears
       to decline.
@@ -636,13 +647,13 @@ that meet the above criteria, we find \nravecomoving\ confirmed comoving pairs.
 We plot the confirmed comoving pairs identified through radial velocity
 follow-up in this work along with the RAVE-confirmed pairs in
 \figurename~\ref{fig:separation-RAVE}.
-Top histogram shows the separation (chord length) distribution for the joint
-sample, scatter plot shows log-chord-length and the pair distances, and right
+Top histogram shows the tangential separation distribution for the joint
+sample, scatter plot shows log-separation and the pair distances, and right
 histogram shows the distance distribution of the confirmed pairs.
 At larger distances ($\gtrsim 150~\pc$) it appears that the detection efficiency
 of our method drops, as expected given the hard cut in log-FML-ratio applied to
 define the candidate sample.
-Reassuringly, there do not appear to be any trends of the chord length
+Reassuringly, there do not appear to be any trends of the separation
 distribution with distance.
 
 \figurename~\ref{fig:genuine-highlighted-cmd} (left) shows the color-magnitude
@@ -709,7 +720,7 @@ the assumption of Gaussianity ($\sigma \approx 1.5 \times {\rm MAD}$).
     \begin{tabular}{ c | c | c | c | c }
       \toprule
         Star name & \logg\ & \teff\ [K] & mass [$M_\odot$] &
-          chord length [pc]  \\
+          tangential separation [pc]  \\
         \toprule
         HD 95088 & $3.7 \pm 0.02$ & $5303 \pm 74$ & $1.490 \pm 0.002$ &
           \multirow{2}{*}{$8.6 \pm 0.8$}\\
@@ -738,8 +749,9 @@ From their surface gravities and temperatures, the component stars of this pair
 appear to be an A-type dwarf (HD 92278) and a slightly less massive G-type
 subgiant (HD 95088).
 This pair is separated by $4.5^\circ$ on the sky (corresponding to $\approx
-8.6~\pc$ in chord length, see \tablename~\ref{tbl:highlighted-pairs}) and have
-consistent distances within their uncertainties of $\approx 110 \pm 5~\pc$.
+8.6~\pc$ in tangential separation, see \tablename~\ref{tbl:highlighted-pairs})
+and have consistent distances within their uncertainties of $\approx 110 \pm
+5~\pc$.
 At first glance, it seems unlikely that the two stars could be coeval, as the
 more massive A star has not begun its post-main-sequence evolution.
 One possible explanation is that this pair is a false-positive in three
@@ -764,9 +776,10 @@ scenarios.
 
 The components of this pair appear to be a K-type subgiant (HD 79247) and a
 G-type dwarf (TYC 3807-1439-1).
-This pair is separated by $4^\circ$ on the sky or $6.8~\pc$ in chord length and
-have an apparent radial separation of $\approx 3~\pc$, corresponding to a 3D
-separation of $\approx 9.8~\pc$ at a distance of $\approx 100~\pc$.
+This pair is separated by $4^\circ$ on the sky or $6.8~\pc$ in tangential
+separation and have an apparent radial separation of $\approx 3~\pc$,
+corresponding to a 3D separation of $\approx 9.8~\pc$ at a distance of $\approx
+100~\pc$.
 Coeval stars at different phases of stellar evolution are extremely valuable for
 calibrating and testing stellar evolution models (e.g., \citealt{Torres:2013}).
 With a larger sample of confirmed comoving pairs, identified pairs that contain
@@ -778,8 +791,9 @@ of great interest.
 The components of this pair appear to be an A- or B-type dwarf (HD 54318) and a
 G-type dwarf (TYC 3792-658-1), the largest magnitude difference between all of
 the confirmed comoving pairs.
-This pair is separated by $2.5^\circ$ on the sky or $8.5~\pc$ in chord length
-and have a consistent distance of $\approx 190~\pc$ within their uncertainties.
+This pair is separated by $2.5^\circ$ on the sky or $8.5~\pc$ in tangential
+separation and have a consistent distance of $\approx 190~\pc$ within their
+uncertainties.
 The mass ratio distribution of comoving star pairs will help constrain star
 formation models (e.g., \citealt{Raghavan:2010}).
 
@@ -811,7 +825,7 @@ metallicities and radial velocities from 61 candidate comoving pairs that are in
 validation test.
 \figurename~\ref{fig:lamost} shows these pairs plotted as the difference in
 radial velocity and difference in iron abundance with points colored by the
-chord length separation of each pair.
+tangential separation of each pair.
 There is a clear over-density of pairs with abundance and radial-velocity
 differences close to zero.
 From this figure it is also clear that the false positives are predominantly the
@@ -827,7 +841,7 @@ pairs.
   \caption{%
     Differences in metallicity and radial velocity for candidate comoving pair
     member stars from the \acronym{LAMOST} survey.
-    Points represent each pair, colored by the separation (chord length), and
+    Points represent each pair, colored by the tangential separation, and
     error bars represent the uncertainties taken from the \acronym{LAMOST}
     \DR{3} catalog.
     There is a clear over-density of pairs with near-zero differences in
@@ -1009,32 +1023,6 @@ This work additionally used the Gaia science archive
 
 \appendix
 
-\section{Data products} \label{sec:table}
-
-See the caption for \tablename~\ref{tbl:data-pairs} for a full description of
-the columns in the associated data file.
-
-\begin{table}[htb]
-    \centering
-    \caption{Description of columns in data table containing results from radial
-      velocity follow-up.} \label{tbl:data-pairs}
-    \begin{tabular}{l|l|l}
-        \toprule
-        Column Name    & Unit & Description\\
-        \midrule
-        \texttt{Oh17\_group\_id}  &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
-        \texttt{R\_mu}            &      & Log-likelihood-ratio computed with only astrometric information\\
-        \texttt{R\_rv}            &      & Log-likelihood-ratio computed with radial velocities as well\\
-        \texttt{dx\_50}           & \pc  & Median of 3D spatial separation error distribution\\
-        \texttt{dv\_50}           & \kms & Median of 3D velocity difference error distribution\\
-        \texttt{dx\_15}           & \pc  & 15th percentile of 3D spatial separation error distribution\\
-        \texttt{dx\_85}           & \pc  & 85th percentile of 3D spatial separation error distribution\\
-        \texttt{dv\_15}           & \kms & 15th percentile of 3D velocity difference error distribution\\
-        \texttt{dv\_85}           & \kms & 85th percentile of 3D velocity difference error distribution\\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
 \section{1D spectrum extraction} \label{sec:1d-ext}
 
 For each source or comparison lamp observation, the two-dimensional image is
@@ -1099,6 +1087,25 @@ Once we determine the pixel centroids for all identified emission lines for a
 given night's comparison lamp spectrum, we then fit an interpolating function
 to the pixel-centroid, wavelength values for each emission line.
 
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.8\linewidth]{wavelength_gp.pdf}
+  \end{center}
+  \caption{%
+    A visualization of the pixel-to-wavelength model determined from a single
+    wavelength comparison lamp spectrum.
+    Black markers show the fit pixel centroids for known Hg or Ne emission
+    lines and the residual wavelength value between the linear + GP model and
+    the true emission line centroid.
+    The non-shaded region shows the section of spectrum where the comparison
+    lamp spectrum has sufficient line density to determine the wavelength
+    solution; shaded regions are masked from the resulting spectra.
+    Orange envelope shows the root-variance of the Gaussian process component
+    of the model, which can be interpreted as inherent uncertainties on the
+    wavelength calibration as a result of the model flexibility.
+    \label{fig:wavelength-GP}}
+\end{figure}
+
 Typically, high-order standard polynomials or Chebyshev polynomials are used to
 fit for the wavelength dispersion function.
 We found that using such functions can lead to vastly incorrect wavelength
@@ -1129,25 +1136,6 @@ these 10 spectra, there is a mix of metallicities and spectral types amongst the
 observed targets.
 Note that the spectra are not flux-calibrated, as we only care about measuring
 radial velocities from this sample.
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=0.8\linewidth]{wavelength_gp.pdf}
-  \end{center}
-  \caption{%
-    A visualization of the pixel-to-wavelength model determined from a single
-    wavelength comparison lamp spectrum.
-    Black markers show the fit pixel centroids for known Hg or Ne emission
-    lines and the residual wavelength value between the linear + GP model and
-    the true emission line centroid.
-    The non-shaded region shows the section of spectrum where the comparison
-    lamp spectrum has sufficient line density to determine the wavelength
-    solution; shaded regions are masked from the resulting spectra.
-    Orange envelope shows the root-variance of the Gaussian process component
-    of the model, which can be interpreted as inherent uncertainties on the
-    wavelength calibration as a result of the model flexibility.
-    \label{fig:wavelength-GP}}
-\end{figure}
 
 \begin{figure}[htbp]
   \begin{center}
@@ -1292,7 +1280,7 @@ caption for a detailed description of the contents).
 
 \begin{figure}[!hp]
   \begin{center}
-    \includegraphics[width=\linewidth]{mcmc_corner.pdf}
+    \includegraphics[width=0.75\linewidth]{mcmc_corner.pdf}
   \end{center}
   \caption{%
     A corner plot showing all projections of posterior PDF samples for the \Ha\
@@ -1306,7 +1294,7 @@ caption for a detailed description of the contents).
 
 \begin{figure}[htbp]
   \begin{center}
-    \includegraphics[width=0.7\linewidth]{mcmc_example_fit.pdf}
+    \includegraphics[width=0.5\linewidth]{mcmc_example_fit.pdf}
   \end{center}
   \caption{%
     Visualization of the \Ha\ absorption line model and fits for the source HD
@@ -1325,15 +1313,20 @@ caption for a detailed description of the contents).
     \label{fig:Halpha-mcmc-fit}}
 \end{figure}
 
-\begin{table}[htb]
+\section{Data products} \label{sec:table}
+
+See tables below for full descriptions of the columns in the associated data
+files.
+
+\begin{table}[ht]
     \centering
-    \caption{Description of columns in data table containing results from radial
-    velocity follow-up.} \label{tbl:data-stars}
+    \caption{Description of columns in data table containing absolute radial
+    velocity measurements and summary information from the \tgas\ catalog.}
+    \label{tbl:data-stars}
     \begin{tabular}{l|l|l}
         \toprule
         Column Name    & Unit & Description\\
         \midrule
-        \texttt{Oh17\_id}         &      & Star row index from the candidate catalog (\citealt{Oh:2017})\\
         \texttt{Oh17\_group\_id}  &      & Group ID from the candidate catalog (\citealt{Oh:2017})\\
         \texttt{tgas\_source\_id} &      & Unique source identifier from \tgas\\
         \texttt{name}             &      & HD, \project{Hipparcos}, or \project{Tycho-2} identifier\\
@@ -1349,7 +1342,28 @@ caption for a detailed description of the contents).
     \end{tabular}
 \end{table}
 
-% \clearpage
+\begin{table}[h]
+    \centering
+    \caption{Description of columns in data table containing separations and
+    relative radial velocities for all observed groups, along with likelihood
+    ratios computed with and without relative radial velocities.}
+    \label{tbl:data-pairs}
+    \begin{tabular}{l|l|l}
+        \toprule
+        Column Name    & Unit & Description\\
+        \midrule
+        \texttt{Oh17\_group\_id}    &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
+        \texttt{R\_mu}              &      & Log-likelihood-ratio computed with only astrometric information\\
+        \texttt{R\_rv}              &      & Log-likelihood-ratio computed with radial velocities as well\\
+        \texttt{sep\_tan}           & \pc  & Median of tangential separation error distribution\\
+        \texttt{sep\_tan\_err}      & \pc  & Uncertainty in tangential separation\\
+        \texttt{relative\_rv}       & \kms & Relative radial velocity between the two stars\\
+        \texttt{relative\_rv\_err}  & \kms & Uncertainty in relative radial velocity\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\clearpage
 
 \bibliographystyle{aasjournal}
 \bibliography{refs}

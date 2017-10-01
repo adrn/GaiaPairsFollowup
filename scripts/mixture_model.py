@@ -251,6 +251,8 @@ if __name__ == "__main__":
     # data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
     #                  rv_err=_tbl2['RV_err']*u.km/u.s)
 
+    print("Loading data...")
+
     # Load real data
     _tbl1 = fits.getdata('../data/tgas_apw1.fits')
     data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
@@ -260,8 +262,11 @@ if __name__ == "__main__":
     data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
                      rv_err=_tbl2['RV_err']*u.km/u.s)
 
+    print("Data loaded, creating model...")
+
     mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
     # plot_posterior(data1, data2)
+
     print("Model created - starting sampling")
     run_emcee(mm, pool)
 

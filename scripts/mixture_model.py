@@ -12,6 +12,7 @@ from scipy.integrate import simps
 from scipy.stats import norm
 from tqdm import tqdm
 import emcee
+from emcee.utils import MPIPool
 
 # Project
 from gwb.coords import get_tangent_basis
@@ -230,7 +231,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.mpi:
-        pool = schwimmbad.MPIPool()
+        pool = MPIPool()
 
         if not pool.is_master():
             pool.wait()

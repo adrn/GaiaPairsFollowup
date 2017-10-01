@@ -202,12 +202,21 @@ def run_emcee(model, pool):
 
     n_walkers = 28
     n_steps = 1024
+    n_batches = 8
+
     p0 = np.random.normal(0.5, 1E-3, size=(n_walkers, 1))
     sampler = emcee.EnsembleSampler(n_walkers, 1, model)
-    _ = sampler.run_mcmc(p0, n_steps)
 
-    np.save('../data/sampler.chain', sampler.chain)
-    np.save('../data/sampler.blobs', sampler.blobs)
+    for batch in range(n_batches):
+        pos, *_ = sampler.run_mcmc(p0, n_steps // n_batches)
+        p0 = pos
+
+        np.save('../data/sampler_chain{0}.npy'.format(batch),
+                sampler.chain)
+        np.save('../data/sampler_blobs{0}.npy'.format(batch),
+                sampler.blobs)
+
+        sampler.reset()
 
 if __name__ == "__main__":
     import schwimmbad
@@ -252,6 +261,6 @@ if __name__ == "__main__":
     # plot_posterior(data1, data2)
     print("Model created - starting sampling")
     run_emcee(mm, pool)
-    
+
     pool.close()
     sys.exit(0)

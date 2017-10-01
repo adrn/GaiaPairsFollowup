@@ -182,7 +182,7 @@ class MixtureModel:
         return lp + ll.sum(), blobs
 
     def __call__(self, p):
-        print(p[0])
+        # print(p[0])
         return self.ln_posterior(p)
 
 def plot_posterior(mm):
@@ -201,9 +201,10 @@ def plot_posterior(mm):
 def run_emcee(model, pool):
 
     n_walkers = 28
+    n_steps = 1024
     p0 = np.random.normal(0.5, 1E-3, size=(n_walkers, 1))
     sampler = emcee.EnsembleSampler(n_walkers, 1, model)
-    sampler.run_mcmc(p0, 1024)
+    _ = sampler.run_mcmc(p0, n_steps)
 
     np.save('../data/sampler.chain', sampler.chain)
     np.save('../data/sampler.blobs', sampler.blobs)
@@ -249,5 +250,8 @@ if __name__ == "__main__":
 
     mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
     # plot_posterior(data1, data2)
-
+    print("Model created - starting sampling")
     run_emcee(mm, pool)
+    
+    pool.close()
+    sys.exit(0)

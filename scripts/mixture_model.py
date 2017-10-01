@@ -209,6 +209,8 @@ def run_emcee(model, pool):
     sampler = emcee.EnsembleSampler(n_walkers, 1, model)
 
     for batch in range(n_batches):
+        print("Batch: {0}".format(batch))
+
         pos, *_ = sampler.run_mcmc(p0, n_steps // n_batches)
         p0 = pos
 

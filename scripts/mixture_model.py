@@ -11,6 +11,7 @@ from scipy.misc import logsumexp
 from scipy.integrate import simps
 from scipy.stats import norm
 from tqdm import tqdm
+import emcee
 
 # Project
 from gwb.coords import get_tangent_basis
@@ -161,10 +162,31 @@ class MixtureModel:
 
         return np.logaddexp(lls1, lls2), (lls1, lls2)
 
+    def ln_prior(self, p):
+        f = p[0]
 
-def main(data1, data2):
-    mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
+        if f <= 0 or f >= 1:
+            return -np.inf
 
+        return 0.
+
+    def ln_posterior(self, p):
+        lp = self.ln_prior(p)
+        if not np.isfinite(lp):
+            return -np.inf, None
+
+        ll, blobs = self.ln_likelihood(p)
+        if np.any(np.logical_not(np.isfinite(ll))):
+            return -np.inf, None
+
+        return lp + ll.sum(), blobs
+
+    def __call__(self, p):
+        print(p[0])
+        return self.ln_posterior(p)
+
+def plot_posterior(mm):
+    # Test: plot the posterior curve
     lls = []
     fs = np.linspace(0.15, 0.7, 32)
     for f in tqdm(fs):
@@ -176,7 +198,37 @@ def main(data1, data2):
     plt.plot(fs, np.exp(lls - lls.max()))
     plt.show()
 
+def run_emcee(model, pool):
+
+    n_walkers = 28
+    p0 = np.random.normal(0.5, 1E-3, size=(n_walkers, 1))
+    sampler = emcee.EnsembleSampler(n_walkers, 1, model)
+    sampler.run_mcmc(p0, 1024)
+
+    np.save('../data/sampler.chain', sampler.chain)
+    np.save('../data/sampler.blobs', sampler.blobs)
+
 if __name__ == "__main__":
+    import schwimmbad
+    from argparse import ArgumentParser
+
+    # Define parser object
+    parser = ArgumentParser(description="")
+    parser.add_argument('--mpi', action='store_true', default=False,
+                        dest='mpi')
+
+    args = parser.parse_args()
+
+    if args.mpi:
+        pool = schwimmbad.MPIPool()
+
+        if not pool.is_master():
+            pool.wait()
+            sys.exit(0)
+
+    else:
+        pool = schwimmbad.SerialPool()
+
     # # Load simulated data
     # _tbl1 = fits.getdata('../notebooks/data1.fits')
     # data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
@@ -195,4 +247,7 @@ if __name__ == "__main__":
     data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
                      rv_err=_tbl2['RV_err']*u.km/u.s)
 
-    main(data1, data2)
+    mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
+    # plot_posterior(data1, data2)
+
+    run_emcee(mm, pool)

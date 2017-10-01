@@ -1,3 +1,7 @@
+# Standard library
+from math import log
+import sys
+
 # Third-party
 from astropy.io import fits
 import astropy.units as u
@@ -15,7 +19,10 @@ from gwb.data import TGASData
 pc_mas_yr_per_km_s = (1*u.km/u.s).to(u.pc*u.mas/u.yr, u.dimensionless_angles()).value
 km_s_per_pc_mas_yr = 1/pc_mas_yr_per_km_s
 
-def get_icrs_samples(data, size=1):
+def get_icrs_samples(data, size=1, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
     all_samples = []
     for i in range(len(data)):
         star = data[i]
@@ -62,24 +69,26 @@ class MixtureModel:
 
         self._field_vdisp = field_vdisp.to(u.km/u.s).value
 
-        icrs1 = get_icrs_samples(data1, n_dv_samples)
-        icrs2 = get_icrs_samples(data2, n_dv_samples)
+        self._icrs1 = get_icrs_samples(data1, n_dv_samples)
+        self._icrs2 = get_icrs_samples(data2, n_dv_samples)
 
         # We can pre-compute the tangent basis matrices given the sky positions
-        # of each star
-        self.M1 = get_tangent_basis(icrs1[:,0,0], icrs1[:,0,1])
-        self.M2 = get_tangent_basis(icrs2[:,0,0], icrs2[:,0,1])
+        # of each star. We transpose it using swapaxes()
+        self.M1 = np.swapaxes(get_tangent_basis(self._icrs1[:,0,0],
+                                                self._icrs1[:,0,1]), 1, 2)
+        self.M2 = np.swapaxes(get_tangent_basis(self._icrs2[:,0,0],
+                                                self._icrs2[:,0,1]), 1, 2)
 
         # We can also pre-compute sample vectors in proper motion components
         # and in radial velocity and make units consistent. To get velocity
         # samples we just need to multiply in the distances
-        self._v1_samples = np.array([icrs1[...,3] * km_s_per_pc_mas_yr,
-                                     icrs1[...,4] * km_s_per_pc_mas_yr,
-                                     icrs1[...,5]])
+        self._v1_samples = np.array([self._icrs1[...,3].T * km_s_per_pc_mas_yr,
+                                     self._icrs1[...,4].T * km_s_per_pc_mas_yr,
+                                     self._icrs1[...,5].T])
 
-        self._v2_samples = np.array([icrs2[...,3] * km_s_per_pc_mas_yr,
-                                     icrs2[...,4] * km_s_per_pc_mas_yr,
-                                     icrs2[...,5]])
+        self._v2_samples = np.array([self._icrs2[...,3].T * km_s_per_pc_mas_yr,
+                                     self._icrs2[...,4].T * km_s_per_pc_mas_yr,
+                                     self._icrs2[...,5].T])
 
         self._plx1 = data1.parallax.to(u.mas).value
         self._plx1_err = data1.parallax_error.to(u.mas).value
@@ -100,63 +109,75 @@ class MixtureModel:
                          for i in range(self.n_data)])
 
     def get_dv_samples(self, d1, d2):
-        d1_tmp = np.vstack((d1, d1, np.ones_like(d1)))
-        d2_tmp = np.vstack((d2, d2, np.ones_like(d2)))
+        v1_tmp = self._v1_samples* np.vstack((d1, d1, np.ones_like(d1)))[:,None]
+        v2_tmp = self._v2_samples* np.vstack((d2, d2, np.ones_like(d2)))[:,None]
 
-        v1_samples = np.einsum('nij,ink->jkn', self.M1,
-                               self._v1_samples * d1_tmp[...,None])
-        v2_samples = np.einsum('nij,ink->jkn', self.M2,
-                               self._v2_samples * d2_tmp[...,None])
-        return np.linalg.norm(v1_samples - v2_samples, axis=0)
+        v1_samples = np.array([self.M1[n].dot(v1_tmp[...,n])
+                               for n in range(self.n_data)])
+        v2_samples = np.array([self.M2[n].dot(v2_tmp[...,n])
+                               for n in range(self.n_data)])
+
+        return np.linalg.norm(v1_samples - v2_samples, axis=1).T
 
     def ln_likelihood_at_d1d2(self, p, d1, d2):
         f = p[0]
-        b = np.vstack((np.full(self.n_dv_samples, f),
-                       np.full(self.n_dv_samples, 1-f)))
 
         dv_samples = self.get_dv_samples(d1, d2)
-        term1 = ln_dv_pdf(dv_samples, 1.)
-        term2 = ln_dv_pdf(dv_samples, self._field_vdisp)
 
-        ll = np.zeros(term1.shape[1])
-        for n in range(self.n_data):
-            ll[n] += logsumexp([term1[:,n], term2[:,n]], b=b) - np.log(self.n_dv_samples)
+        term1 = ln_dv_pdf(dv_samples, 1.) + log(f)
+        term2 = ln_dv_pdf(dv_samples, self._field_vdisp) + log(1-f)
 
-        return ll
+        return (logsumexp(term1, axis=0) - log(self.n_dv_samples),
+                logsumexp(term2, axis=0) - log(self.n_dv_samples))
 
     def ln_likelihood(self, p):
-        ll_grid = np.zeros((self.n_data, self.n_dist_grid, self.n_dist_grid))
+        ll_grid1 = np.zeros((self.n_data, self.n_dist_grid, self.n_dist_grid))
+        ll_grid2 = np.zeros((self.n_data, self.n_dist_grid, self.n_dist_grid))
+
+        terms = self.ln_likelihood_at_d1d2(p, self.d1_grids[:,2],
+                                           self.d2_grids[:,2])
 
         for i in range(self.n_dist_grid):
             for j in range(self.n_dist_grid):
-                ll_grid[:,i,j] = (self.ln_likelihood_at_d1d2(p,
-                                                             self.d1_grids[:,i],
-                                                             self.d2_grids[:,j]) +
-                                  norm.logpdf(1000/self.d1_grids[:,i],
-                                              self._plx1, self._plx1_err) +
-                                  norm.logpdf(1000/self.d2_grids[:,j],
-                                              self._plx2, self._plx2_err))
+                terms = self.ln_likelihood_at_d1d2(p,
+                                                   self.d1_grids[:,i],
+                                                   self.d2_grids[:,j])
+                log_d_pdf = (norm.logpdf(1000 / self.d1_grids[:,i],
+                                         self._plx1, self._plx1_err) +
+                             norm.logpdf(1000 / self.d2_grids[:,j],
+                                         self._plx2, self._plx2_err))
+                ll_grid1[:,i,j] = terms[0] + log_d_pdf
+                ll_grid2[:,i,j] = terms[1] + log_d_pdf
 
-        l_grid = np.exp(ll_grid)
-        likes = np.array([simps(simps(l_grid[n], self.d2_grids[n]), self.d1_grids[n])
-                          for n in range(self.n_data)])
-        return np.log(likes)
+        l_grid1 = np.exp(ll_grid1)
+        lls1 = np.log([simps(simps(l_grid1[n], self.d2_grids[n]),
+                             self.d1_grids[n])
+                       for n in range(self.n_data)])
+
+        l_grid2 = np.exp(ll_grid2)
+        lls2 = np.log([simps(simps(l_grid2[n], self.d2_grids[n]),
+                             self.d2_grids[n])
+                       for n in range(self.n_data)])
+
+        return np.logaddexp(lls1, lls2), (lls1, lls2)
 
 
 def main(data1, data2):
-    mm = MixtureModel(data1, data2, field_vdisp=15.*u.km/u.s)
+    mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
 
     lls = []
-    fs = np.linspace(0., 0.75, 32)
+    fs = np.linspace(0.15, 0.7, 32)
     for f in tqdm(fs):
-        lls.append(mm.ln_likelihood([f]).sum())
+        ll = mm.ln_likelihood([f])[0].sum()
+        print(f, ll)
+        lls.append(ll)
 
     lls = np.array(lls)
     plt.plot(fs, np.exp(lls - lls.max()))
     plt.show()
 
 if __name__ == "__main__":
-    # Load simulated data
+    # # Load simulated data
     # _tbl1 = fits.getdata('../notebooks/data1.fits')
     # data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
     #                  rv_err=_tbl1['RV_err']*u.km/u.s)
@@ -170,7 +191,7 @@ if __name__ == "__main__":
     data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
                      rv_err=_tbl1['RV_err']*u.km/u.s)
 
-    _tbl2 = fits.getdata('../data/tgas_apw1.fits')
+    _tbl2 = fits.getdata('../data/tgas_apw2.fits')
     data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
                      rv_err=_tbl2['RV_err']*u.km/u.s)
 

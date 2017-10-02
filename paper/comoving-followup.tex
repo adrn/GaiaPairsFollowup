@@ -30,6 +30,7 @@
 \newcommand{\teff}{\ensuremath{\ensuremath{T_{\rm eff}}}}
 \newcommand{\llrold}{\ensuremath{\mathcal{R}_\mu}}
 \newcommand{\llrnew}{\ensuremath{\mathcal{R}_{\rm RV}}}
+\DeclareMathOperator{\Tr}{Tr}
 
 \newcommand{\npairsobs}{311}
 \newcommand{\ncomoving}{127}
@@ -405,11 +406,6 @@ matters.
 
 % \subsection{Comoving pair probabilities} \label{sec:pair-probs}
 
-% TODO: assumptions:
-% - Same velocity dispersion for all ages. Could have an age-dependent
-%   dispersion
-% -
-
 Of the 323 observed star pairs, 12 have at least one member with an unreliable
 (flagged) radial velocity measurement from the spectroscopic reduction pipeline.
 For the remaining 311 pairs, we construct a statistical model to determine the
@@ -451,7 +447,8 @@ the assumption that the two vectors were drawn independently from an isotropic,
 That is,
 \begin{eqnarray}
     f(\psi \,;\, \sigma) &=& \left[2\sqrt {\pi}\, \sigma^3 \right]^{-1} \,
-        \psi^2 \, \ \exp\left[-\frac {\psi^2} {4\, \sigma^2} \right] \\
+        \psi^2 \, \ \exp\left[-\frac {\psi^2} {4\, \sigma^2} \right]
+        \label{eq:vel-diff-dist}\\
     \bs{v_1}, \bs{v_2} &\sim& \mathcal{N}(\bs{0}, \sigma^2\,\mat{I}_3) \\
     p_{\rm co}(\psi) &=& f(\psi \,;\, \sigma = 1~\kms)\\
     p_{\rm field}(\psi) &=& f(\psi \,;\, \sigma = \sigma_{\rm field})
@@ -546,7 +543,39 @@ uncertainty reported in the \tgas\ catalog for each star.
 From convergence tests, we have found that it is sufficient to use 1024 samples
 in the Monte Carlo integral and 5 by 5 distance grid points.
 
-Dispersion ... Nordstrom 2004
+We use an isotropic model for the field velocity distribution with dispersion
+set by taking the trace of the local velocity dispersion tensor for young
+($<2~{\rm Gyr}$) thin disk stars from \citealt{Nordstrom:2004}, $\mat{V}_{\rm
+N04}$, $\sigma_{\rm field} =
+\sqrt{\frac{1}{3}\Tr{\left(\mat{V}_{\rm N04}\right)}} \approx
+18~\kms$.\footnote{Even though the dispersion in this isotropic model for the
+field stars is only $18~\kms$, most randomly paired stars will tend to have 3D
+velocity differences $>20~\kms$. The 15th and 85th percentiles of the
+distribution of velocity differences (\eqname~\ref{eq:vel-diff-dist}) are
+$\approx 23~\kms$ and $\approx 59~\kms$, respectively.}
+This is a conservative choice: the velocity dispersion of thin disk stars
+increases steadily with age (e.g., \citealt{Aumer:2016}), so assuming that all
+of our pairs are young should lead to under-predictions of the probability that
+a given pair is truly comoving.
+A more robust model that simultaneously models the ages and age distribution of
+the comoving pairs would lead to more precise inferences of these probabilities,
+but is outside of the scope of this work.
+
+We generate samples in $f$ using \package{emcee} (\citealt{Foreman-Mackey:2013})
+with 28 walkers, keeping track of the value of the marginal likelihood under
+each mixture model component for each sample.
+We run the sampler for 256 burn-in steps from a small ball of initial positions
+centered on $f=0.5$, then restart the walkers from the final position and run
+for an additional 1024 steps.
+With the samples in $f$ and the mixture model component likelihoods, we compute
+the per-pair probabilities of belonging to the comoving component (see the final
+section of \citealt{Foreman-Mackey:2014}).
+
+% TODO: summary of assumptions:
+% - parallax-proper-motion covariances small
+% - Same velocity dispersion for all ages. Could have an age-dependent
+%   dispersion
+% - Isotropic field
 
 \section{Old section on FMLs}
 We compute two fully marginalized likelihoods (FMLs) for the data: (1) assuming

@@ -1,5 +1,6 @@
 # Standard library
 from math import log
+import os
 import sys
 
 # Third-party
@@ -199,7 +200,7 @@ def plot_posterior(mm):
     plt.plot(fs, np.exp(lls - lls.max()))
     plt.show()
 
-def run_emcee(model, pool):
+def run_emcee(model, pool, chain_file, blobs_file):
 
     n_walkers = 28
     n_steps = 1024
@@ -221,6 +222,47 @@ def run_emcee(model, pool):
 
         sampler.reset()
 
+    # Now collect all the individual files into one...
+    chains = []
+    blobs = []
+    for batch in range(n_batches):
+        chains.append(np.load('../data/sampler_chain{0}.npy'.format(batch)))
+        blobs.append(np.load('../data/sampler_blobs{0}.npy'.format(batch)))
+
+    chain = np.hstack(chains)
+    blobs = np.vstack(blobs)
+    np.save(chain_file, chain)
+    np.save(blobs_file, blobs)
+
+    # Now clean up / delete the files
+    for batch in range(n_batches):
+        os.remove('../data/sampler_chain{0}.npy'.format(batch))
+        os.remove('../data/sampler_blobs{0}.npy'.format(batch))
+
+def analyze_chain(chain, blobs):
+    # MAGIC NUMBER: index after which walkers are converged
+    ix = 256
+    trim_chain = chain[:,ix:]
+    trim_blobs = blobs[ix:]
+
+    # Downsample chains because correlation
+    flat_f = np.vstack(trim_chain[:,::8])[:,0]
+    med_f = np.median(flat_f)
+    std_f = 1.5 * np.median(np.abs(flat_f - med_f))
+    print('f = {0:.2f} +/- {1:.2f}'.format(med_f, std_f))
+
+    # Now we compute the per-pair probability
+    norm = 0.0
+    post_prob = np.zeros(blobs.shape[-1])
+    for i in range(trim_chain.shape[1]): # steps
+        for j in range(trim_chain.shape[0]): # walkers
+            ll_fg, ll_bg = trim_blobs[i][j]
+            post_prob += np.exp(ll_fg - np.logaddexp(ll_fg, ll_bg))
+            norm += 1
+    post_prob /= norm
+
+    np.save('../data/pair_probs.npy', post_prob)
+
 if __name__ == "__main__":
     import schwimmbad
     from argparse import ArgumentParser
@@ -229,6 +271,8 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="")
     parser.add_argument('--mpi', action='store_true', default=False,
                         dest='mpi')
+    parser.add_argument('--sim', action='store_true', default=False,
+                        dest='simulated_data')
 
     args = parser.parse_args()
 
@@ -242,33 +286,45 @@ if __name__ == "__main__":
     else:
         pool = schwimmbad.SerialPool()
 
-    # # Load simulated data
-    # _tbl1 = fits.getdata('../notebooks/data1.fits')
-    # data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
-    #                  rv_err=_tbl1['RV_err']*u.km/u.s)
+    if args.simulated_data:
+        print("Loading simulated data")
 
-    # _tbl2 = fits.getdata('../notebooks/data2.fits')
-    # data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
-    #                  rv_err=_tbl2['RV_err']*u.km/u.s)
+        # Load simulated data
+        _tbl1 = fits.getdata('../notebooks/data1.fits')
+        data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
+                         rv_err=_tbl1['RV_err']*u.km/u.s)
 
-    print("Loading data...")
+        _tbl2 = fits.getdata('../notebooks/data2.fits')
+        data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
+                         rv_err=_tbl2['RV_err']*u.km/u.s)
 
-    # Load real data
-    _tbl1 = fits.getdata('../data/tgas_apw1.fits')
-    data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
-                     rv_err=_tbl1['RV_err']*u.km/u.s)
+    else:
+        print("Loading real data")
 
-    _tbl2 = fits.getdata('../data/tgas_apw2.fits')
-    data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
-                     rv_err=_tbl2['RV_err']*u.km/u.s)
+        # Load real data
+        _tbl1 = fits.getdata('../data/tgas_apw1.fits')
+        data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
+                         rv_err=_tbl1['RV_err']*u.km/u.s)
+
+        _tbl2 = fits.getdata('../data/tgas_apw2.fits')
+        data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
+                         rv_err=_tbl2['RV_err']*u.km/u.s)
 
     print("Data loaded, creating model...")
 
     mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
+    print("Model created")
     # plot_posterior(data1, data2)
 
-    print("Model created - starting sampling")
-    run_emcee(mm, pool)
+    chain_file = '../data/sampler_chain.npy'
+    blobs_file = '../data/sampler_blobs.npy'
 
-    pool.close()
+    if not os.path.exists(chain_file):
+        print("Couldn't find cached chain file - starting sampling")
+        run_emcee(mm, pool, chain_file=chain_file, blobs_file=blobs_file)
+        pool.close()
+
+    analyze_chain(np.load(chain_file),
+                  np.load(blobs_file))
+
     sys.exit(0)

@@ -239,7 +239,7 @@ def run_emcee(model, pool, chain_file, blobs_file):
         os.remove('../data/sampler_chain{0}.npy'.format(batch))
         os.remove('../data/sampler_blobs{0}.npy'.format(batch))
 
-def analyze_chain(chain, blobs):
+def analyze_chain(chain, blobs, probs_file):
     # MAGIC NUMBER: index after which walkers are converged
     ix = 256
     trim_chain = chain[:,ix:]
@@ -261,7 +261,7 @@ def analyze_chain(chain, blobs):
             norm += 1
     post_prob /= norm
 
-    np.save('../data/pair_probs.npy', post_prob)
+    np.save(probs_file, post_prob)
 
 if __name__ == "__main__":
     import schwimmbad
@@ -330,6 +330,7 @@ if __name__ == "__main__":
         pool.close()
 
     analyze_chain(np.load(chain_file),
-                  np.load(blobs_file))
+                  np.load(blobs_file),
+                  '../data/pair_probs_{0}.npy'.format(args.name))
 
     sys.exit(0)

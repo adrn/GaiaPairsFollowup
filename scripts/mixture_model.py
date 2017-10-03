@@ -273,6 +273,8 @@ if __name__ == "__main__":
                         dest='mpi')
     parser.add_argument('--sim', action='store_true', default=False,
                         dest='simulated_data')
+    parser.add_argument('--name', required=True, dest='name',
+                        help='Name of the data - can be "apw" or "rave"')
 
     args = parser.parse_args()
 
@@ -301,12 +303,15 @@ if __name__ == "__main__":
     else:
         print("Loading real data")
 
+        if args.name not in ['apw', 'rave']:
+            raise ValueError("Invalid name '{0}'".format(args.name))
+
         # Load real data
-        _tbl1 = fits.getdata('../data/tgas_apw1.fits')
+        _tbl1 = fits.getdata('../data/tgas_{0}1.fits'.format(args.name))
         data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
                          rv_err=_tbl1['RV_err']*u.km/u.s)
 
-        _tbl2 = fits.getdata('../data/tgas_apw2.fits')
+        _tbl2 = fits.getdata('../data/tgas_{0}2.fits'.format(args.name))
         data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
                          rv_err=_tbl2['RV_err']*u.km/u.s)
 
@@ -316,8 +321,8 @@ if __name__ == "__main__":
     print("Model created")
     # plot_posterior(data1, data2)
 
-    chain_file = '../data/sampler_chain.npy'
-    blobs_file = '../data/sampler_blobs.npy'
+    chain_file = '../data/sampler_chain_{0}.npy'.format(args.name)
+    blobs_file = '../data/sampler_blobs_{0}.npy'.format(args.name)
 
     if not os.path.exists(chain_file):
         print("Couldn't find cached chain file - starting sampling")

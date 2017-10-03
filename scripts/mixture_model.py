@@ -54,7 +54,7 @@ def ln_dv_pdf(x, sigma):
 class MixtureModel:
 
     def __init__(self, data1, data2, n_dv_samples=512, n_dist_grid=5,
-                 field_vdisp=25.*u.km/u.s):
+                 field_vdisp=18.*u.km/u.s):
         """
         Parameters
         ----------

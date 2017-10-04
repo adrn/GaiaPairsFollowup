@@ -242,7 +242,23 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     logger.log(1, 'simbad names for this object could not be '
                                'retrieved')
 
-                result_table = Simbad.query_object(object_name)
+                # get the Tycho 2 ID, if it has one
+                tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
+                if tyc_id:
+                    tyc_id = tyc_id[0].replace('TYC', '').strip()
+                    logger.log(1, 'source has tycho 2 id: {0}'.format(tyc_id))
+                    tgas_row_idx = np.where(tgas['tycho2_id'] == tyc_id)[0]
+
+                    if len(tgas_row_idx) == 0:
+                        tgas_row_idx = None
+                    else:
+                        tgas_row = tgas[tgas_row_idx]
+
+                else:
+                    logger.log(1, 'source has no tycho 2 id.')
+                    tgas_row_idx = None
+
+                # result_table = Simbad.query_object(object_name)
 
             else:
                 object_name = hdr['OBJECT']

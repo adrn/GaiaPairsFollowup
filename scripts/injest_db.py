@@ -112,6 +112,12 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
         session.add(run)
         session.commit()
 
+    elif n == 1:
+        run = session.query(Run).filter(Run.name == run_name).limit(1).one()
+
+    else:
+        raise RuntimeError("Fuck.")
+
     # Now we need to go through each processed night of data and load all of the
     # relevant observations of sources.
 

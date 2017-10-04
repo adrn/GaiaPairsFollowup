@@ -48,8 +48,17 @@ def get_icrs_samples(data, size=1, seed=None):
     # rv : km/s
     return np.dstack((ra[...,None], dec[...,None], all_samples))
 
+
 def ln_dv_pdf(x, sigma):
     return 2*np.log(x) - x**2/(4*sigma**2) - 1.2655121234846456 - 3*np.log(sigma)
+
+
+def comoving_ln_pdf(x, sigma):
+    """ Normal distribution truncated at 0 (x >= 0) """
+    res = np.full_like(x, -np.inf)
+    res[x >= 0] = -0.5*(x/sigma)**2 - 0.22579135264472741 - np.log(sigma)
+    return res
+
 
 class MixtureModel:
 
@@ -127,7 +136,7 @@ class MixtureModel:
 
         dv_samples = self.get_dv_samples(d1, d2)
 
-        term1 = ln_dv_pdf(dv_samples, 1.) + log(f)
+        term1 = comoving_ln_pdf(dv_samples, 1.) + log(f)
         term2 = ln_dv_pdf(dv_samples, self._field_vdisp) + log(1-f)
 
         return (logsumexp(term1, axis=0) - log(self.n_dv_samples),

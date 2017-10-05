@@ -99,7 +99,10 @@ def get_CRVAD_rv(obs):
             return None
 
         err = float(row['e_RV'])
-        qual = str(row['q_RV'].astype(str)).lower()
+        try:
+            qual = str(row['q_RV'].astype(str)).lower()
+        except AttributeError:
+            qual = str(row['q_RV']).lower()
 
         if np.isnan(err):
             if qual in ['a', 'b']:
@@ -145,7 +148,12 @@ def get_GCRV_rv(obs):
         except IndexError:
             return None
 
-        return float(row['RV']), None, str(row['q_RV'].astype(str)), bibcode
+        try:
+            q = str(row['q_RV'].astype(str))
+        except AttributeError:
+            q = str(row['q_RV'])
+
+        return float(row['RV']), None, q, bibcode
 
     return None
 
@@ -184,8 +192,12 @@ def get_simbad_rv(obs):
 
     if result is not None and not np.any(result['RV_VALUE'].mask):
         k, = np.where(np.logical_not(result['RV_VALUE'].mask))
-        return (float(result['RV_VALUE'][k]), None,
-                str(result['RVZ_QUAL'].astype(str)[k]),
+        try:
+            q = str(result['RVZ_QUAL'].astype(str)[k])
+        except AttributeError:
+            q = str(result['RVZ_QUAL'][k])
+
+        return (float(result['RV_VALUE'][k]), None, q,
                 str(result['RVZ_BIBCODE'].astype(str)[k]))
 
     return None

@@ -27,7 +27,7 @@ SELECT TOP 10 j_m, j_msigcom, h_m, h_msigcom, ks_m, ks_msigcom
 FROM gaiadr1.tmass_original_valid
 JOIN gaiadr1.tmass_best_neighbour USING (tmass_oid)
 JOIN gaiadr1.tgas_source USING (source_id)
-WHERE source_id = {0}
+WHERE source_id = {0:d}
 """
 
 # Project
@@ -174,8 +174,13 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
             # read in header of 1d file and store keywords that exist as columns
             kw.update(fits_header_to_cols(hdr, obs_columns))
 
+            # HACK: skip empty object name
+            if len(str(hdr['OBJECT'])) == 0:
+                logger.warning('SKIPPING - empty OBJECT key')
+                continue
+
             # get group id from object name
-            if '-' in hdr['OBJECT']:
+            if '-' in str(hdr['OBJECT']):
                 # Per APW and SMOH's convention
 
                 split_name = hdr['OBJECT'].split('-')
@@ -213,10 +218,15 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     logger.log(1, 'simbad names for this object could not be '
                                'retrieved')
 
-            elif hdr['OBJECT'].startswith('k') or hdr['OBJECT'][0].isdigit():
+            elif (isinstance(hdr['OBJECT'], int) or
+                    str(hdr['OBJECT']).startswith('k') or
+                    hdr['OBJECT'][0].isdigit()):
                 # Assume it's a KIC number - per Ruth and Dan's convention
 
-                if hdr['OBJECT'].startswith('k'):
+                if isinstance(hdr['OBJECT'], int):
+                    object_name = 'KIC {0:d}'.format(hdr['OBJECT'])
+
+                elif hdr['OBJECT'].startswith('k'):
                     object_name = 'KIC {0}'.format(hdr['OBJECT'][1:])
 
                 else:
@@ -243,8 +253,19 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                                'retrieved')
 
                 # get the Tycho 2 ID, if it has one
+                hip_id = [id_ for id_ in all_ids if 'HIP' in id_]
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
-                if tyc_id:
+                if hip_id:
+                    hip_id = int(hip_id[0].replace('HIP', '').strip())
+                    logger.log(1, 'source has HIP id: {0}'.format(hip_id))
+                    tgas_row_idx = np.where(tgas['hip'] == hip_id)[0]
+
+                    if len(tgas_row_idx) == 0:
+                        tgas_row_idx = None
+                    else:
+                        tgas_row = tgas[tgas_row_idx]
+
+                elif tyc_id:
                     tyc_id = tyc_id[0].replace('TYC', '').strip()
                     logger.log(1, 'source has tycho 2 id: {0}'.format(tyc_id))
                     tgas_row_idx = np.where(tgas['tycho2_id'] == tyc_id)[0]
@@ -255,7 +276,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                         tgas_row = tgas[tgas_row_idx]
 
                 else:
-                    logger.log(1, 'source has no tycho 2 id.')
+                    logger.log(1, 'source has no HIP or TYC id.')
                     tgas_row_idx = None
 
                 # result_table = Simbad.query_object(object_name)
@@ -275,8 +296,19 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     continue
 
                 # get the Tycho 2 ID, if it has one
+                hip_id = [id_ for id_ in all_ids if 'HIP' in id_]
                 tyc_id = [id_ for id_ in all_ids if 'TYC' in id_]
-                if tyc_id:
+                if hip_id:
+                    hip_id = int(hip_id[0].replace('HIP', '').strip())
+                    logger.log(1, 'source has HIP id: {0}'.format(hip_id))
+                    tgas_row_idx = np.where(tgas['hip'] == hip_id)[0]
+
+                    if len(tgas_row_idx) == 0:
+                        tgas_row_idx = None
+                    else:
+                        tgas_row = tgas[tgas_row_idx]
+
+                elif tyc_id:
                     tyc_id = tyc_id[0].replace('TYC', '').strip()
                     logger.log(1, 'source has tycho 2 id: {0}'.format(tyc_id))
                     tgas_row_idx = np.where(tgas['tycho2_id'] == tyc_id)[0]
@@ -330,7 +362,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
                     if name in tgassource_columns:
                         tgas_kw[name] = tgas_row[name]
 
-                job = Gaia.launch_job(gaia_query.format(tgas_kw['source_id']),
+                job = Gaia.launch_job(gaia_query.format(tgas_kw['source_id'][0]),
                                       dump_to_file=False)
                 res = job.get_results()
 

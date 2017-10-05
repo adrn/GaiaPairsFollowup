@@ -62,7 +62,7 @@ def comoving_ln_pdf(x, sigma):
 class MixtureModel:
 
     def __init__(self, data1, data2, n_dv_samples=512, n_dist_grid=5,
-                 field_vdisp=18.*u.km/u.s):
+                 field_vdisp=18.*u.km/u.s, name=''):
         """
         Parameters
         ----------
@@ -77,6 +77,7 @@ class MixtureModel:
         self.n_data = len(data1)
         self.n_dv_samples = int(n_dv_samples)
         self.n_dist_grid = int(n_dist_grid)
+        self.name = name
 
         self._field_vdisp = field_vdisp.to(u.km/u.s).value
 
@@ -223,9 +224,9 @@ def run_emcee(model, pool, chain_file, blobs_file):
         pos, *_ = sampler.run_mcmc(p0, n_steps // n_batches)
         p0 = pos
 
-        np.save('../data/sampler_chain{0}.npy'.format(batch),
+        np.save('../data/sampler_chain{0}_{1}.npy'.format(batch, model.name),
                 sampler.chain)
-        np.save('../data/sampler_blobs{0}.npy'.format(batch),
+        np.save('../data/sampler_blobs{0}_{1}.npy'.format(batch, model.name),
                 sampler.blobs)
 
         sampler.reset()
@@ -234,8 +235,10 @@ def run_emcee(model, pool, chain_file, blobs_file):
     chains = []
     blobs = []
     for batch in range(n_batches):
-        chains.append(np.load('../data/sampler_chain{0}.npy'.format(batch)))
-        blobs.append(np.load('../data/sampler_blobs{0}.npy'.format(batch)))
+        chains.append(np.load('../data/sampler_chain{0}_{1}.npy'
+                              .format(batch, model.name)))
+        blobs.append(np.load('../data/sampler_blobs{0}_{1}.npy'
+                             .format(batch, model.name)))
 
     chain = np.hstack(chains)
     blobs = np.vstack(blobs)
@@ -244,8 +247,8 @@ def run_emcee(model, pool, chain_file, blobs_file):
 
     # Now clean up / delete the files
     for batch in range(n_batches):
-        os.remove('../data/sampler_chain{0}.npy'.format(batch))
-        os.remove('../data/sampler_blobs{0}.npy'.format(batch))
+        os.remove('../data/sampler_chain{0}_{1}.npy'.format(batch, model.name))
+        os.remove('../data/sampler_blobs{0}_{1}.npy'.format(batch, model.name))
 
 def analyze_chain(chain, blobs, probs_file):
     # MAGIC NUMBER: index after which walkers are converged
@@ -325,7 +328,7 @@ if __name__ == "__main__":
 
     print("Data loaded, creating model...")
 
-    mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
+    mm = MixtureModel(data1, data2, name=args.name, field_vdisp=25.*u.km/u.s)
     print("Model created")
     # plot_posterior(data1, data2)
 

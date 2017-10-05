@@ -55,9 +55,8 @@ def ln_dv_pdf(x, sigma):
 
 def comoving_ln_pdf(x, sigma):
     """ Normal distribution truncated at 0 (x >= 0) """
-    res = np.full_like(x, -np.inf)
-    res[x >= 0] = -0.5*(x/sigma)**2 - 0.22579135264472741 - np.log(sigma)
-    return res
+    x = np.abs(x)
+    return -0.5*(x/sigma)**2 - 0.22579135264472741 - np.log(sigma)
 
 
 class MixtureModel:

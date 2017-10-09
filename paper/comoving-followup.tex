@@ -409,19 +409,23 @@ matters.
 Of the 323 observed star pairs, 12 have at least one member with an unreliable
 (flagged) radial velocity measurement from the spectroscopic reduction pipeline.
 For the remaining 311 pairs, we construct a statistical model to determine the
-probability that a given candidate comoving pair is truly comoving.
+probability that a given candidate comoving pair is comoving in 3D velocity
+given the radial velocity and uncertainty measured in this work combined with
+\tgas\ astrometric data.
 For this inference, the data are the proper motions in the ICRS reference frame,
-$\bs{\mu}$, and parallax, $\varpi$, (from the \tgas\ catalog) and barycentric
-radial velocity, $v_r$, for each star in a candidate comoving pair; we assume
-that the sky position for each star $(\alpha, \delta)$ is known perfectly.
+$\bs{\mu} = (\mu_{\alpha^*}, \mu_\delta)$,\footnote{$\mu_{\alpha^*} = \mu_\alpha
+\, \cos\delta$} and parallax, $\varpi$, (from the
+\tgas\ catalog) and barycentric radial velocity, $v_r$, for each star in a
+candidate comoving pair; we assume that the sky position for each star $(\alpha,
+\delta)$ is known perfectly.
 For brevity in the expressions below, we define $\bs{\eta} = (\mu_{\alpha^*},
 \mu_\delta, v_r)$, where, e.g., $\bs{\eta}_1$ refers to the proper motion and
 radial velocity data for star 1 in the pair.
 To simplify some expressions, we additionally ignore any correlations between
 the observed parallax and the proper motion components (but keep the covariance
-structure between the two proper motion components).
+between the two proper motion components).
 
-Our model is expressed in terms of the magnitude of the true (unobserved) 3D
+Our model is expressed in terms of the magnitude of the true (latent) 3D
 velocity difference for each pair, $\psi = \left| \bs{v}_1 - \bs{v}_2 \right|$,
 and the (global) fraction of pairs that are comoving, $f$.
 For the distribution of true 3D velocity difference magnitudes, $p(\psi \given
@@ -431,31 +435,36 @@ f)$, we use a mixture model with two components
 \end{eqnarray}
 where $p_{\rm co}$, the probability distribution function (pdf) of true comoving
 pairs, and $p_{\rm field}$, the pdf of randomly paired field stars.
-Using a mixture model and inferring the mixture weight is a common trick to
-avoid explicitly having to sample over the per-pair probabilities: this
-expression is equivalent to the marginal likelihood under a model in which every
-candidate comoving pair has an additional latent parameter (a binary flag,
-$q_n$) that specifies which mixture component it belongs to
-(\citealt{Hogg:2010,Foreman-Mackey:2014}).
+Using a mixture model and inferring the mixture weight is a trick to avoid
+explicitly having to sample over the probabilities for each individual object
+(candidate comoving pair): this expression is equivalent to the marginal
+likelihood under a model in which every candidate comoving pair has an
+additional latent parameter (a binary flag, $q_n$) that specifies which mixture
+component it belongs to (\citealt{Hogg:2010,Foreman-Mackey:2014}).
 We later use this fact to compute the probability that each pair is truly
 comoving, or, more precisely, belongs to the mixture component $p_{\rm co}$.
 
 The form for both mixture components ($p_{\rm co}$ and $p_{\rm field}$) is taken
-to be the probability of the magnitude of the 3D separation of two vectors under
-the assumption that the two vectors were drawn independently from an isotropic,
-3D Gaussian with dispersion $\sigma$.
+to be the probability distribution of the magnitude of the 3D difference between
+two vectors under the assumption that the two vectors were drawn independently
+from an isotropic, 3D Gaussian with dispersion $\sigma$.
+For the three-dimensional velocity vectors we consider here, the distribution is
+Maxwellian in form.
 That is,
 \begin{eqnarray}
     f(\psi \,;\, \sigma) &=& \left[2\sqrt {\pi}\, \sigma^3 \right]^{-1} \,
         \psi^2 \, \ \exp\left[-\frac {\psi^2} {4\, \sigma^2} \right]
         \label{eq:vel-diff-dist}\\
-    \bs{v_1}, \bs{v_2} &\sim& \mathcal{N}(\bs{0}, \sigma^2\,\mat{I}_3) \\
-    p_{\rm co}(\psi) &=& f(\psi \,;\, \sigma = 1~\kms)\\
-    p_{\rm field}(\psi) &=& f(\psi \,;\, \sigma = \sigma_{\rm field})
+    \bs{v_1}, \bs{v_2} &\sim& \mathcal{N}(\bs{v} \given \bs{0}, \sigma^2\,\mat{I}_3) \\
+    p_{\rm co}(\psi) &=& \mathcal{N}(\psi \given 0, \sigma^2_{\rm co})\\
+    p_{\rm field}(\psi) &=& f(\psi \,;\, \sigma_{\rm field})
 \end{eqnarray}
-where $\sigma_{\rm field}$ is defined below, $\mathcal{N}(\bs{m},
-\mat{\Sigma})$ represents a normal distribution with mean vector $\bs{m}$ and
-covariance matrix $\mat{\Sigma}$, and $\mat{I}_3$ is the 3 by 3 identity matrix.
+where $\sigma_{\rm co}$ and $\sigma_{\rm field}$ are defined below,
+$\mathcal{N}(\bs{v} \given \bs{m}, \mat{\Sigma})$ represents a normal
+distribution over $\bs{v}$ with mean vector $\bs{m}$ and covariance matrix
+$\mat{\Sigma}$, $\mathcal{N}(x \given m, \sigma^2)\,[a,b]$ is a truncated normal
+distribution with mean $m$ and variance $\sigma^2$ defined on the domain
+$[a,b]$, and $\mat{I}_3$ is the 3 by 3 identity matrix.
 
 Under this model, the joint probability of the velocity data for a given pair
 $\bs{\eta}_1$ and $\bs{\eta}_2$, and the latent parameters $\bs{v}_1, \bs{v}_2,
@@ -464,7 +473,7 @@ these separately below), is
 \begin{equation}
 p(\bs{\eta}_1, \bs{\eta}_2, \bs{v}_1, \bs{v}_2, \psi \given d_1, d_2, f) =
     p(\bs{\eta}_1 \given d_1, \bs{v}_1) \,
-    p(\bs{\eta}_2, v_{r,2} \given d_2, \bs{v}_2) \,
+    p(\bs{\eta}_2 \given d_2, \bs{v}_2) \,
     p(\bs{v}_1, \bs{v}_2 \given \psi) \, p(\psi \given f)\label{eq:full-ll}
 \end{equation}
 where
@@ -473,14 +482,14 @@ where
 \end{eqnarray}
 
 Because we are only interested in inferring the fraction of stars consistent
-with being comoving, we marginalize this expression over the true 3D velocities
-and velocity difference, obtaining the velocity-marginalized, per-pair
-likelihood
+with being comoving, $f$, we marginalize this expression over the true 3D
+velocities and velocity difference, obtaining the velocity-marginalized,
+per-pair likelihood
 \begin{equation}
     p(\bs{\eta}_1, \bs{\eta}_2 \given d_1, d_2, f) =
     \int \dd^3\bs{v}_1 \, \dd^3\bs{v}_2 \, \dd \psi \,
     p(\bs{\eta}_1, \bs{\eta}_2, \bs{v}_1, \bs{v}_2, \psi \given d_1, d_2, f)
-    \quad .
+    \quad . \label{eq:vel-marg}
 \end{equation}
 This expression is still conditioned on the true distances, $d_1$ and $d_2$, but
 we observe the parallaxes $\varpi_1$ and $\varpi_2$.
@@ -490,8 +499,8 @@ velocity-and-distance marginalized likelihood
 \begin{equation}
     p(\bs{\eta}_1, \bs{\eta}_2, \varpi_1, \varpi_2 \given f) =
         \int \dd d_1 \, \dd d_2 \,
-        p(\varpi_1 \given d_1) \, p(\varpi_2 \given d_2) \,
         p(\bs{\eta}_1, \bs{\eta}_2 \given d_1, d_2, f) \,
+        p(\varpi_1 \given d_1) \, p(\varpi_2 \given d_2) \,
         p(d_1) \, p(d_2)
 \end{equation}
 where we assume a uniform space-density prior for the distances
@@ -500,22 +509,23 @@ where we assume a uniform space-density prior for the distances
 The posterior probability over the fraction of true comoving star pairs, $f$, is
 then given by
 \begin{equation}
-    p(f \given \{\bs{\eta}_1, \bs{\eta}_2, \varpi_1, \varpi_2\}_{N}) \propto
-        p(f) \, \prod_n^N
-        p(\bs{\eta}_{1,n}, \bs{\eta}_{2,n}, \varpi_{1,n}, \varpi_{2,n} \given f)
+    p(f \given \{\bs{\eta}_{n1}, \bs{\eta}_{n2}, \varpi_{n1}, \varpi_{n2}\}_N)
+        \propto p(f) \, \prod_n^N
+        p(\bs{\eta}_{n1}, \bs{\eta}_{n2}, \varpi_{n1}, \varpi_{n2} \given f)
 \end{equation}
-where $N$ is the number of candidate comoving star pairs and the index $n$
-specifies the data for the $n$th pair.
+where $(\bs{\eta}_{n1}, \varpi_{n1})$ and $(\bs{\eta}_{n2}, \varpi_{n2})$ refer
+to the first and second star in the $n$-th comoving pair, respectively, and  $N$
+is the total number of candidate comoving star pairs.
 
 We approximate all of the marginalization integrals using numerical procedures.
-Given distances $d_1$ and $d_2$, we can approximate the velocity marginalization
-using Monte Carlo integration:
+Given distances $d_1$ and $d_2$, we estimate the velocity marginalization
+(\eqname~\ref{eq:vel-marg}) using Monte Carlo integration:
 \begin{equation}
     p(\bs{\eta}_1, \bs{\eta}_2 \given d_1, d_2, f) \approx
     \frac{1}{K} \, \sum^K_k \,
     p(\psi^{(k)} \given f) \quad .
 \end{equation}
-In this expression, the $k$-th sample $\psi^{(k)}$ is defined as
+In this expression, the $k$-th Monte Carlo sample $\psi^{(k)}$ is defined as
 \begin{eqnarray}
     \psi^{(k)} &=& |\bs{v}_1^{(k)} - \bs{v}_2^{(k)}| \\
     \bs{v}_1^{(k)} &=& \mat{M}(\alpha_1, \delta_1) \cdot
@@ -523,23 +533,29 @@ In this expression, the $k$-th sample $\psi^{(k)}$ is defined as
             d_1\,\mu_{\alpha^*, 1}^{(k)} \\
             d_1\,\mu_{\delta, 1}^{(k)} \\
             v_{r, 1}^{(k)}
-        \end{array}\right)\\
+        \end{array}\right)\label{eq:v1-sample} \\
     \left(\begin{array}{c}
         \mu_{\alpha^*, 1}^{(k)} \\
         \mu_{\delta, 1}^{(k)} \\
         v_{r, 1}^{(k)}
-    \end{array}\right) &\sim& \mathcal{N}(\bs{\eta}_1, \mat{C}_1)
+    \end{array}\right) &\sim& \mathcal{N}(\bs{\eta}_1, \mat{C}_1) \label{eq:mu1-sample}
 \end{eqnarray}
 where $\mat{C}_1$ is the covariance matrix of the \gaia\ data provided by the
 \tgas\ catalog with an additional (uncorrelated) diagonal term added for the
 uncertainty in the radial velocity measurement, and the rotation matrix
 $\mat{M}(\alpha, \delta)$ transforms from the local, tangent-space coordinates
 at $(\alpha, \delta)$ to the ICRS (see, e.g., Section~3 of \citealt{Oh:2017}).
+Expressions for star 2 are equivalent with index 1 replaced with 2 in \eqname
+s~\ref{eq:v1-sample}--\ref{eq:mu1-sample}.
 We perform the outer integral over the two distances, $d_1$ and $d_2$, using
 Simpson's rule on a 2D grid of distances that, in each dimension, spans the
 domain $\left[ (\varpi + 3\sigma_{\varpi})^{-1}, (\varpi -
-3\sigma_{\varpi})^{-1} \right]$, where $\sigma_{\varpi}$ is the parallax
-uncertainty reported in the \tgas\ catalog for each star.
+3\sigma_{\varpi})^{-1} \right]$,\footnote{All of our stars have high enough
+parallax signal-to-noise ratios that integration over this grid is equivalent to
+integrating over much larger domains. We tested this by increasing the grid to
+$\left[ (\varpi + 10\sigma_{\varpi})^{-1}, (\varpi - 10\sigma_{\varpi})^{-1}
+\right]$ and comparing the integral estimates.} where $\sigma_{\varpi}$ is the
+parallax uncertainty reported in the \tgas\ catalog for each star.
 From convergence tests, we have found that it is sufficient to use 1024 samples
 in the Monte Carlo integral and 5 by 5 distance grid points.
 
@@ -552,7 +568,10 @@ N04}$, $\sigma_{\rm field} =
 field stars is only $18~\kms$, most randomly paired stars will tend to have 3D
 velocity differences $>20~\kms$. The 15th and 85th percentiles of the
 distribution of velocity differences (\eqname~\ref{eq:vel-diff-dist}) are
-$\approx 23~\kms$ and $\approx 59~\kms$, respectively.}
+$\approx 23~\kms$ and $\approx 59~\kms$, respectively.
+This is related to the fact that, for a three-dimensional Gaussian, most of the
+probability \emph{mass} is not at $\bs{0}$, but is rather concentrated in an
+annular region at finite distance from the origin.}
 This is a conservative choice: the velocity dispersion of thin disk stars
 increases steadily with age (e.g., \citealt{Aumer:2016}), so assuming that all
 of our pairs are young should lead to under-predictions of the probability that
@@ -560,6 +579,11 @@ a given pair is truly comoving.
 A more robust model that simultaneously models the ages and age distribution of
 the comoving pairs would lead to more precise inferences of these probabilities,
 but is outside of the scope of this work.
+
+At the smallest tangential separations of our candidate pairs, ($s_{\rm tan}
+\approx 10^{-3}~\pc$), if the two stars are bound, the expected velocity
+difference is a few $\kms$ (depending on mass).
+We therefore set $\sigma_{\rm co} = 2~\kms$
 
 We generate samples in $f$ using \package{emcee} (\citealt{Foreman-Mackey:2013})
 with 28 walkers, keeping track of the value of the marginal likelihood under

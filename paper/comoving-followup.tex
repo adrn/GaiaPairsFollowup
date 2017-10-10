@@ -107,7 +107,7 @@ uniform.
 We thus confirm the discovery of a population of comoving star pairs at very
 large separations, suggesting that disrupted wide binaries and stellar
 associations remain approximately spatially coherent.
-\todo{something about stellar models and chemical tagging}
+% \todo{something about stellar models and chemical tagging?}
 \end{abstract}
 
 \keywords{
@@ -179,9 +179,9 @@ and the samples are likely predominantly wide binaries
 (\citealt{Chaname:2004,Lepine:2007,Sesar:2008}).
 In most cases, the angular or projected separation distribution is fit using a
 decreasing power-law, and the power-law index, $\alpha$, is found to be $\alpha
-\approx 1.5$--$2$ out to angular separations of $\approx 0.25^\circ$ ($\approx
-0.65~\pc$ at a distance of $150~\pc$), apparently consistent with simulations
-(e.g., \citealt{Weinberg:1987}).
+\approx 1.5$--$2$ out to separations $\approx 0.65~\pc$ (angular separations of
+$\approx 0.25^\circ$ at a distance of $150~\pc$), apparently consistent with
+simulations (e.g., \citealt{Weinberg:1987}).
 Tentative reports of a steepening or cutoff of the separation distribution at
 larger separations have been claimed (e.g., \citealt{Yoo:2004,Quinn:2009}), but
 these claims are limited by small numbers of high-probability pairs at large
@@ -221,7 +221,7 @@ By compiling radial velocities from the literature for \project{Hipparcos}
 stars, SO11 applied this method to search for all comoving star pairs with
 separations larger than $0.01~\pc$ within $100~\pc$ of the sun.
 They find $\sim 200$ high probability comoving pairs with a separation
-distribution that falls of until $\sim 1~\pc$, where the number of pairs then
+distribution that falls off until $\sim 1~\pc$, where the number of pairs then
 begins rising in bins of log-separation.
 
 Our primary goal in this work is to identify a sample of high-probability, very
@@ -301,12 +301,12 @@ log-separation from $\sim 1$~\pc.
 For a full description of the selection method, see \citealt{Oh:2017}.
 
 To select candidate pairs for follow-up spectroscopic observations, we only
-consider mutually exclusive star pairs within $200~\pc$ in Heliocentric
-distance.
-With the SNR cut used above and given the limitations of the \tgas\ catalog
-itself, \tgas\ is $\approx$90\% complete to $200~\pc$ (\citealt{Bovy:2017}).
-From this source target list, we randomly observed targets with airmass $\sec z
-< 1.5$ during our observing run.
+consider mutually exclusive star pairs with Heliocentric distances $d <
+200~\pc$.
+With the SNR cut used above, and within the limits (e.g., magnitude range) of
+the \tgas\ catalog itself, \tgas\ is $\approx$90\% complete to $200~\pc$
+(\citealt{Bovy:2017}).
+From this source target list, we randomly observed targets.
 \figurename~\ref{fig:sample-cmd} shows a color-magnitude diagram of all targets
 observed in this observing run (markers) plotted over the density of 195,294
 \tgas\ stars within $200~\pc$ with \acronym{2MASS} photometry.
@@ -330,6 +330,7 @@ most exposures were between $30$--$120~{\rm s}$.
 To maximize the number of observed pairs, we chose not to take
 comparison lamp spectra at each pointing as it adds an overhead of $\approx
 90~{\rm s}$ per observation.
+All of our targets were observed at an airmass $\sec z < 1.5$.
 We are primarily interested in relative velocities between pair members and
 therefore don't need precise absolute calibrations of their radial velocities.
 To determine rough nightly wavelength solutions, calibration spectra were
@@ -1509,7 +1510,7 @@ files.
         Column Name    & Unit & Description\\
         \midrule
         \texttt{Oh17\_group\_id}    &      & Group ID from candidate catalog (\citealt{Oh:2017})\\
-        \texttt{prob}               &      & \todo{Probability ...}\\
+        \texttt{prob}               &      & Probability of being comoving given 3D velocity data.\\
         \texttt{sep\_tan}           & \pc  & Median of tangential separation error distribution\\
         \texttt{sep\_tan\_err}      & \pc  & Uncertainty in tangential separation\\
         \texttt{relative\_rv}       & \kms & Relative radial velocity between the two stars\\

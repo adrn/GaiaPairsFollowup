@@ -97,7 +97,7 @@ pairs.
 Of the \npairsobs\ observed comoving pairs, we confirm \ncomoving\ comoving
 pairs with separations as large as $\approx 10~\pc$, our original search limit.
 Between separations of $10^{-3}~\pc$ to $\approx 0.5~\pc$,
-the number of confirmed pairs per separation decreases with increasing
+the number of high-probability pairs per separation decreases with increasing
 separation (number per log separation is uniform).
 From $\approx 0.5~\pc$ to $10~\pc$, the number per separation is approximately
 uniform (number per log separation increases).
@@ -170,8 +170,8 @@ Oelkers:2017, Andrews:2017}) have been discovered over the last several decades
 (see also \citealt{Chaname:2007} and references therein).
 These pairs are identified by searching for approximately cospatial stars that
 appear to be comoving either in sky-projected velocities --- we refer to these
-as ``comoving pair candidates'' --- or using full-space velocity information ---
-we refer to these as ``confirmed comoving pairs.''
+as ``candidate comoving pairs'' --- or using full-space velocity information ---
+we refer to these as ``high-probability comoving pairs.''
 Radial velocity follow-up is still needed to confirm the majority of the known
 candidates, though \gaia\ \DR{2} will provide radial velocities for the
 brightest stars ($G < 12$; \citealt{Gaia-Collaboration:2016}).
@@ -188,7 +188,7 @@ decreasing power-law, and the power-law index, $\alpha$, is found to be $\alpha
 (e.g., \citealt{Weinberg:1987}).
 Tentative reports of a steepening or cutoff of the separation distribution at
 larger separations have been claimed (e.g., \citealt{Yoo:2004,Quinn:2009}), but
-these claims are limited by small numbers of confirmed pairs at large
+these claims are limited by small numbers of high-probability pairs at large
 separations.
 
 Most measurements of the separation distribution have neglected the possible
@@ -229,14 +229,14 @@ distribution that falls of until $\sim 1~\pc$, where the number of pairs then
 begins rising in bins of log-separation.
 
 To verify the existence of a population of very wide-separation comoving pairs,
-we first need to identify a large sample of confirmed comoving stars.
+we first need to identify a large sample of high-probability comoving stars.
 This will already be possible for the brightest stars with \gaia\ \DR{2}, but
 obtaining even larger samples will require significant efforts to obtain radial
 velocities for candidate comoving pairs.
-In this work, we present a catalog of confirmed comoving star pairs discovered
-through low-resolution spectroscopic follow-up of candidate comoving stars
-selected from inferences using astrometric measurements from the \tgas\ catalog
-alone (\citealt{Oh:2017}).
+In this work, we present a catalog of comoving star pairs discovered through
+low-resolution spectroscopic follow-up of candidate comoving stars selected from
+inferences using astrometric measurements from the \tgas\ catalog alone
+(\citealt{Oh:2017}).
 
 We describe the data and observations in \sectionname~\ref{sec:data}.
 Details of the spectroscopic reduction and velocity measurements are described
@@ -786,7 +786,7 @@ distribution with distance.
     \emph{Middle}: Tangential separation plotted against mean distance for each
       comoving pair identified from this work (circles, blue) or from RAVE
       overlap (squares, orange).
-    \emph{Right}: Distance distribution for all confirmed comoving pairs.
+    \emph{Right}: Distance distribution for all high-probability comoving pairs.
       Note that at distances $\gtrsim 150~\pc$, our detection efficiency appears
       to decline.
     \label{fig:separation-scatter}}
@@ -808,9 +808,9 @@ We highlight a few of these pairs in the next section
     \includegraphics[width=\linewidth]{genuine_highlighted_cmd.pdf}
   \end{center}
   \caption{%
-    {\it Left}: Color-magnitude diagram of confirmed comoving star pairs plotted
-    over the density of all \tgas\ sources within 200 pc; similar to
-    \figurename~\ref{fig:sample-cmd}, but for only the confirmed comoving pairs.
+    {\it Left}: Color-magnitude diagram of high-probability comoving star pairs
+    plotted over the density of all \tgas\ sources within 200 pc; similar to
+    \figurename~\ref{fig:sample-cmd}, but for only the high-probability comoving pairs.
     Several interesting pairs that include main-sequence and giant component
     stars are highlighted in the text (\sectionname~\ref{sec:interesting-pairs})
     and in the right panel.
@@ -822,7 +822,8 @@ We highlight a few of these pairs in the next section
 \subsection{A few highlighted comoving pairs}\label{sec:interesting-pairs}
 
 \figurename~\ref{fig:genuine-highlighted-cmd} (right) shows a few highlighted
-pairs selected from the color-magnitude diagram of confirmed comoving stars.
+pairs selected from the color-magnitude diagram of high-probability comoving
+stars.
 We compile \project{Tycho-2} ($B$, $V$; \citealt{Hog:2000}), \tmass\
 ($J$, $H$, $K_{\rm s}$; \citealt{Skrutskie:2006}), and \acronym{WISE} ($W_1$,
 $W_2$, $W_3$; \citealt{Wright:2010}) photometry for each star in the pairs below
@@ -865,9 +866,9 @@ the assumption of Gaussianity ($\sigma \approx 1.5 \times {\rm MAD}$).
           \multirow{2}{*}{$6.8 \pm 0.3$}\\
         TYC 3807-1439-1 & $4.50 \pm 0.04$ & $5409 \pm 80$ & $0.88 \pm 0.05$ &\\
         \midrule
-        HD 54318 & $4.15 \pm 0.04$ & $10030 \pm 345$ & $2.4 \pm 0.1$ &
-          \multirow{2}{*}{$8.4 \pm 1.1$}\\
-        TYC 3792-658-1 & $4.54 \pm 0.03$ & $5462 \pm 139$ & $0.89 \pm 0.06$ &\\
+        HD 78249 & $3.53 \pm 0.02$ & $4997 \pm 62$ & $1.54 \pm 0.01$ &
+          \multirow{2}{*}{$3.3 \pm 0.2$}\\
+        TYC 3813-167-1 & $4.64 \pm 0.01$ & $4503 \pm 45$ & $0.75 \pm 0.02$ &\\
       \bottomrule
     \end{tabular}
     \caption{
@@ -917,28 +918,63 @@ corresponding to a 3D separation of $\approx 9.8~\pc$ at a distance of $\approx
 100~\pc$.
 Coeval stars at different phases of stellar evolution are extremely valuable for
 calibrating and testing stellar evolution models (e.g., \citealt{Torres:2013}).
-With a larger sample of confirmed comoving pairs, identified pairs that contain
-both an evolved star and a main sequence star --- such as this pair --- will be
-of great interest.
+With a larger sample of high-probability comoving pairs, identified pairs that
+contain both an evolved star and a main sequence star --- such as this pair ---
+will be of great interest.
 
-\subsubsection{HD 54318 -- TYC 3792-658-1}
+\subsubsection{HD 78249 -- TYC 3813-167-1}
 
-The components of this pair appear to be an A- or B-type dwarf (HD 54318) and a
-G-type dwarf (TYC 3792-658-1), the largest magnitude difference between all of
-the confirmed comoving pairs.
-This pair is separated by $2.5^\circ$ on the sky or $8.5~\pc$ in tangential
-separation and have a consistent distance of $\approx 190~\pc$ within their
-uncertainties.
+The components of this pair appear to be a K-type subgiant (HD 78249) and a
+K-type dwarf (TYC 3813-167-1), the largest magnitude difference between all of
+the comoving pairs with probability $>0.5$.
+This pair is separated by $3^\circ$ on the sky or $3.3~\pc$ in tangential
+separation and distances of $55.6 \pm 1.4~\pc$ and $63.8 \pm 1.3~\pc$,
+respectively, implying a 3D separation of $\approx8$--$9~\pc$.
 The mass ratio distribution of comoving star pairs will help constrain star
 formation models (e.g., \citealt{Raghavan:2010}).
+
+\subsection{An additional test of comoving pairs with \acronym{LAMOST}}
+
+We use metallicities and radial velocities for an additional, independent set of
+61 candidate comoving pairs that are in
+\DR{3} of the \acronym{LAMOST} survey (\citealt{Deng:2012}) as an additional
+validation test.
+\figurename~\ref{fig:lamost} shows these pairs plotted as the difference in
+radial velocity and difference in iron abundance with points colored by the
+tangential separation of each pair.
+There is a clear over-density of pairs with abundance and radial-velocity
+differences close to zero.
+From this figure it is also clear that the false positives are predominantly the
+largest separation pairs (i.e. are the darkest markers), but a number of
+$>1~\pc$ pairs appear to have small radial-velocity differences and small
+differences in iron abundances, making them even more likely to be comoving
+pairs.
+
+\begin{figure}[htbp]
+  \begin{center}
+    \includegraphics[width=0.65\linewidth]{lamost.pdf}
+  \end{center}
+  \caption{%
+    Differences in metallicity and radial velocity for candidate comoving pair
+    member stars from the \acronym{LAMOST} survey.
+    Points represent each pair, colored by the tangential separation, and
+    error bars represent the uncertainties taken from the \acronym{LAMOST}
+    \DR{3} catalog.
+    There is a clear over-density of pairs with near-zero differences in
+    metallicity and radial velocity even at large ($>1~\pc$) separations, adding
+    more confidence to the existence of comoving star pairs with these extreme
+    separations.
+    \label{fig:lamost}}
+\end{figure}
 
 \section{Discussion} \label{sec:discussion}
 
 % \subsection{Caveats and additional validation} \label{sec:caveats}
 
 The results presented in this work demonstrate that even at separations larger
-than a parsec, a substantial fraction of comoving pair candidates selected from
-astrometry alone are confirmed with three-dimensional velocity information.
+than a parsec, a substantial fraction of candidate comoving pairs selected from
+astrometry alone are consistent with being comoving given three-dimensional
+velocity information.
 This is exciting because it confirms the existence of what is likely a
 population of nearly-coherent but unbound coeval stars.
 It is also encouraging for the prospect of selecting large samples of comoving
@@ -953,38 +989,7 @@ velocity, signal-to-noise, or likelihood ratio, as were done with the input
 sample used in this work.
 It will also be important to quantify the contamination rate of (3D) comoving
 pair lookalikes, especially at large separations.
-
-We do not try to estimate a contamination rate in this work, but instead use
-metallicities and radial velocities from 61 candidate comoving pairs that are in
-\DR{3} of the \acronym{LAMOST} survey (\citealt{Deng:2012}) as an additional
-validation test.
-\figurename~\ref{fig:lamost} shows these pairs plotted as the difference in
-radial velocity and difference in iron abundance with points colored by the
-tangential separation of each pair.
-There is a clear over-density of pairs with abundance and radial-velocity
-differences close to zero.
-From this figure it is also clear that the false positives are predominantly the
-largest separation pairs (i.e. are the darkest markers), but a number of
-$>1~\pc$ pairs appear to have small radial-velocity differences and small
-differences in iron abundances, making them even more likely to be genuine
-pairs.
-
-\begin{figure}[htbp]
-  \begin{center}
-    \includegraphics[width=0.9\linewidth]{lamost.pdf}
-  \end{center}
-  \caption{%
-    Differences in metallicity and radial velocity for candidate comoving pair
-    member stars from the \acronym{LAMOST} survey.
-    Points represent each pair, colored by the tangential separation, and
-    error bars represent the uncertainties taken from the \acronym{LAMOST}
-    \DR{3} catalog.
-    There is a clear over-density of pairs with near-zero differences in
-    metallicity and radial velocity even at large ($>1~\pc$) separations, adding
-    even more confidence to the existence of comoving star pairs with these
-    extreme separations.
-    \label{fig:lamost}}
-\end{figure}
+\todo{however, hard to get 2 stars with same 3d velocities}
 
 Going forward, definitive confirmation of comoving star pairs may require
 precise measurements of chemical abundances combined with precise radial
@@ -1091,8 +1096,9 @@ perturbers in the Galaxy.
 From this work it appears that modeling the population of wide binaries or
 comoving stars with a monotonically decreasing separation distribution---as is commonly done---too simple to also represent the population of unbound systems.
 With future data releases from the \gaia\ mission combined with large
-spectroscopic surveys, the anticipated catalogs of confirmed comoving star pairs
-will offer a new ``stereo'' view on the evolution and state of our Galaxy.
+spectroscopic surveys, the anticipated catalogs of high-probability comoving
+star pairs will offer a new ``stereo'' view on the evolution and state of our
+Galaxy.
 
 \acknowledgements
 

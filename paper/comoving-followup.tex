@@ -33,7 +33,7 @@
 \DeclareMathOperator{\Tr}{Tr}
 
 \newcommand{\npairsobs}{311}
-\newcommand{\ncomoving}{127}
+\newcommand{\nhighprob}{124}
 \newcommand{\nraveoverlap}{154}
 \newcommand{\nravecomoving}{59}
 \newcommand{\ncomovingtotal}{186}
@@ -75,44 +75,40 @@
 % Context
 Members of widely-separated stellar binaries ($\gtrsim 0.1$~pc) or loosely bound
 stellar associations and clusters are born with small spreads in kinematics and
-chemistry, but disrupt and dissociate on timescales comparable to their orbital
-time within the Milky Way.
-The kinematic properties of comoving star pairs---bound wide binaries or unbound
-but coeval stars---are therefore sensitive to both the smooth tidal field and
-gravitational perturbation spectrum of the Milky Way.
+chemistry, but are thought to physically dissociate over short timescales.
+The kinematic properties of comoving stars---bound, wide or unbound but coeval
+systems---are therefore sensitive to both the smooth tidal field and the
+spectrum of massive perturbers (e.g., stellar remnants, dark matter, giant
+molecular clouds) in the Milky Way.
 % Aims
 % Thus far, a few hundred confirmed comoving pairs with separations as large as
 % $8~\pc$ have been discovered in the solar neighborhood using
 % \project{Hipparcos} astrometry combined with radial velocity surveys.
-In previous work, we identified $>4,000$ candidate comoving pairs using only
-astrometric data from the Tycho-Gaia Astrometric Solution (TGAS) catalog and
-find a large number of pairs with separations $\gtrsim 1~\pc$.
+In previous work, we identified $>4,000$ candidate comoving star pairs using
+only astrometric data from the Tycho-Gaia Astrometric Solution (TGAS) catalog
+and found a large number of candidate comoving pairs with separations $\gtrsim
+1~\pc$.
 Without radial velocity measurements for the vast majority of these pairs, the
-false-positive rate at these separations is significant ($\sim 50\%$).
+false-positive rate at large separations is significant ($\sim 60\%$).
 % Methods
 Here we present results from our own low-resolution radial-velocity survey of a
-random sample of the candidate pairs to identify and validate true comoving star
+random sample of the candidate pairs to identify high-probability comoving star
 pairs.
 % Results
-Of the \npairsobs\ observed comoving pairs, we confirm \ncomoving\ comoving
-pairs with separations as large as $\approx 10~\pc$, our original search limit.
+Of the \npairsobs\ observed comoving pairs, \nhighprob\ comoving pairs have
+probabilities $50\%$ with separations as large as $\approx 10~\pc$, our original
+search limit.
 Between separations of $10^{-3}~\pc$ to $\approx 0.5~\pc$,
 the number of high-probability pairs per separation decreases with increasing
-separation (number per log separation is uniform).
+separation.
 From $\approx 0.5~\pc$ to $10~\pc$, the number per separation is approximately
-uniform (number per log separation increases).
+uniform.
 % Conclusions
-We confirm the discovery of a population of comoving star pairs at very large
-separations, suggesting that disrupted wide binaries and stellar associations
-remain approximately spatially coherent.
+We thus confirm the discovery of a population of comoving star pairs at very
+large separations, suggesting that disrupted wide binaries and stellar
+associations remain approximately spatially coherent.
+\todo{something about stellar models and chemical tagging}
 \end{abstract}
-
-% The confirmed discovery of this population of coeval, comoving stars will
-% enable future dynamical tests of dark matter and XX of star formation XX.
-% as predicted from simulations of the disruption and evolution of wide binary
-% stars. Gaia DR2 -> how many do we expect? Can we say anything? Out to what
-% distance and separation for a typical MS star can we determine they are bound
-% assuming high-res spectra to get very precise RVs?
 
 \keywords{
     binaries: spectroscopic
@@ -228,21 +224,28 @@ They find $\sim 200$ high probability comoving pairs with a separation
 distribution that falls of until $\sim 1~\pc$, where the number of pairs then
 begins rising in bins of log-separation.
 
-To verify the existence of a population of very wide-separation comoving pairs,
-we first need to identify a large sample of high-probability comoving stars.
-This will already be possible for the brightest stars with \gaia\ \DR{2}, but
-obtaining even larger samples will require significant efforts to obtain radial
-velocities for candidate comoving pairs.
-In this work, we present a catalog of comoving star pairs discovered through
+Our primary goal in this work is to identify a sample of high-probability, very
+wide-separation comoving pairs to be followed up with high-resolution
+spectroscopy in future work to determine detailed chemical abundances.
+This will be possible for the brightest stars with \gaia\ \DR{2}, but obtaining
+even larger samples will require significant efforts to obtain radial velocities
+for candidate comoving pairs at fainter magnitudes.
+Here we present a catalog of comoving star pairs discovered through our own
 low-resolution spectroscopic follow-up of candidate comoving stars selected from
 inferences using astrometric measurements from the \tgas\ catalog alone
 (\citealt{Oh:2017}).
+For each pair, we provide a probability of being comoving as determined by
+modeling the 3D velocity information for each pair, with radial velocities
+either from this work, or from \DR{5} of the Radial Velocity Experiment
+(\acronym{RAVE}; \citealt{Kunder:2017}).
 
-We describe the data and observations in \sectionname~\ref{sec:data}.
-Details of the spectroscopic reduction and velocity measurements are described
-in the Appendix.
+We describe the data and observations in \sectionname~\ref{sec:data}, then
+present a probabilistic model to infer the comoving probability for each pair
+with radial velocity measurements in \sectionname~\ref{sec:pair-probs}.
 We present our main results in \sectionname~\ref{sec:results} and
 \sectionname~\ref{sec:discussion}.
+Details of the spectroscopic reduction and radial velocity measurements for our
+observations are described in the Appendix.
 
 \section{Data}\label{sec:data}
 
@@ -251,10 +254,10 @@ We present our main results in \sectionname~\ref{sec:results} and
     \includegraphics[width=0.8\linewidth]{sample_cmd.pdf}
   \end{center}
   \caption{%
-    Color-magnitude diagram for all \tgas\ sources within $200~\pc$ (background
-    blue histogram) and all comoving star pair members observed in this
-    follow-up effort (black points); colored lines connect candidate comoving
-    star pairs.
+    Color-magnitude diagram for all 195,294 \tgas\ sources with \acronym{2MASS}
+    photometry within $200~\pc$ (background blue histogram) and all comoving
+    star pair members observed in this follow-up effort (black points); colored
+    lines connect candidate comoving star pairs.
     \tmass\ (\citealt{Skrutskie:2006}) $J$-band magnitudes are obtained
     from the Gaia science archive.
     Apparent $G$-band magnitudes (\citealt{Carrasco:2016}) are converted to
@@ -274,18 +277,18 @@ ratio computed for all nearly co-spatial pairs of stars.
 We performed a model selection between two hypotheses: that the velocities of
 the two stars in a pair are identical (case 1) or that they are indepndent (case
 2).
-We marginalized over the (unknown) true velocity and distance of each star to
+We marginalized over the (unknown) true 3D velocity and distance of each star to
 obtain the ratio of fully marginalized likelihoods,
 $\mathcal{L}_1/\mathcal{L}_2$.
 The likelihoods appropriately take into account the reported uncertainties and
-covariances of the astrometric measurements in the \tgas\ catalog
-as well as projection effect in comparing spherical
-velocities for star pairs separated by large angles on the sky.
+covariances of the astrometric measurements in the \tgas\ catalog as well as
+projection effects with comparing spherical velocities for star pairs separated
+by large angles on the sky.
 
 After a parallax signal-to-noise ratio (SNR) cut, $\varpi/\sigma_\varpi > 8$,
-we compute the marginalized likelihood ratio for all stars within $10~\pc$ and
-with a difference in tangential velocity $\Delta v_\perp < 10~\kms$ for each
-star in the \tgas\ catalog.
+for each star, we compute the marginalized likelihood ratio for all nearby stars
+within $10~\pc$ and with a difference in tangential velocity $\Delta v_\perp <
+10~\kms$.
 After applying a conservative cut on the likelihood ratio motivated by computing
 the same likelihood ratio for random pairings of stars, $\ln
 \mathcal{L}_1/\mathcal{L}_2 > 6$, we found 13,058 comoving star pairs with
@@ -305,9 +308,9 @@ itself, \tgas\ is $\approx$90\% complete to $200~\pc$ (\citealt{Bovy:2017}).
 From this source target list, we randomly observed targets with airmass $\sec z
 < 1.5$ during our observing run.
 \figurename~\ref{fig:sample-cmd} shows a color-magnitude diagram of all targets
-observed in this observing run (markers) plotted over the density of all \tgas\
-stars within $200~\pc$.
-Candidate comoving pairs are connected by (colored) lines.
+observed in this observing run (markers) plotted over the density of 195,294
+\tgas\ stars within $200~\pc$ with \acronym{2MASS} photometry.
+Candidate comoving pairs are connected by (arbitrarily colored) lines.
 
 \subsection{Observations and data reduction}\label{sec:reduction}
 
@@ -378,7 +381,7 @@ reliable prior measurements from the literature search described above.
 differences between our measurements and literature values.
 From this distribution (right panel), we compute the median absolute deviation
 (MAD) and estimate the standard deviation to be $\approx 20~\kms$, which we
-adopt as our global systematic error for all absolute radial velocities.
+adopt as our global systematic error for all \emph{absolute} radial velocities.
 We note, however, that for computing \emph{relative} velocities for pairs of
 nearby stars, it is the RV precision (typically $\approx 5$--$10~\kms$) that
 matters.
@@ -432,39 +435,43 @@ For the distribution of true 3D velocity difference magnitudes, $p(\psi \given
 f)$, we use a mixture model with two components
 \begin{eqnarray}
     p(\psi \given f) &=& f\,p_{\rm co}(\psi) + (1-f)\,p_{\rm field}(\psi)
+    \label{eq:mixture}
 \end{eqnarray}
-where $p_{\rm co}$, the probability distribution function (pdf) of true comoving
-pairs, and $p_{\rm field}$, the pdf of randomly paired field stars.
+where $p_{\rm co}$ is the probability distribution function (pdf) of true
+comoving pairs, and $p_{\rm field}$ is the pdf of randomly paired field stars.
 Using a mixture model and inferring the mixture weight is a trick to avoid
 explicitly having to sample over the probabilities for each individual object
-(candidate comoving pair): this expression is equivalent to the marginal
-likelihood under a model in which every candidate comoving pair has an
-additional latent parameter (a binary flag, $q_n$) that specifies which mixture
-component it belongs to (\citealt{Hogg:2010,Foreman-Mackey:2014}).
+(candidate comoving pair): this expression (\eqname~\ref{eq:mixture}) is
+equivalent to the marginal likelihood under a model in which every candidate
+comoving pair has an additional latent parameter (a binary flag, $q_n$) that
+specifies which mixture component it belongs to
+(\citealt{Hogg:2010,Foreman-Mackey:2014}).
 We later use this fact to compute the probability that each pair is truly
 comoving, or, more precisely, belongs to the mixture component $p_{\rm co}$.
 
-The form for both mixture components ($p_{\rm co}$ and $p_{\rm field}$) is taken
-to be the probability distribution of the magnitude of the 3D difference between
-two vectors under the assumption that the two vectors were drawn independently
-from an isotropic, 3D Gaussian with dispersion $\sigma$.
+For the field mixture component, $p_{\rm field}$, we use the probability
+distribution of the magnitude of the 3D difference between two vectors under the
+assumption that the two vectors were drawn independently from an isotropic, 3D
+Gaussian with dispersion $\sigma_{\rm field}$.
 For the three-dimensional velocity vectors we consider here, the distribution is
 Maxwellian in form.
-That is,
+For the comoving mixture component, $p_{\rm co}$, we use a truncated normal
+distribution centered on 0 with dispersion $\sigma_{\rm co}$ defined over the
+domain $\psi \in [0, \infty]$.
+To summarize,
 \begin{eqnarray}
-    f(\psi \,;\, \sigma) &=& \left[2\sqrt {\pi}\, \sigma^3 \right]^{-1} \,
-        \psi^2 \, \ \exp\left[-\frac {\psi^2} {4\, \sigma^2} \right]
-        \label{eq:vel-diff-dist}\\
     \bs{v_1}, \bs{v_2} &\sim& \mathcal{N}(\bs{v} \given \bs{0}, \sigma^2\,\mat{I}_3) \\
-    p_{\rm co}(\psi) &=& \mathcal{N}(\psi \given 0, \sigma^2_{\rm co})\\
-    p_{\rm field}(\psi) &=& f(\psi \,;\, \sigma_{\rm field})
+    p_{\rm co}(\psi) &=& \mathcal{N}(\psi \given 0, \sigma^2_{\rm co})\,[0, \infty]\\
+    p_{\rm field}(\psi) &=& g(\psi \,;\, \sigma_{\rm field})\\g(\psi \,;\, \sigma) &=& \left[2\sqrt {\pi}\, \sigma^3 \right]^{-1} \,
+        \psi^2 \, \ \exp\left[-\frac {\psi^2} {4\, \sigma^2} \right]
+        \label{eq:vel-diff-dist}
 \end{eqnarray}
-where $\sigma_{\rm co}$ and $\sigma_{\rm field}$ are defined below,
-$\mathcal{N}(\bs{v} \given \bs{m}, \mat{\Sigma})$ represents a normal
+where $\mathcal{N}(\bs{v} \given \bs{m}, \mat{\Sigma})$ represents a normal
 distribution over $\bs{v}$ with mean vector $\bs{m}$ and covariance matrix
 $\mat{\Sigma}$, $\mathcal{N}(x \given m, \sigma^2)\,[a,b]$ is a truncated normal
 distribution with mean $m$ and variance $\sigma^2$ defined on the domain
-$[a,b]$, and $\mat{I}_3$ is the 3 by 3 identity matrix.
+$[a,b]$, $\mat{I}_3$ is the 3 by 3 identity matrix, and the values of
+$\sigma_{\rm co}$ and $\sigma_{\rm field}$ are set below,
 
 Under this model, the joint probability of the velocity data for a given pair
 $\bs{\eta}_1$ and $\bs{\eta}_2$, and the latent parameters $\bs{v}_1, \bs{v}_2,
@@ -514,8 +521,9 @@ then given by
         p(\bs{\eta}_{n1}, \bs{\eta}_{n2}, \varpi_{n1}, \varpi_{n2} \given f)
 \end{equation}
 where $(\bs{\eta}_{n1}, \varpi_{n1})$ and $(\bs{\eta}_{n2}, \varpi_{n2})$ refer
-to the first and second star in the $n$-th comoving pair, respectively, and  $N$
-is the total number of candidate comoving star pairs.
+to the velocity and parallax data for the first and second star in the $n$-th
+comoving pair, respectively, and $N$ is the total number of candidate comoving
+star pairs.
 
 We approximate all of the marginalization integrals using numerical procedures.
 Given distances $d_1$ and $d_2$, we estimate the velocity marginalization
@@ -591,9 +599,9 @@ at the same distance (the smaller distance of the two, $d_{\rm min}$):
     s_{\rm tan} = 2\, d_{\rm min} \, \sin{\left( \frac{1}{2}\theta \right)}
 \end{equation}
 where $\theta$ is the angular extent of the pair.
-We set $\sigma_{\rm co} = 1~\kms$ (rather than using a delta-function at zero)
-so that binary stars with very small but finite velocity differences are
-considered comoving.
+We therefore set $\sigma_{\rm co} = 1~\kms$ (rather than using a delta-function
+at zero) so that binary stars with very small but finite velocity differences
+are considered comoving.
 In principle, this ``tolerance'' on finite velocity difference should decrease
 with increasing separation, at least out to the radius at which most wide
 binaries are disrupted.
@@ -601,7 +609,7 @@ At the unbinding radius, the instantaneous velocity difference between the two
 stars should be comparable to the orbital velocity of the binary at unbinding
 (typically $\approx$0.1--$0.5~\kms$; \citealt{Jiang:2010}), but the difference
 may also increase steadily through dynamical heating.
-Rather than constructing a model for the full process in this work, we use a
+Rather than constructing a model for this full process in this work, we use a
 constant velocity tolerance ($\sigma_{\rm co}$) and defer to future work a full
 population analysis that also infers the separation distribution of comoving
 stars, which could instead express the model as a phase-space distribution
@@ -629,13 +637,13 @@ $<1~\kms$.
 
 \figurename~\ref{fig:mixture-model-demo} shows the probability distributions for
 each mixture model component, $p_{\rm field}(\psi)$ and $p_{\rm co}(\psi)$,
-normalized so that the peak of the distribution is at 1.
+normalized so that the peak of each distribution is at 1.
 As noted above, even though the field dispersion is set to $\sigma_{\rm field}
 \approx 18~\kms$, most randomly paired stars will have 3D velocity differences
 (i.e. $\psi$) significantly larger than the value of the dispersion.
 
-To generate samples in $f$, we use Markov Chain Monte Carlo sampling as
-implemented in \package{emcee} (\citealt{Foreman-Mackey:2013}).
+To generate posterior samples in $f$, we use Markov Chain Monte Carlo sampling
+as implemented in \package{emcee} (\citealt{Foreman-Mackey:2013}).
 We use 28 walkers and keep track of the value of the marginal likelihood under
 each mixture model component for each sample at every iteration step.
 We run the sampler for 256 burn-in steps from a small ball of initial positions
@@ -650,11 +658,11 @@ section of \citealt{Foreman-Mackey:2014}).
 \subsection{Probable comoving pairs}\label{sec:genuine}
 
 We use the model described in \sectionname~\ref{sec:pair-probs} to constrain the
-fraction of stars consistent with being comoving given 3D velocities for
+fraction of stars consistent with being comoving given 3D velocities for the
 candidate comoving pairs (a) with radial velocities obtained and described in
 this work---\npairsobs\ pairs, and (b) with radial velocities previously
-measured and released in \DR{5} of the Radial Velocity Experiment
-(\acronym{RAVE}; \citealt{Kunder:2017})---202 pairs.
+measured and released in \DR{5} of the \acronym{RAVE} survey
+(\citealt{Kunder:2017})---202 pairs.
 Using the posterior samples in $f$, we compute the probability (under this
 model) that each given pair is comoving including the radial velocity
 measurements.
@@ -731,9 +739,9 @@ in the blue points in these figures).
 \figurename~\ref{fig:separation} shows histograms of the tangential separation
 for all pairs with radial velocities from this work and the \acronym{RAVE}
 survey, with each pair weighted by the probability that it is comoving.
-Interestingly, the separation distribution of the probable comoving pairs
-appears to be uniform with increasing separation.
-This strongly suggests the existence of a population of unbound wide binaries or
+Interestingly, the separation distribution appears to be uniform with increasing
+separation above $\approx1~\pc$.
+This suggests the existence of a population of unbound wide binaries or
 dissolved open clusters, which maintain approximate spatial coherence for long
 times because of the small relative velocities at the time of disruption of the
 constituent stars (e.g., \citealt{Jiang:2010}).
@@ -742,6 +750,9 @@ information about the tidal field and fluctuations in the mass distribution of
 the Milky Way.
 With \gaia\ \DR{2}, we will be able to study the statistical properties of these
 widely-separated but comoving stars at even larger separations ($>10~\pc$).
+However, high resolution spectroscopy is needed to determine precise stellar
+parameters, ages, and high-precision radial velocities for all of our
+high-probability comoving pairs to further validate the sample.
 
 \begin{figure}[htb]
   \begin{center}
@@ -763,9 +774,10 @@ widely-separated but comoving stars at even larger separations ($>10~\pc$).
     \label{fig:separation}}
 \end{figure}
 
-To see whether the separation distribution depends on heliocentric distance, we
-also plot the tangential separation of all comoving pairs with comoving
-probability $> 50\%$ as a function of heliocentric distance in
+To see whether the separation distribution depends on heliocentric distance,
+which could indicate a problem with our statistical inferences, we also plot the
+tangential separation of all comoving pairs with comoving probability $> 50\%$
+as a function of heliocentric distance in
 \figurename~\ref{fig:separation-scatter}.
 The top histogram again shows the tangential separation distribution for the
 joint sample (now only for pairs with $> 50\%$ comoving probability).
@@ -793,8 +805,8 @@ distribution with distance.
 \end{figure}
 
 \figurename~\ref{fig:genuine-highlighted-cmd} (left) shows the color-magnitude
-diagram for pairs with radial velocities measured in this work with comoving
-probability $> 0.5$.
+diagram for high-probability ($>50\%$) pairs with radial velocities measured in
+this work.
 As would be expected if all of the pairs are coeval, the majority of pairs lie
 along isochrones in color-magnitude space, with the exception of a few visible
 outliers.
@@ -888,8 +900,8 @@ This pair is separated by $4.5^\circ$ on the sky (corresponding to $\approx
 8.6~\pc$ in tangential separation, see \tablename~\ref{tbl:highlighted-pairs})
 and have consistent distances within their uncertainties of $\approx 110 \pm
 5~\pc$.
-At first glance, it seems unlikely that the two stars could be coeval, as the
-more massive A star has not begun its post-main-sequence evolution.
+At first glance, it seems impossible that the two stars could be coeval, given
+that the more massive A star has not begun its post-main-sequence evolution.
 One possible explanation is that this pair is a false-positive in three
 dimensions, in which case they are unassociated but just appear to be comoving
 with small relative velocity at present day.
@@ -935,10 +947,10 @@ formation models (e.g., \citealt{Raghavan:2010}).
 
 \subsection{An additional test of comoving pairs with \acronym{LAMOST}}
 
-We use metallicities and radial velocities for an additional, independent set of
-61 candidate comoving pairs that are in
-\DR{3} of the \acronym{LAMOST} survey (\citealt{Deng:2012}) as an additional
-validation test.
+As an additional validation test of the candidate comoving stars, we use
+metallicities and radial velocities for an independent set of 61 candidate
+comoving pairs that are in \DR{3} of the \acronym{LAMOST} survey
+(\citealt{Deng:2012}).
 \figurename~\ref{fig:lamost} shows these pairs plotted as the difference in
 radial velocity and difference in iron abundance with points colored by the
 tangential separation of each pair.
@@ -989,7 +1001,9 @@ velocity, signal-to-noise, or likelihood ratio, as were done with the input
 sample used in this work.
 It will also be important to quantify the contamination rate of (3D) comoving
 pair lookalikes, especially at large separations.
-\todo{however, hard to get 2 stars with same 3d velocities}
+However, we reiterate that given the velocity dispersions in the Galactic disk,
+it is unlikely to get 3D velocity differences $<10~\kms$ (see, e.g.,
+\figurename~\ref{fig:mixture-model-demo}).
 
 Going forward, definitive confirmation of comoving star pairs may require
 precise measurements of chemical abundances combined with precise radial
@@ -998,8 +1012,8 @@ However, we would also like to \emph{test} assumptions about chemical
 homogeneity, rather than simply assuming that all true comoving pairs must have
 identical abundances.
 For example, the outcomes of planet formation may lead to large or appreciable
-abundance differences between coeval stars (e.g., \citealt{Pinsonneault:2001},
-Oh et al., submitted).
+abundance differences between coeval stars (e.g.,
+\citealt{Pinsonneault:2001,Oh:2017a}).
 We therefore caution that---to study the chemical properties of comoving pairs
 and star formation in general---the comoving pairs should be selected from their
 kinematics alone.
@@ -1086,13 +1100,13 @@ comoving star pairs with small differences in radial velocities also have small
 differences in iron abundance, even at large separations ($>1~\pc$).
 The separation distribution of the spectroscopically-confirmed comoving star
 pairs presented shows an abundance of comoving pairs at separations between
-$1$--$10~\pc$ (\figurename~\ref{fig:separation-RAVE}), the imposed limit in our
-initial search (\citealt{Oh:2017}).
-This result is further tentative evidence (see also \citealt{Shaya:2011}) for
-the existence of a population of unbound comoving stars that represent the
-ultimate fate of wide binaries and moving groups that slowly dissociate due to
-weak perturbations from stars (\citealt{Jiang:2010}) and other massive
-perturbers in the Galaxy.
+$1$--$10~\pc$ (\figurename~\ref{fig:separation-scatter}), the imposed limit in
+our initial search (\citealt{Oh:2017}).
+This result is further evidence (see also \citealt{Shaya:2011}) for the
+existence of a population of unbound comoving stars that represent the ultimate
+fate of wide binaries and moving groups that slowly dissociate due to weak
+perturbations from stars (\citealt{Jiang:2010}) and other massive perturbers in
+the Galaxy.
 From this work it appears that modeling the population of wide binaries or
 comoving stars with a monotonically decreasing separation distribution---as is commonly done---too simple to also represent the population of unbound systems.
 With future data releases from the \gaia\ mission combined with large

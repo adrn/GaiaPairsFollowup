@@ -103,16 +103,21 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
             line = SpectralLineInfo(name=name, wavelength=wvln)
             session.add(line)
             session.commit()
+        else:
+            logger.debug('Line {0} already loaded'.format(name))
 
     # Create an entry for this observing run
     data_path, run_name = path.split(run_root_path)
+    logger.info("Path to night paths: {0}".format(data_path))
     n = session.query(Run).filter(Run.name == run_name).count()
     if n == 0:
+        logger.debug('Adding run {0} to database'.format(run_name))
         run = Run(name=run_name)
         session.add(run)
         session.commit()
 
     elif n == 1:
+        logger.debug('Loading run from database'.format(run_name))
         run = session.query(Run).filter(Run.name == run_name).limit(1).one()
 
     else:

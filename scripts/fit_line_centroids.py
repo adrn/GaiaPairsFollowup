@@ -47,7 +47,8 @@ def log_probability(params, gp, flux_data):
 
     return ll + lp
 
-def main(db_path, run_name, filename=None, overwrite=False, pool=None):
+def main(db_path, run_name, data_root_path=None,
+         filename=None, overwrite=False, pool=None):
 
     if pool is None:
         pool = schwimmbad.SerialPool()
@@ -61,6 +62,9 @@ def main(db_path, run_name, filename=None, overwrite=False, pool=None):
     session = Session()
 
     root_path, _ = path.split(db_path)
+    if data_root_path is None:
+        data_root_path = root_path
+
     plot_path = path.join(root_path, 'plots', run_name)
     if not path.exists(plot_path):
         os.makedirs(plot_path, exist_ok=True)
@@ -93,7 +97,7 @@ def main(db_path, run_name, filename=None, overwrite=False, pool=None):
 
         # Read the spectrum data and get wavelength solution
         filebase, _ = path.splitext(obs.filename_1d)
-        filename_1d = obs.path_1d(root_path)
+        filename_1d = obs.path_1d(data_root_path)
         spec = Table.read(filename_1d)
         logger.debug('Loaded 1D spectrum for object {0} from file {1}'
                      .format(obs.object, filename_1d))
@@ -310,6 +314,8 @@ if __name__ == "__main__":
                         help='Name of the observing run')
     parser.add_argument('-f', '--file', dest='filename', default=None,
                         help='Only run on one particular file.')
+    parser.add_argument('--data-root', dest='data_root_path', default=None,
+                        help='Root data path.')
 
     # multiprocessing options
     group = parser.add_mutually_exclusive_group()
@@ -342,5 +348,6 @@ if __name__ == "__main__":
     pool = choose_pool(mpi=args.mpi, processes=args.n_cores)
     logger.info("Using pool: {}".format(pool.__class__))
 
-    main(db_path=args.db_path, run_name=args.run_name, filename=args.filename,
+    main(db_path=args.db_path, data_root_path=args.data_root_path,
+         run_name=args.run_name, filename=args.filename,
          overwrite=args.overwrite, pool=pool)

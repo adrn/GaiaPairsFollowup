@@ -14,7 +14,6 @@ import astropy.units as u
 from astropy.table import Table
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('apw-notebook')
 import emcee
 import corner
 import schwimmbad

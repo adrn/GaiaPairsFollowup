@@ -14,7 +14,6 @@ from astropy.constants import c
 import astropy.units as u
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('apw-notebook')
 import schwimmbad
 from schwimmbad import choose_pool
 

@@ -44,7 +44,7 @@ class Observation(Base):
 
     id = Column(types.Integer, primary_key=True)
 
-    night = Column('night', IntEnumType(1,2,3,4,5), nullable=False)
+    night = Column('night', IntEnumType(1,2,3,4,5,6,7,8,9), nullable=False)
 
     filename_raw = Column('filename_raw', types.String, nullable=False)
     filename_p = Column('filename_p', types.String, nullable=False)

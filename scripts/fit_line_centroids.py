@@ -12,6 +12,7 @@ from os import path
 # Third-party
 import astropy.units as u
 from astropy.table import Table
+import celerite
 import numpy as np
 import matplotlib.pyplot as plt
 import emcee
@@ -40,7 +41,11 @@ def log_probability(params, gp, flux_data):
     if (params[4] < -8. or params[4] > 2 or params[5] < -8. or params[5] > 2):
         return -np.inf
 
-    ll = gp.log_likelihood(flux_data)
+    try:
+        ll = gp.log_likelihood(flux_data)
+    except celerite.solver.LinAlgError:
+        return -np.inf
+
     if not np.isfinite(ll):
         return -np.inf
 

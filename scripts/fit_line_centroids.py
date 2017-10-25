@@ -244,8 +244,17 @@ def main(db_path, run_name, data_root_path=None,
                                                    spec['background_ivar']])
 
             lf = GaussianLineFitter(x, flux, ivar, absorp_emiss=1.) # all emission lines
-            lf.fit()
-            fit_pars = lf.get_gp_mean_pars()
+
+            try:
+                lf.fit()
+                fit_pars = lf.get_gp_mean_pars()
+
+            except Exception as e:
+                logger.warn("Failed to fit sky line {0}:\n{1}".format(sky_line,
+                                                                      e))
+                lf.success = False
+                fit_pars = lf.get_init()
+                fit_pars['amp'] = 0.
 
             # HACK: hackish signal-to-noise
             max_ = fit_pars['amp'] / np.sqrt(2*np.pi*fit_pars['std']**2)

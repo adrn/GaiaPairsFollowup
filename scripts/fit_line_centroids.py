@@ -265,16 +265,19 @@ def main(db_path, run_name, data_root_path=None,
                 # failed
                 x0 = np.nan * u.angstrom
                 title = 'fucked'
+                fit_pars['amp'] = 0.
+
             else:
                 x0 = fit_pars['x0'] * u.angstrom
                 title = '{:.2f}'.format(fit_pars['amp'])
 
-            fig = lf.plot_fit()
-            fig.suptitle(title, y=0.95)
-            fig.subplots_adjust(top=0.8)
-            fig.savefig(path.join(plot_path, '{}_maxlike_sky_{:.0f}.png'
-                                  .format(filebase, wvln)), dpi=256)
-            plt.close(fig)
+            if lf.success:
+                fig = lf.plot_fit()
+                fig.suptitle(title, y=0.95)
+                fig.subplots_adjust(top=0.8)
+                fig.savefig(path.join(plot_path, '{}_maxlike_sky_{:.0f}.png'
+                                      .format(filebase, wvln)), dpi=256)
+                plt.close(fig)
 
             # store the sky line measurements
             fit_pars['std_G'] = fit_pars.pop('std') # HACK

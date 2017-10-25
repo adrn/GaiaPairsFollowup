@@ -255,6 +255,7 @@ def main(db_path, run_name, data_root_path=None,
                 lf.success = False
                 fit_pars = lf.get_init()
                 fit_pars['amp'] = 0.
+                fit_pars['bg_coef'] = None
 
             # HACK: hackish signal-to-noise
             max_ = fit_pars['amp'] / np.sqrt(2*np.pi*fit_pars['std']**2)

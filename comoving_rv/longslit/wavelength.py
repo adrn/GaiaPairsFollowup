@@ -55,16 +55,20 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
         try:
             lf.fit()
         except LinAlgError:
-            lf.init_gp()
+            # lf.init_gp()
 
-            fig = lf.plot_fit()
-            ax = fig.axes[1]
-            ax.plot(x_, flux_, drawstyle='steps-mid', marker='', linestyle='-')
-            ax.errorbar(x_, flux_, 1/np.sqrt(ivar_),
-                        marker='', linestyle='none', zorder=-1, alpha=0.5)
+            # fig = lf.plot_fit()
+            # ax = fig.axes[1]
+            # ax.plot(x_, flux_, drawstyle='steps-mid', marker='', linestyle='-')
+            # ax.errorbar(x_, flux_, 1/np.sqrt(ivar_),
+            #             marker='', linestyle='none', zorder=-1, alpha=0.5)
 
-            fig.tight_layout()
-            plt.show()
+            # fig.tight_layout()
+            # plt.show()
+            logger.warning("Failed to fit line! Skipping...but you should be "
+                           "careful if many fits fail, you might have a bad "
+                           "comparison lamp spectrum.")
+            continue
 
         # TODO: need to get plot path into here
         # fig = lf.plot_fit()

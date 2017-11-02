@@ -4,7 +4,7 @@ import inspect
 
 # Third-party
 from celerite import terms, GP
-from celerite.solver import LinalgError
+from celerite.solver import LinAlgError
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
@@ -255,7 +255,7 @@ class LineFitter(object):
 
         try:
             ll = self.gp.log_likelihood(self.flux)
-        except (RuntimeError, LinalgError):
+        except (RuntimeError, LinAlgError):
             return np.inf
 
         if np.isnan(ll):

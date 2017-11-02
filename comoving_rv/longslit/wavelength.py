@@ -68,7 +68,7 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
             logger.warning("Failed to fit line! Skipping...but you should be "
                            "careful if many fits fail, you might have a bad "
                            "comparison lamp spectrum.")
-            continue
+            lf.success = False
 
         # TODO: need to get plot path into here
         # fig = lf.plot_fit()

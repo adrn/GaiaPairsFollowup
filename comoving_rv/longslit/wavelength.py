@@ -55,10 +55,14 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
         try:
             lf.fit()
         except LinAlgError:
+            lf.init_gp()
+
             fig,ax = plt.subplots(1,1)
             ax.plot(x_, flux_, drawstyle='steps-mid', marker='', linestyle='-')
             ax.errorbar(x_, flux_, 1/np.sqrt(ivar_),
                         marker='', linestyle='none', zorder=-1, alpha=0.5)
+            ax.plot_fit(axes=ax)
+
             ax.set_title("Failed to fit line!")
             fig.tight_layout()
             plt.show()

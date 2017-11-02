@@ -48,13 +48,21 @@ def get_icrs_samples(data, size=1, seed=None):
     # rv : km/s
     return np.dstack((ra[...,None], dec[...,None], all_samples))
 
+
 def ln_dv_pdf(x, sigma):
     return 2*np.log(x) - x**2/(4*sigma**2) - 1.2655121234846456 - 3*np.log(sigma)
+
+
+def comoving_ln_pdf(x, sigma):
+    """ Normal distribution truncated at 0 (x >= 0) """
+    x = np.abs(x)
+    return -0.5*(x/sigma)**2 - 0.22579135264472741 - np.log(sigma)
+
 
 class MixtureModel:
 
     def __init__(self, data1, data2, n_dv_samples=512, n_dist_grid=5,
-                 field_vdisp=25.*u.km/u.s):
+                 field_vdisp=18.*u.km/u.s, name=''):
         """
         Parameters
         ----------
@@ -69,6 +77,7 @@ class MixtureModel:
         self.n_data = len(data1)
         self.n_dv_samples = int(n_dv_samples)
         self.n_dist_grid = int(n_dist_grid)
+        self.name = name
 
         self._field_vdisp = field_vdisp.to(u.km/u.s).value
 
@@ -127,7 +136,7 @@ class MixtureModel:
 
         dv_samples = self.get_dv_samples(d1, d2)
 
-        term1 = ln_dv_pdf(dv_samples, 1.) + log(f)
+        term1 = comoving_ln_pdf(dv_samples, 1.) + log(f)
         term2 = ln_dv_pdf(dv_samples, self._field_vdisp) + log(1-f)
 
         return (logsumexp(term1, axis=0) - log(self.n_dv_samples),
@@ -215,9 +224,9 @@ def run_emcee(model, pool, chain_file, blobs_file):
         pos, *_ = sampler.run_mcmc(p0, n_steps // n_batches)
         p0 = pos
 
-        np.save('../data/sampler_chain{0}.npy'.format(batch),
+        np.save('../data/sampler_chain{0}_{1}.npy'.format(batch, model.name),
                 sampler.chain)
-        np.save('../data/sampler_blobs{0}.npy'.format(batch),
+        np.save('../data/sampler_blobs{0}_{1}.npy'.format(batch, model.name),
                 sampler.blobs)
 
         sampler.reset()
@@ -226,8 +235,10 @@ def run_emcee(model, pool, chain_file, blobs_file):
     chains = []
     blobs = []
     for batch in range(n_batches):
-        chains.append(np.load('../data/sampler_chain{0}.npy'.format(batch)))
-        blobs.append(np.load('../data/sampler_blobs{0}.npy'.format(batch)))
+        chains.append(np.load('../data/sampler_chain{0}_{1}.npy'
+                              .format(batch, model.name)))
+        blobs.append(np.load('../data/sampler_blobs{0}_{1}.npy'
+                             .format(batch, model.name)))
 
     chain = np.hstack(chains)
     blobs = np.vstack(blobs)
@@ -236,10 +247,10 @@ def run_emcee(model, pool, chain_file, blobs_file):
 
     # Now clean up / delete the files
     for batch in range(n_batches):
-        os.remove('../data/sampler_chain{0}.npy'.format(batch))
-        os.remove('../data/sampler_blobs{0}.npy'.format(batch))
+        os.remove('../data/sampler_chain{0}_{1}.npy'.format(batch, model.name))
+        os.remove('../data/sampler_blobs{0}_{1}.npy'.format(batch, model.name))
 
-def analyze_chain(chain, blobs):
+def analyze_chain(chain, blobs, probs_file):
     # MAGIC NUMBER: index after which walkers are converged
     ix = 256
     trim_chain = chain[:,ix:]
@@ -261,7 +272,7 @@ def analyze_chain(chain, blobs):
             norm += 1
     post_prob /= norm
 
-    np.save('../data/pair_probs.npy', post_prob)
+    np.save(probs_file, post_prob)
 
 if __name__ == "__main__":
     import schwimmbad
@@ -273,6 +284,8 @@ if __name__ == "__main__":
                         dest='mpi')
     parser.add_argument('--sim', action='store_true', default=False,
                         dest='simulated_data')
+    parser.add_argument('--name', required=True, dest='name',
+                        help='Name of the data - can be "apw" or "rave"')
 
     args = parser.parse_args()
 
@@ -301,23 +314,26 @@ if __name__ == "__main__":
     else:
         print("Loading real data")
 
+        if args.name not in ['apw', 'rave']:
+            raise ValueError("Invalid name '{0}'".format(args.name))
+
         # Load real data
-        _tbl1 = fits.getdata('../data/tgas_apw1.fits')
+        _tbl1 = fits.getdata('../data/tgas_{0}1.fits'.format(args.name))
         data1 = TGASData(_tbl1, rv=_tbl1['RV']*u.km/u.s,
                          rv_err=_tbl1['RV_err']*u.km/u.s)
 
-        _tbl2 = fits.getdata('../data/tgas_apw2.fits')
+        _tbl2 = fits.getdata('../data/tgas_{0}2.fits'.format(args.name))
         data2 = TGASData(_tbl2, rv=_tbl2['RV']*u.km/u.s,
                          rv_err=_tbl2['RV_err']*u.km/u.s)
 
     print("Data loaded, creating model...")
 
-    mm = MixtureModel(data1, data2, field_vdisp=25.*u.km/u.s)
+    mm = MixtureModel(data1, data2, name=args.name, field_vdisp=25.*u.km/u.s)
     print("Model created")
     # plot_posterior(data1, data2)
 
-    chain_file = '../data/sampler_chain.npy'
-    blobs_file = '../data/sampler_blobs.npy'
+    chain_file = '../data/sampler_chain_{0}.npy'.format(args.name)
+    blobs_file = '../data/sampler_blobs_{0}.npy'.format(args.name)
 
     if not os.path.exists(chain_file):
         print("Couldn't find cached chain file - starting sampling")
@@ -325,6 +341,7 @@ if __name__ == "__main__":
         pool.close()
 
     analyze_chain(np.load(chain_file),
-                  np.load(blobs_file))
+                  np.load(blobs_file),
+                  '../data/pair_probs_{0}.npy'.format(args.name))
 
     sys.exit(0)

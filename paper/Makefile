@@ -20,6 +20,13 @@ ${NAME}.pdf: ${NAME}.tex *.bib gitstuff.tex
 	( grep "Rerun to get" ${NAME}.log && ${LATEX} ${NAME} ) || echo "Done."
 	( grep "Rerun to get" ${NAME}.log && ${LATEX} ${NAME} ) || echo "Done."
 
+diff.pdf: diff.tex *.bib gitstuff.tex
+	${LATEX} diff
+	bibtex diff
+	${LATEX} diff
+	( grep "Rerun to get" diff.log && ${LATEX} diff ) || echo "Done."
+	( grep "Rerun to get" diff.log && ${LATEX} diff ) || echo "Done."
+
 clean:
 	${RM} $(foreach suff, ${TMP_SUFFS}, ${NAME}.${suff})
 	${RM} *.aux

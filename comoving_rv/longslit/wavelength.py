@@ -4,6 +4,7 @@ import numpy as np
 from numpy.polynomial.polynomial import polyval
 from celerite.modeling import Model
 from celerite import terms, GP
+from celerite.solver import LinAlgError
 
 # Project
 from .fitting.gaussian import GaussianLineFitter
@@ -51,7 +52,16 @@ def fit_all_lines(pixels, flux, flux_ivar, line_waves, line_pixels,
                                             arrs=[flux, flux_ivar])
 
         lf = GaussianLineFitter(x_, flux_, ivar_, absorp_emiss=1.)
-        lf.fit()
+        try:
+            lf.fit()
+        except LinAlgError:
+            fig,ax = plt.subplots(1,1)
+            ax.plot(x_, flux_, drawstyle='steps-mid', marker='', linestyle='-')
+            ax.errorbar(x_, flux_, 1/np.sqrt(ivar_),
+                        marker='', linestyle='none', zorder=-1, alpha=0.5)
+            ax.set_title("Failed to fit line!")
+            fig.tight_layout()
+            plt.show()
 
         # TODO: need to get plot path into here
         # fig = lf.plot_fit()

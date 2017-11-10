@@ -1,0 +1,106 @@
+We thank the referee for the constructive report and suggested improvements. To
+address the referee's concerns, we have redone and rewritten our population
+modeling to provide a probabilistic classification of each pair as being
+"comoving" or "field." Though our conclusions or results haven't changed as a
+result of this change, we agree that it is more robust and more honest to
+provide probabilities for each pair rather than perform a hard cut on likelihood
+ratio increase. We believe that the re-analysis and re-write of our modeling
+section will address many of the broader concerns the referee had with this work
+and thus don't reply to every issue specifically. We've also moved away from
+using the word "confirmed comoving pairs" and instead say "high-probability."
+See especially sections 3 and 4 in the revised draft.
+
+To assist the referee in interpreting the differences, we have also uploaded a
+"diff"ed and rendered version of the paper that shows the changes made
+(diff.pdf).
+
+Below we address additional, specific concerns raised in the report: lines that
+contain questions or comments raised by the referee begin with ">" and our
+responses are listed immediately below.
+
+> Minor concerns:
+> ===============
+
+> (1) The comparison with LAMOST metallicity and Delta-RV seems important enough
+> for the case that it should probably be detailed in its own subsection, rather
+> than being placed in the discussion.
+
+We agree, and have moved it into the "Results" section - see Section 4.4
+
+> (2) The description of the data reduction in the appendices is perhaps
+> too detailed and too general, especially the 1D spectrum extraction
+> and wavelength calibration. If this is standard procedure for
+> MDM-MODSPEC reduction, then these details make the paper
+> unnecessarily long. Publishing these details might however be useful
+> if this is a novel reduction procedure - but this does not seem to be
+> the case. The RV measurements on the other hand might be worth
+> detailing if the procedure is truly novel, or if it is critical in
+> demonstrating the level of RV precision needed for the study.
+
+We aren't aware of a spectroscopic reduction pipeline that uses Gaussian
+processes or flexible model for the spectral extraction or wavelength
+calibration, so we have chosen to leave the description in this paper. We placed
+it in the appendix because we agree that, while cumbersome, does describe a
+novel reduction procedure. Most readers can just ignore the appendix.
+
+
+> Other suggested changes:
+> ========================
+
+> Section 1, paragraph 5:
+> -----------------------
+> "is found to be alpha~1.5-2 out to..." Since the alpha power law is determined
+> for the distribution of separations, the sentence should be reversed here: "is
+> found to be alpha~1.5-2 out to projected separations ~0.65pc (~0.25degrees of
+> angular separation on the sky at a distance of 150pc),"
+
+Fixed.
+
+> Section 1, paragraph 7:
+> -----------------------
+> "that falls of until" -> "that falls off until"
+
+Fixed.
+
+> Section 2.1, paragraph 2:
+> -------------------------
+> "...likelihood ratio for all stars within 10pc and with a
+> difference..."
+>
+> Perhaps you mean:
+>
+> "...likelihood ratio for a star to have another star within 10 pc of
+> itself, and with a difference..."
+
+For each star in TGAS, we compute the likelihood ratio for all nearby stars
+(within 10pc). We've restructured this sentence to try to clarify.
+
+> Section 2.1, paragraph 3:
+> -------------------------
+> "...exclusive star pairs within 200 pc in Heliocentric distance."
+> ->
+> "...exclusive stars pairs with heliocentric distances d<200pc.
+
+Fixed.
+
+> "...used above and given the limitations of the TGAS catalog itself..."
+> ->
+> "...used above, and within the limits of the TGAS catalog itself
+> (e.g. magnitude range), TGAS is..."
+
+Fixed.
+
+> "...with airmass sec z < 1.5..."
+> ->
+> [The airmass is an incidental parameter of the observations, not an
+> intrinsic property of the targets. This statement should therefore be
+> moved to section 2.2.]
+
+Fixed.
+
+> "...all TGAS stars within 200 pc."
+> ->
+> [Please cite the actual number of TGAS stars within 200pc.]
+
+Fixed. In fact, we fixed this to read "all 195,294 TGAS stars with 2MASS
+photometry within 200 pc...".

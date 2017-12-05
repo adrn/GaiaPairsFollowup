@@ -11,7 +11,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Session = scoped_session(sessionmaker(autoflush=True, autocommit=False))
 Base = declarative_base()
 
-def db_connect(database_path, ensure_db_exists=True):
+def db_connect(database_path, ensure_db_exists=False):
     """
     Connect to the specified database.
 

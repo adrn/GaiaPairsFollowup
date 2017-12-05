@@ -72,7 +72,7 @@ def main(db_path, run_root_path, drop_all=False, overwrite=False, **kwargs):
     # --------------------------------------------------------------------------
 
     # connect to the database
-    engine = db_connect(db_path)
+    engine = db_connect(db_path, ensure_db_exists=True)
     # engine.echo = True
     logger.debug("Connected to database at '{}'".format(db_path))
 

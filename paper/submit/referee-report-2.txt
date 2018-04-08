@@ -1,0 +1,105 @@
+The statistical analysis presented in section 3 appears to be an
+attempt at modeling the 3D velocity differences (\psi) in a subset of
+311 co-moving pairs, using a combination of a model that represents
+the distribution of velocity differences for real co-moving pairs,
+with one that represents the distribution of velocity differences for
+randomly selected field stars.
+
+While the model for the distribution of co-moving pairs (P_{co})
+appears satisfactory, the model for the distribution of randomly
+selected field stars (P_{field}) is not.
+
+Here's the problem:
+The subset of 311 co-moving candidates represents
+a subset of objects that have been *pre-selected* on the basis of
+having similar proper motions (from TGAS). As a result, their
+distribution of velocity differences cannot be represented by the 3D
+distribution of field stars, because these pairs represent a subset of
+objects that *a priori* have motions that are much more similar to
+each other than to normal field stars. Effectively, this subset
+represent stars that are already known to have motions that are
+similar to each other along two components of motion (motion in the
+plane of the sky), and thus the only uncertainty that remains is in
+the radial velocity direction - in other words, this is a 1D problem,
+and not a 3D problem. If you pre-select stars that have identical
+transverse motion, then the distribution of velocity differences is
+going to be a truncated Gaussian, and not a Maxwellian distribution.
+
+As a result, the modeled probability distribution P_{field} grossly
+underestimates the likelihood that two stars from the subset of common
+proper motion pairs will have total velocity differences near 0 km/s.
+
+Unfortunately, if that is what was done, the entire analysis in section 3,
+as well as the general conclusions of the manuscript, are invalid.
+
+Perhaps I have misunderstood the analysis presented in section
+3. If that is the case, then I would urge the authors to present a
+revised discussion that would explain more clearly what has been done,
+in particular one that would clearly explain how the
+simulationaccounts for the fact that we are dealing with a subset of
+stars that were initially preselected based on having similar proper
+motions, and how this affects the results.
+
+As pointed out in the first report, it is surprising that so many of
+these common proper motion pairs (selected from Oh et al. 2017) are
+found after these follow-up spectroscopic observations to have
+velocity differences >20km/s, especially for the subset of pairs with
+separations 1pc-10pc. Remember that these are all common proper motion
+pairs, so their 3D motions must be relatively small to begin with;
+effectively their velocity differences start with being close to 0km/s
+when the radial velocity is not included, and then grows to pretty
+large values when the radial velocity data is included. This suggests
+a high level of contamination in the sample, from which one could
+argue that the majority of pairs with distances 1pc-10pc are in fact
+chance aalignment This is a serious concern that must be addressed.
+
+On the other hand, it is clear that of the ~20-25 pairs in the <1pc
+subset, the majority of them appear to be confirmed as co-moving
+objects. The manuscript should probably focus on these objects. For
+pairs with separations >1pc, the present study does not provide
+sufficient evidence to identify any of these objects as a probable
+co-moving system, and instead appear to suggest that most of them are
+chance aalignments This can only be solved with more accurate radial
+velocity information.
+
+
+Other recommended corrections:
+==============================
+
+Abstract:
+---------
+
+"Of the 311 observed comoving pairs, we confirm 124 comoving pairs
+have probabilities 50% with separations as large as 10 pc, our
+original search limit."
+=>
+"Of an initial sample of 311 possible comoving pairs targeted for
+follow-up spectroscopy, we identify 124 pairs that have co-moving
+probabilities >50% with separations as large as 10 pc, our original
+search limit."
+
+
+"...the number of high-probability pairs per separation decreases..."
+=>
+"...the number of high-probability pairs per separation unit
+decreases..."
+
+
+"From ~0.5 pc to 10 pc, the number per separation is approximately
+uniform..."
+=>
+"From ~0.5 pc to 10 pc, on the other hand, the number per separation
+is approximately uniform..."
+
+
+"We thus confirm the discovery of a population of comoving..."
+=>
+"This supports the existence of a population of comoving..."
+
+
+Section 3:
+----------
+
+"...is comoving in 3D velocity given..."
+=>
+"...is comoving in 3D velocity space given..."

@@ -1,0 +1,216 @@
+Referee Report
+
+This manuscript presents a follow-up spectroscopy study of
+co-moving pairs of stars identified in the TGAS survey by Oh et. al
+(2017). Radial velocity measurements are obtained for both components
+in 311 pairs, with the goal to try and confirm whether the pairs are
+truly co-moving objects or simple change alignments. Metallicity
+information is also obtained for a smaller number of sources. The
+manuscript claims the confirmation of 127 pairs as genuine co-moving
+objects, including some pairs with separations as large as 10pc.
+
+Unfortunately, the present study does not satisfactorily demonstrate
+that pairs with large separations (d>1pc) are co-moving. In fact, a
+careful examination of the data suggests quite the opposite - see
+below for a list of counterarguments (-> major concerns). As a result,
+the paper should not be accepted in its current form.
+
+It is possible that the referee might have been confused by the
+presentation, in which case a revised manuscript with more rigorous
+demonstration might be acceptable. However, the referee urges the
+authors to carefully reconsider their evidence in light of the
+comments below.
+
+In any case, the radial velocity data collected for this program is
+interesting and useful, and would be worth publishing. For this
+reason, the authors are urged to submit a revised version of the
+manuscript.
+
+
+
+Major concerns:
+===============
+
+While the analysis convincingly shows that the short separation pairs
+(d<2pc) are indeed co-moving systems (perhaps even wide binaries), the
+claim that some of the pairs with large separations (2pc<d<10pc) are
+also co-moving does not appear to be supported by the follow-up data.
+
+A fundamental property of co-moving pairs is that for the pairs to
+remain coherent (i.e. close to each other) over tens to hundreds of
+millions of years requires that their velocity differences be very
+small. As an example, a 1km/s velocity difference translates into a
+motion of 1 parsec per million year. Therefore if the pairs are still
+coherent within 10pc of each other after 100Myr or more, then it means
+that the velocity difference between the components must be less than
+0.1 km/s. Therefore, high-resolution observations would normally be
+required to demonstrate the co-moving status of two stars.
+
+Additionally, the global velocity scatter in the local field
+population for moderately young (<2Gyr) stars is about 30 km/s. This
+however is for the *global* distribution. In the direction of the
+north and south Galactic poles, the velocity scatter is significantly
+smaller, due to sigma_W~12 km/s (Nordtrsom et al. 2004). In the
+direction of the apex and antapex of the Sun's orbital motion, the
+scatter is just sigma_V~15 km/s. As a result, one would expect the
+typical difference in radial velocity between any two randomly
+selected stars young stars in the local field population to be in the
+the 10km/s-30km/s range, depending on the direction on the sky.
+
+The evidence shown in Figure 4 and Figure 8 shows two distinct
+populations:
+
+(1) Co-moving pairs with separations <3pc. These clearly have
+total velocity differences |v1-v2| that are smaller than the expected
+10-30km/s random scatter, and their differences in radial velocities
+are also convincingly small. In addition, Figure 8 shows that these
+pairs have similar abundances.
+
+(2) Co-moving pairs with separations >3pc. These have a much large
+scatter in total velocity differences |v1-v2|. It is clear that the
+pairs with |v1-v2|>20km/s cannot be co-moving. Figure 8 also shows
+that a large fraction of those large separation systems also have a
+significant scatter in both their radial velocity differences AND in
+their metallicity differences.
+
+Hence, there is no doubt that at least a significant fraction of the
+large-separation, co-moving pairs originally selected in Oh
+et. al. (2017) are no actually co-moving. That there is significant
+contamination means that one must be careful about pairs that are
+found to have similar radial velocities. The medium-resolution spectra
+that were obtained in the follow-up study have a precision of only
+5-10km/s, which is large considering that the field population itself
+is expected to have a scatter of 10-30 km/s. One would, for example,
+expect that a large fraction of the pairs with RV differences <10km/s
+to be chance alignments of unrelated objects. Even pairs with measured
+RV differences 1-2 km/s could still be chance alignments of unrelated
+stars, since the tru requirement for two star to actually be co-moving
+is that they must have RV differences <0.1km/s (see above).
+
+Therefore, a look at the distribution in Figure 4 would suggest that
+at least *some* of the pairs with |v1-v2|<10km/s should be chance
+alignments. However, the plot shows that essentially *all* pairs
+with |v1-v2|<10km/s are marked as "confirmed" (bold point). This is
+not what one would expect. The fact that the number of "confirmed"
+pairs increases with physical separation further corroborates the idea
+that at least some of them are chance alignments; this is probably a
+contentious point since one can argue that the increase represents a
+true feature of the separation distribution
+
+Note that this is not an issue for the short-separation pairs, since
+they don't show any evidence of contamination - none of the pairs with
+short separations have |v1-v2|>25km/s. Therefore we need not worry
+about these. However, since we know that there actually *is*
+substantial contamination in the large separation subset means that we
+must be extremely cautious.
+
+Now, the criterion used to claim that the large-separation pairs are
+real is the likelihood ratio R_RV-R_mu. The argument is that if the
+addition of the radial velocity information has increased the
+likelihood of the pairing, then the pair must be real. However, if the
+radial velocity difference happens to be small only by chance, then of
+course we will get R_RV>R_mu, but that does not necessarily mean that
+the pair is genuine. There are so many pairs for which the RV
+decreases the probability of the pairing, 184/311 pairs actually, that
+this signals that chance alignments in RV space will probably lead to
+some pairs having RV<10km/s, which will increase their R_RV compared
+to the original R_mu. In short, because you find an increase in
+probability when you add new data doesn't mean that the probability is
+in fact 100%. The increase could be due to chance.
+
+In fact, one can see a point in Figure 4 representing a star with
+R_RV>R_mu, but this star has |v1-v2|>50km/s! This is a hint that the
+R_RV>R_mu criterion is not sufficient to "confirm" the pair as genuine.
+
+In addition, the mismatch in the apparent ages of HD 95088 and HD
+92278 finds a very simple explanation if the two stars are in fact
+simple chance alignments of unrelated objects. This may not be the
+only pair with mismatched ages, although it is the most obvious one.
+
+A more convincing diagram would be one that shows the distribution of
+RV differences as a function of physical separation. From the "wings"
+of the distribution |Delta_RV|>15km/s, one could probably model the
+distribution to get an idea of the density in "core"
+|Delta_RV|<15km/s. There are other simple statistical tests that could
+be made but I will leave that to the authors to figure out.
+
+To summarize: the current version of the manuscript does not make a
+convincing case that the large-separation pairs are true co-moving
+pairs, rather than simple chance alignments of unrelated stars.
+
+
+Minor concerns:
+===============
+
+(1) The comparison with LAMOST metallicity and Delta-RV seems important
+enough for the case that it should probably be detailed in its own
+subsection, rather than being placed in the discussion.
+
+(2) The description of the data reduction in the appendices is perhaps
+too detailed and too general, especially the 1D spectrum extraction
+and wavelength calibration. If this is standard procedure for
+MDM-MODSPEC reduction, then these details make the paper
+unnecessarily long. Publishing these details might however be useful
+if this is a novel reduction procedure - but this does not seem to be
+the case. The RV measurements on the other hand might be worth
+detailing if the procedure is truly novel, or if it is critical in
+demonstrating the level of RV precision needed for the study.
+
+
+
+Other suggested changes:
+========================
+
+Section 1, paragraph 5:
+-----------------------
+"is found to be alpha~1.5-2 out to..."
+
+Since the alpha power law is determined for the distribution of
+separations, the sentence should be reversed here:
+
+"is found to be alpha~1.5-2 out to projected separations ~0.65pc
+(~0.25degrees of angular separation on the sky at a distance of
+150pc),"
+
+
+
+Section 1, paragraph 7:
+-----------------------
+"that falls of until" -> "that falls off until"
+
+
+Section 2.1, paragraph 2:
+-------------------------
+"...likelihood ratio for all stars within 10pc and with a
+difference..."
+
+Perhaps you mean:
+
+"...likelihood ratio for a star to have another star within 10 pc of
+itself, and with a difference..."
+
+
+Section 2.1, paragraph 3:
+-------------------------
+"...exclusive star pairs within 200 pc in Heliocentric distance."
+->
+"...exclusive stars pairs with heliocentric distances d<200pc.
+
+
+"...used above and given the limitations of the TGAS catalog
+itself..."
+->
+"...used above, and within the limits of the TGAS catalog itself
+(e.g. magnitude range), TGAS is..."
+
+
+"...with airmass sec z < 1.5..."
+->
+[The airmass is an incidental parameter of the observations, not an
+intrinsic property of the targets. This statement should therefore be
+moved to section 2.2.]
+
+
+"...all TGAS stars within 200 pc."
+->
+[Please cite the actual number of TGAS stars within 200pc.]
